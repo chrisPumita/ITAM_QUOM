@@ -130,9 +130,11 @@ try
     Log.Information("ITAM.Api iniciando. Logs en {LogsDir}", logsDir);
     app.Run();
 }
-catch (Exception ex)
+catch (Exception ex) when (ex is not HostAbortedException and not OperationCanceledException)
 {
+    // HostAbortedException es normal: `dotnet ef` / PMC abortan el host tras obtener el DbContext.
     Log.Fatal(ex, "ITAM.Api terminó inesperadamente");
+    throw;
 }
 finally
 {

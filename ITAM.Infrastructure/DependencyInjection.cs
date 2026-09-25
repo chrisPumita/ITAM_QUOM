@@ -1,10 +1,13 @@
 using System.Security.Claims;
+using ITAM.Domain.Interfaces.Repositories;
 using ITAM.Domain.Interfaces.Services;
 using ITAM.Infrastructure.Identity;
 using ITAM.Infrastructure.Persistence;
+using ITAM.Infrastructure.Repositories;
 using ITAM.Infrastructure.Services;
 using ITAM.Shared.Enums;
 using ITAM.Shared.Services.Identity;
+using ITAM.Shared.Services.Mail;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -46,6 +49,10 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
 
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IBrandRepository, BrandRepository>();
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IBrandService, BrandService>();
 
         return services;
     }
