@@ -24,6 +24,8 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.Configure<ITAM.Shared.Services.Mail.SmtpSettings>(
+            configuration.GetSection(ITAM.Shared.Services.Mail.SmtpSettings.SectionName));
 
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' no configurada.");

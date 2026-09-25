@@ -14,3 +14,5 @@
 /ITAM.Infrastructure/bin
 /ITAM.Domain/bin
 /ITAM.Shared/bin
+**/wwwroot/App_Data/logs/*.log
+**/wwwroot/App_Data/logs/*.txt

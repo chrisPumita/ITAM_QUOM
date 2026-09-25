@@ -1,13 +1,37 @@
 # ITAM QUOM — Arquitectura e Identity
 
+## Topología runtime (MVC → API → BD)
+
+Regla Daikin: **solo la API tiene acceso a SQL Server**. El MVC habla por HTTP + JWT.
+
+```mermaid
+flowchart LR
+  B["Browser"] -->|HTTPS| W["ITAM.WebApp\nMVC + ApiConnect"]
+  W -->|"REST + Bearer JWT"| A["ITAM.Api"]
+  A --> INF["Infrastructure"]
+  INF -->|EF Core| DB[(SQL Server)]
+  INF -->|Dapper| DB
+  INF -->|ADO.NET + SPs| DB
+  S["ITAM.Shared\nDTOs · HttpRequestBuilder"] -.-> W
+  S -.-> A
+```
+
+| Tramo | Cómo |
+|---|---|
+| **WebApp → Api** | `HttpRequestBuilder` / `BaseHttpRepository` (ApiConnectV2), token en `WithBearer` |
+| **Api → BD** | EF (Identity + catálogos/CRUD), Dapper (listados/historial), ADO.NET+SP (asignar/devolver) |
+| **WebApp ↛ BD** | Sin `SqlConnection`, sin referencia a Infrastructure |
+
+Canvas interactivo (Cursor): vista **0 · Arquitectura** en `itam-modelo-datos.canvas.tsx`.
+
 ## Capas
 
 | Proyecto | Responsabilidad |
 |---|---|
 | **ITAM.Domain** | Contratos (`Interfaces`), reglas puras. Sin EF / SQL / HTTP. |
 | **ITAM.Application** | Casos de uso futuros (orquestación). |
-| **ITAM.Infrastructure** | Identity + EF (solo auth), repos ADO.NET/SPs (negocio), DI. |
-| **ITAM.Shared** | DTOs, enums de rol, `JwtSettings`, (luego ApiConnect para MVC). |
+| **ITAM.Infrastructure** | Identity + EF, repos ADO.NET/SPs / Dapper, DI. |
+| **ITAM.Shared** | DTOs, enums de rol, `JwtSettings`, ApiConnect para MVC. |
 | **ITAM.Api** | Controllers, JWT Bearer, Swagger. Único host con acceso a BD. |
 | **ITAM.WebApp** | MVC; consume la API por HTTP (sin BD). |
 
@@ -33,8 +57,11 @@ Nuevas interfaces de negocio irán en `ITAM.Domain/Interfaces/` (Services y Repo
 | Roles | `Administrador`, `Operador` (Identity Role + claim) |
 | Hash | ASP.NET Identity (no texto plano) |
 | Token | JWT Bearer (`JwtSettings` en appsettings) |
-| Negocio | ADO.NET + Stored Procedures (sin EF) |
+| Negocio | EF (CRUD) + ADO.NET/SP (asignar) + Dapper (reportes) |
 | Identity schema | EF Core migraciones **manuales** |
+| Logs | Serilog en `wwwroot/App_Data/logs/` (portable al publish MonsterASP; App_Data no se sirve como estático) |
+| Excepciones | `ExceptionHandlingMiddleware` en API (ProblemDetails) y MVC (redirect Error) |
+| SMTP | `SmtpSettings` en appsettings (reset/invite password) |
 
 ## Identity / DbContext (como Daikin, con Guid)
 
