@@ -11,7 +11,7 @@ public class Employee : BaseEntity
 
     public string FullName { get; set; } = string.Empty;
 
-    /// <summary>Correo de contacto; no implica acceso al sistema.</summary>
+    /// <summary>Correo de contacto único; no implica acceso al sistema.</summary>
     public string Email { get; set; } = string.Empty;
 
     public string? Department { get; set; }

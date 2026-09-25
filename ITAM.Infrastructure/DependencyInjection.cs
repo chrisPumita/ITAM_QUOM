@@ -1,12 +1,16 @@
 using System.Security.Claims;
 using ITAM.Domain.Interfaces.Repositories.Catalog;
+using ITAM.Domain.Interfaces.Repositories.Company;
 using ITAM.Domain.Interfaces.Services;
 using ITAM.Domain.Interfaces.Services.Catalog;
+using ITAM.Domain.Interfaces.Services.Company;
 using ITAM.Infrastructure.Identity;
 using ITAM.Infrastructure.Persistence;
 using ITAM.Infrastructure.Repositories.Catalog;
+using ITAM.Infrastructure.Repositories.Company;
 using ITAM.Infrastructure.Services;
 using ITAM.Infrastructure.Services.Catalog;
+using ITAM.Infrastructure.Services.Company;
 using ITAM.Shared.Enums;
 using ITAM.Shared.Services.Identity;
 using ITAM.Shared.Services.Mail;
@@ -55,10 +59,12 @@ public static class DependencyInjection
         services.AddScoped<IBrandRepository, BrandRepository>();
         services.AddScoped<IModelRepository, ModelRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();
+        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IBrandService, BrandService>();
         services.AddScoped<IModelService, ModelService>();
         services.AddScoped<ILocationService, LocationService>();
+        services.AddScoped<IEmployeeService, EmployeeService>();
 
         return services;
     }
