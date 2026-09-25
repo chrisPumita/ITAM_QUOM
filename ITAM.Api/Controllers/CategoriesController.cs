@@ -20,49 +20,45 @@ public class CategoriesController : ControllerBase
 
     public CategoriesController(ICategoryService service) => _service = service;
 
+    /// <summary>Lista categorías. HTTP 200.</summary>
     [HttpGet]
     [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
+    [ProducesResponseType(typeof(ApiResponse<List<CategoryListDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<CategoryListDto>>>> List([FromQuery] bool? onlyActive = true)
-    {
-        var result = await _service.ListAsync(onlyActive);
-        return Ok(ApiResponseFactory.From(result, HttpStatusCode.OK));
-    }
+        => ApiResponseFactory.FromResult(await _service.ListAsync(onlyActive), HttpStatusCode.OK);
 
+    /// <summary>Obtiene por id. HTTP 200 / 404.</summary>
     [HttpGet("{id:int}")]
     [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
+    [ProducesResponseType(typeof(ApiResponse<CategoryListDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CategoryListDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<CategoryListDto>>> Get(int id)
-    {
-        var result = await _service.GetAsync(id);
-        if (!result.IsSuccess)
-            return NotFound(ApiResponseFactory.From(result, HttpStatusCode.NotFound));
-        return Ok(ApiResponseFactory.From(result, HttpStatusCode.OK));
-    }
+        => ApiResponseFactory.FromResult(await _service.GetAsync(id), HttpStatusCode.OK);
 
+    /// <summary>Alta. HTTP 201 / 400 / 409.</summary>
     [HttpPost]
     [Authorize(Roles = AppRoles.Administrador)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<ApiResponse<int>>> Create([FromBody] CategoryUpsertDto dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ApiResponseFactory.InvalidModel<int>());
-
-        var result = await _service.CreateAsync(dto);
-        if (!result.IsSuccess)
-            return BadRequest(ApiResponseFactory.From(result, HttpStatusCode.BadRequest));
-        return StatusCode(StatusCodes.Status201Created, ApiResponseFactory.From(result, HttpStatusCode.Created));
+            return ApiResponseFactory.InvalidModel<int>();
+        return ApiResponseFactory.FromResult(await _service.CreateAsync(dto), HttpStatusCode.Created);
     }
 
+    /// <summary>Actualización. HTTP 200 / 400 / 404 / 409.</summary>
     [HttpPut("{id:int}")]
     [Authorize(Roles = AppRoles.Administrador)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<ApiResponse<bool>>> Update(int id, [FromBody] CategoryUpsertDto dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ApiResponseFactory.InvalidModel<bool>());
-
-        var result = await _service.UpdateAsync(id, dto);
-        if (!result.IsSuccess && result.Error == "NotFound")
-            return NotFound(ApiResponseFactory.From(result, HttpStatusCode.NotFound));
-        if (!result.IsSuccess)
-            return BadRequest(ApiResponseFactory.From(result, HttpStatusCode.BadRequest));
-        return Ok(ApiResponseFactory.From(result, HttpStatusCode.OK));
+            return ApiResponseFactory.InvalidModel<bool>();
+        return ApiResponseFactory.FromResult(await _service.UpdateAsync(id, dto), HttpStatusCode.OK);
     }
 }

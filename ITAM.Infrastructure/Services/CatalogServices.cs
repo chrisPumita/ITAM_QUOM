@@ -170,3 +170,116 @@ public class BrandService : IBrandService
         Error = error
     };
 }
+
+public class ModelService : IModelService
+{
+    private readonly IModelRepository _repo;
+    private readonly ICategoryRepository _categories;
+    private readonly IBrandRepository _brands;
+
+    public ModelService(
+        IModelRepository repo,
+        ICategoryRepository categories,
+        IBrandRepository brands)
+    {
+        _repo = repo;
+        _categories = categories;
+        _brands = brands;
+    }
+
+    public async Task<Result<List<ModelListDto>>> ListAsync(bool? onlyActive, int? categoryId, int? brandId)
+    {
+        var items = await _repo.ListAsync(onlyActive, categoryId, brandId);
+        return Ok(items.Select(Map).ToList(), "Modelos obtenidos.");
+    }
+
+    public async Task<Result<ModelListDto>> GetAsync(int id)
+    {
+        var entity = await _repo.GetByIdAsync(id);
+        if (entity is null)
+            return Fail<ModelListDto>("Modelo no encontrado.", "NotFound");
+        return Ok(Map(entity), "OK");
+    }
+
+    public async Task<Result<int>> CreateAsync(ModelUpsertDto dto)
+    {
+        var name = dto.Name.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+            return Fail<int>("El nombre es obligatorio.", "Validation");
+
+        if (await _categories.GetByIdAsync(dto.CategoryId) is null)
+            return Fail<int>("La categoría no existe.", "Validation");
+
+        if (await _brands.GetByIdAsync(dto.BrandId) is null)
+            return Fail<int>("La marca no existe.", "Validation");
+
+        if (await _repo.ExistsAsync(dto.CategoryId, dto.BrandId, name, null))
+            return Fail<int>("Ya existe ese modelo para la categoría y marca.", "Duplicate");
+
+        var entity = new Model
+        {
+            Name = name,
+            Specs = string.IsNullOrWhiteSpace(dto.Specs) ? null : dto.Specs.Trim(),
+            CategoryId = dto.CategoryId,
+            BrandId = dto.BrandId,
+            IsActive = dto.IsActive
+        };
+        await _repo.AddAsync(entity);
+        return Ok(entity.Id, "Modelo creado.");
+    }
+
+    public async Task<Result<bool>> UpdateAsync(int id, ModelUpsertDto dto)
+    {
+        var entity = await _repo.GetByIdAsync(id);
+        if (entity is null)
+            return Fail<bool>("Modelo no encontrado.", "NotFound");
+
+        var name = dto.Name.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+            return Fail<bool>("El nombre es obligatorio.", "Validation");
+
+        if (await _categories.GetByIdAsync(dto.CategoryId) is null)
+            return Fail<bool>("La categoría no existe.", "Validation");
+
+        if (await _brands.GetByIdAsync(dto.BrandId) is null)
+            return Fail<bool>("La marca no existe.", "Validation");
+
+        if (await _repo.ExistsAsync(dto.CategoryId, dto.BrandId, name, id))
+            return Fail<bool>("Ya existe ese modelo para la categoría y marca.", "Duplicate");
+
+        entity.Name = name;
+        entity.Specs = string.IsNullOrWhiteSpace(dto.Specs) ? null : dto.Specs.Trim();
+        entity.CategoryId = dto.CategoryId;
+        entity.BrandId = dto.BrandId;
+        entity.IsActive = dto.IsActive;
+        entity.UpdatedAt = DateTime.UtcNow;
+        await _repo.UpdateAsync(entity);
+        return Ok(true, "Modelo actualizado.");
+    }
+
+    private static ModelListDto Map(Model x) => new()
+    {
+        Id = x.Id,
+        Name = x.Name,
+        Specs = x.Specs,
+        CategoryId = x.CategoryId,
+        CategoryName = x.Category?.Name ?? string.Empty,
+        BrandId = x.BrandId,
+        BrandName = x.Brand?.Name ?? string.Empty,
+        IsActive = x.IsActive
+    };
+
+    private static Result<T> Ok<T>(T data, string message) => new()
+    {
+        IsSuccess = true,
+        Message = message,
+        Data = data
+    };
+
+    private static Result<T> Fail<T>(string message, string error) => new()
+    {
+        IsSuccess = false,
+        Message = message,
+        Error = error
+    };
+}

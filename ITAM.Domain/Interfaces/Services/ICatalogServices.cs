@@ -18,3 +18,11 @@ public interface IBrandService
     Task<Result<int>> CreateAsync(BrandUpsertDto dto);
     Task<Result<bool>> UpdateAsync(int id, BrandUpsertDto dto);
 }
+
+public interface IModelService
+{
+    Task<Result<List<ModelListDto>>> ListAsync(bool? onlyActive, int? categoryId, int? brandId);
+    Task<Result<ModelListDto>> GetAsync(int id);
+    Task<Result<int>> CreateAsync(ModelUpsertDto dto);
+    Task<Result<bool>> UpdateAsync(int id, ModelUpsertDto dto);
+}
