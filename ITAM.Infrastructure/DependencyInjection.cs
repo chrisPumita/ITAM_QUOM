@@ -1,10 +1,12 @@
 using System.Security.Claims;
-using ITAM.Domain.Interfaces.Repositories;
+using ITAM.Domain.Interfaces.Repositories.Catalog;
 using ITAM.Domain.Interfaces.Services;
+using ITAM.Domain.Interfaces.Services.Catalog;
 using ITAM.Infrastructure.Identity;
 using ITAM.Infrastructure.Persistence;
-using ITAM.Infrastructure.Repositories;
+using ITAM.Infrastructure.Repositories.Catalog;
 using ITAM.Infrastructure.Services;
+using ITAM.Infrastructure.Services.Catalog;
 using ITAM.Shared.Enums;
 using ITAM.Shared.Services.Identity;
 using ITAM.Shared.Services.Mail;

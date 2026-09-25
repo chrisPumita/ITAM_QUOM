@@ -1,5 +1,5 @@
 using System.Net;
-using ITAM.Domain.Interfaces.Services;
+using ITAM.Domain.Interfaces.Services.Catalog;
 using ITAM.Shared.Dtos.Apis;
 using ITAM.Shared.Dtos.Catalog;
 using ITAM.Shared.Enums;
