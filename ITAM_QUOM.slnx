@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="ITAM.Api/ITAM.Api.csproj" Id="c65f0160-3ef7-44ea-9d1f-8d25f6bf0266" />
+  <Project Path="ITAM.Application/ITAM.Application.csproj" Id="fa1c7562-d9e1-4f54-ac35-cd0628669922" />
+  <Project Path="ITAM.Domain/ITAM.Domain.csproj" Id="e46756de-2a4e-4aae-9e47-e991c4fa9057" />
+  <Project Path="ITAM.Infrastructure/ITAM.Infrastructure.csproj" Id="bb2734df-80dc-479e-b126-bbd865428d40" />
+  <Project Path="ITAM.Shared/ITAM.Shared.csproj" Id="bf1043f3-1ce3-4751-9594-2b957839743a" />
+  <Project Path="ITAM.Tests/ITAM.Tests.csproj" Id="b22ff1d1-6aae-45d3-85b9-1a6411a3696d" />
+  <Project Path="ITAM.WebApp/ITAM.WebApp.csproj" Id="9840cbb2-c92b-48b5-bf7b-25661e44fdb6" />
+</Solution>

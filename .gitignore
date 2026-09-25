@@ -1,0 +1,16 @@
+/.vs
+/.claude
+/ITAM.Api/bin
+/ITAM.Api/obj
+/ITAM.Application/bin
+/ITAM.Application/obj
+/ITAM.Domain/obj
+/ITAM.Infrastructure/obj
+/ITAM.Shared/obj
+/ITAM.Tests/bin
+/ITAM.Tests/obj
+/ITAM.WebApp/bin
+/ITAM.WebApp/obj
+/ITAM.Infrastructure/bin
+/ITAM.Domain/bin
+/ITAM.Shared/bin

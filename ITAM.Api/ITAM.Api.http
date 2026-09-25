@@ -1,0 +1,6 @@
+@ITAM.Api_HostAddress = http://localhost:5151
+
+GET {{ITAM.Api_HostAddress}}/api/Status
+Accept: application/json
+
+###
