@@ -26,6 +26,7 @@ public class AssignmentsController : Controller
         AssetCondition? condition,
         int? brandId,
         int? modelId,
+        Guid? employeeId,
         CancellationToken ct)
     {
         if (brandId is null or <= 0)
@@ -39,7 +40,8 @@ public class AssignmentsController : Controller
             Condition = condition,
             BrandId = brandId,
             ModelId = modelId,
-            PrefillAssetCode = !string.IsNullOrWhiteSpace(assetCode) ? assetCode.Trim() : null
+            PrefillAssetCode = !string.IsNullOrWhiteSpace(assetCode) ? assetCode.Trim() : null,
+            EmployeeId = employeeId is Guid e && e != Guid.Empty ? e : null
         };
         await FillAssignAsync(vm, ct);
 
@@ -259,6 +261,105 @@ public class AssignmentsController : Controller
         TempData[result is { IsSuccess: true } ? "Success" : "Error"] =
             result?.Message ?? "No se pudo enviar a garantía.";
         return RedirectToAction("Details", "Assets", new { id = a.Id });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Asignados(string? search, CancellationToken ct)
+    {
+        var vm = new AsignadosViewModel { Search = search };
+
+        try
+        {
+            var assignmentsTask = _api.Create()
+                .WithEndpoint(ApiEndpoints.Assignments)
+                .WithQuery("onlyActive", "true")
+                .SendJsonAsync<ApiResponse<List<AssignmentListDto>>>(ct);
+
+            var custodyTask = _api.Create()
+                .WithEndpoint(ApiEndpoints.AssignmentsCustody)
+                .SendJsonAsync<ApiResponse<List<CustodyFormListDto>>>(ct);
+
+            await Task.WhenAll(assignmentsTask, custodyTask);
+
+            var assignments = assignmentsTask.Result?.Data ?? [];
+            var remissions = custodyTask.Result?.Data ?? [];
+
+            var q = search?.Trim();
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                assignments = assignments.Where(a =>
+                    a.EmployeeName.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || a.EmployeeNumber.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || a.AssetCode.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || (a.SerialNumber?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
+                    || a.Description.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            var remByEmp = remissions
+                .GroupBy(r => r.EmployeeId)
+                .ToDictionary(g => g.Key, g => g
+                    .OrderByDescending(r => r.IssuedAt ?? DateTime.MinValue)
+                    .ToList());
+
+            vm.Cards = assignments
+                .GroupBy(a => a.EmployeeId)
+                .Select(g =>
+                {
+                    var first = g.First();
+                    remByEmp.TryGetValue(g.Key, out var rem);
+                    return new EmployeeAssignmentCardVm
+                    {
+                        EmployeeId = g.Key,
+                        EmployeeNumber = first.EmployeeNumber,
+                        EmployeeName = first.EmployeeName,
+                        Assets = g.OrderBy(a => a.AssetCode).ToList(),
+                        Remissions = rem ?? []
+                    };
+                })
+                .OrderBy(c => c.EmployeeName)
+                .ToList();
+
+            // Si el filtro solo matcheó remisión/folio, incluir esos empleados aunque no haya activos filtrados
+            if (!string.IsNullOrWhiteSpace(q) && vm.Cards.Count == 0)
+            {
+                var remMatch = remissions.Where(r =>
+                    r.Folio.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || r.EmployeeName.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || r.EmployeeNumber.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                var empIds = remMatch.Select(r => r.EmployeeId).Distinct().ToHashSet();
+                var allActive = assignmentsTask.Result?.Data ?? [];
+                vm.Cards = allActive
+                    .Where(a => empIds.Contains(a.EmployeeId))
+                    .GroupBy(a => a.EmployeeId)
+                    .Select(g =>
+                    {
+                        var first = g.First();
+                        remByEmp.TryGetValue(g.Key, out var rem);
+                        return new EmployeeAssignmentCardVm
+                        {
+                            EmployeeId = g.Key,
+                            EmployeeNumber = first.EmployeeNumber,
+                            EmployeeName = first.EmployeeName,
+                            Assets = g.OrderBy(a => a.AssetCode).ToList(),
+                            Remissions = (rem ?? []).Where(r =>
+                                r.Folio.Contains(q!, StringComparison.OrdinalIgnoreCase)
+                                || r.EmployeeName.Contains(q!, StringComparison.OrdinalIgnoreCase)).ToList()
+                        };
+                    })
+                    .OrderBy(c => c.EmployeeName)
+                    .ToList();
+            }
+
+            vm.EmployeeCount = vm.Cards.Count;
+            vm.AssetCount = vm.Cards.Sum(c => c.Assets.Count);
+        }
+        catch
+        {
+            TempData["Error"] = "Sin conexión con la API.";
+        }
+
+        return View(vm);
     }
 
     [HttpGet]

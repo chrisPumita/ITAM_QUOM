@@ -25,6 +25,7 @@ public class AssetListDto
     };
 
     public int ModelId { get; set; }
+    public int BrandId { get; set; }
     public string ModelName { get; set; } = string.Empty;
     public string BrandName { get; set; } = string.Empty;
     public string CategoryName { get; set; } = string.Empty;

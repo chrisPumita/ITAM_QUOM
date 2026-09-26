@@ -178,6 +178,12 @@
                     </td>
                     <td class="text-end text-nowrap">
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@a.Id">Ver</a>
+                        @if (a.Status != AssetStatus.Retired)
+                        {
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@a.Id" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        }
                         @if (a.Status == AssetStatus.Available)
                         {
                             <a class="btn btn-sm btn-primary" asp-controller="Assignments" asp-action="Assign" asp-route-assetCode="@a.AssetCode">Asignar</a>

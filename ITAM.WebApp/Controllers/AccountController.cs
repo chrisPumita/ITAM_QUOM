@@ -100,6 +100,13 @@ public class AccountController : Controller
         return RedirectToAction(nameof(Login));
     }
 
+    [AllowAnonymous]
+    [HttpGet]
+    public IActionResult AccessDenied()
+    {
+        return View();
+    }
+
     [Authorize]
     [HttpGet]
     public IActionResult ChangePassword() => View(new ChangePasswordDto());
@@ -148,7 +155,11 @@ public class AccountController : Controller
 
     private IActionResult RedirectToLocal(string? returnUrl)
     {
-        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+        if (!string.IsNullOrWhiteSpace(returnUrl)
+            && Url.IsLocalUrl(returnUrl)
+            && !returnUrl.Contains("/Home/Error", StringComparison.OrdinalIgnoreCase)
+            && !returnUrl.Contains("/Account/AccessDenied", StringComparison.OrdinalIgnoreCase)
+            && !returnUrl.Contains("/Account/Login", StringComparison.OrdinalIgnoreCase))
             return Redirect(returnUrl);
         return RedirectToAction("Index", "Home");
     }

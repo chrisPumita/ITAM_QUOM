@@ -145,20 +145,11 @@ public class AssetService : IAssetService
         if (transitionError is not null)
             return Fail<bool>(transitionError, "Validation");
 
-        if (!isAdmin)
-        {
-            // Operador: solo Available ↔ Maintenance.
-            var opFromStatus = entity.Status;
-            entity.Status = dto.Status;
-            entity.UpdatedAt = DateTime.UtcNow;
-            var opAudits = BuildUpdateAudits(entity, opFromStatus, entity.LocationId, performedByUserId);
-            await _repo.UpdateAsync(entity, opAudits);
-            return Ok(true, "Estado actualizado.");
-        }
-
         // Código: no regenerar; mantener el existente si el cliente manda vacío.
         if (string.IsNullOrWhiteSpace(dto.AssetCode))
             dto.AssetCode = entity.AssetCode;
+        else if (!isAdmin && !string.Equals(dto.AssetCode.Trim(), entity.AssetCode, StringComparison.OrdinalIgnoreCase))
+            return Fail<bool>("Solo un administrador puede cambiar el código de etiqueta.", "Validation");
 
         if (entity.Kind == AssetKind.Equipment || dto.Kind == AssetKind.Equipment)
         {
@@ -442,7 +433,8 @@ public class AssetService : IAssetService
         if (!Enum.IsDefined(dto.Kind) || !Enum.IsDefined(dto.OwnershipType) || !Enum.IsDefined(dto.Status))
             return Fail<Guid>("Kind, OwnershipType o Status no válidos.", "Validation");
 
-        if (dto.Status == AssetStatus.Assigned)
+        // En update se permite Status=Assigned si ya estaba (mantener custodia); el alta nunca.
+        if (isCreate && dto.Status == AssetStatus.Assigned)
             return Fail<Guid>("Use el flujo de asignación para marcar Asignado.", "Validation");
 
         if (isCreate && dto.Status is not AssetStatus.Available)
@@ -500,6 +492,7 @@ public class AssetService : IAssetService
         Status = x.Status,
         Condition = x.Condition,
         ModelId = x.ModelId,
+        BrandId = x.Model?.BrandId ?? 0,
         ModelName = x.Model?.Name ?? string.Empty,
         BrandName = x.Model?.Brand?.Name ?? string.Empty,
         CategoryName = x.Model?.Category?.Name ?? string.Empty,

@@ -45,3 +45,20 @@ public class ResponsivasViewModel
     public List<EmployeeListDto> Employees { get; set; } = [];
     public List<CustodyFormListDto> Items { get; set; } = [];
 }
+
+public class AsignadosViewModel
+{
+    public string? Search { get; set; }
+    public int EmployeeCount { get; set; }
+    public int AssetCount { get; set; }
+    public List<EmployeeAssignmentCardVm> Cards { get; set; } = [];
+}
+
+public class EmployeeAssignmentCardVm
+{
+    public Guid EmployeeId { get; set; }
+    public string EmployeeNumber { get; set; } = string.Empty;
+    public string EmployeeName { get; set; } = string.Empty;
+    public List<AssignmentListDto> Assets { get; set; } = [];
+    public List<CustodyFormListDto> Remissions { get; set; } = [];
+}

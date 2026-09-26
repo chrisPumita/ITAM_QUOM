@@ -47,6 +47,15 @@ public class AssetCreateViewModel
     public List<SupplierListDto> Suppliers { get; set; } = [];
 }
 
+public class AssetEditViewModel : AssetCreateViewModel
+{
+    public Guid Id { get; set; }
+    public string AssetCode { get; set; } = string.Empty;
+    public AssetStatus Status { get; set; }
+    public AssetCondition Condition { get; set; }
+    public bool CanEditCode { get; set; }
+}
+
 public class AssetDetailViewModel
 {
     public AssetListDto Asset { get; set; } = null!;

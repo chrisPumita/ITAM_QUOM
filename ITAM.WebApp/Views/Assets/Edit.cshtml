@@ -1,0 +1,269 @@
+@using ITAM.Shared.Enums
+@model ITAM.WebApp.Models.Assets.AssetEditViewModel
+@{
+    ViewData["Title"] = $"Editar {Model.AssetCode}";
+}
+
+<nav aria-label="breadcrumb" class="mb-2">
+    <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item"><a asp-action="Index">Inventario</a></li>
+        <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id" class="font-mono">@Model.AssetCode</a></li>
+        <li class="breadcrumb-item active">Editar</li>
+    </ol>
+</nav>
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Editar activo</h1>
+    <p class="text-muted small mb-0">
+        Código <span class="font-mono">@Model.AssetCode</span>
+        · Estado <strong>@Model.Status.ToSpanish()</strong>
+        · Condición @Model.Condition.ToSpanish()
+    </p>
+</div>
+
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="panel" style="max-width:720px" id="editForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="Status" />
+    <input type="hidden" asp-for="Condition" />
+    <input type="hidden" asp-for="CanEditCode" />
+    @if (!Model.CanEditCode)
+    {
+        <input type="hidden" asp-for="AssetCode" />
+    }
+    <div class="panel__body">
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+        <div class="mb-3">
+            <label class="form-label">Código de etiqueta</label>
+            @if (Model.CanEditCode)
+            {
+                <input asp-for="AssetCode" class="form-control font-mono" maxlength="50" />
+            }
+            else
+            {
+                <input class="form-control font-mono" value="@Model.AssetCode" disabled />
+            }
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Tipo</label>
+            <select asp-for="Kind" class="form-select" id="kind">
+                <option value="@AssetKind.Equipment">Equipo</option>
+                <option value="@AssetKind.Accessory">Accesorio</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label mb-0">Marca</label>
+                <button type="button" class="btn btn-link btn-sm p-0" data-bs-toggle="collapse" data-bs-target="#quickBrand">+ Nueva marca</button>
+            </div>
+            <select class="form-select" id="filterBrand" asp-for="FilterBrandId">
+                <option value="">Seleccione marca…</option>
+                @foreach (var b in Model.Brands.Where(x => x.IsActive || x.Id == Model.FilterBrandId))
+                {
+                    <option value="@b.Id">@b.Name</option>
+                }
+            </select>
+            <div class="collapse mt-2" id="quickBrand">
+                <div class="border rounded p-2 bg-light">
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control text-uppercase" id="newBrandName" placeholder="Nombre (MAYÚSCULAS)" maxlength="100" />
+                        <button type="button" class="btn btn-outline-primary" id="btnSaveBrand">Guardar marca</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label mb-0">Modelo</label>
+                <button type="button" class="btn btn-link btn-sm p-0" data-bs-toggle="collapse" data-bs-target="#quickModel">+ Nuevo modelo</button>
+            </div>
+            <select asp-for="ModelId" class="form-select" id="modelSelect" required
+                    data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Where(x => x.IsActive || x.Id == Model.ModelId).Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName, m.CategoryName })))'
+                    data-selected="@Model.ModelId">
+                <option value="">Seleccione…</option>
+            </select>
+            <div class="collapse mt-2" id="quickModel">
+                <div class="border rounded p-2 bg-light">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <select class="form-select form-select-sm" id="newModelBrand">
+                                @foreach (var b in Model.Brands.Where(x => x.IsActive))
+                                {
+                                    <option value="@b.Id">@b.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select form-select-sm" id="newModelCat">
+                                @foreach (var c in Model.Categories.Where(x => x.IsActive))
+                                {
+                                    <option value="@c.Id">@c.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control form-control-sm" id="newModelName" placeholder="Nombre modelo" maxlength="150" />
+                        </div>
+                        <div class="col-12">
+                            <input type="text" class="form-control form-control-sm" id="newModelSpecs" placeholder="Specs (opcional)" />
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="btnSaveModel">Guardar modelo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Número de serie (SN)</label>
+            <input asp-for="SerialNumber" class="form-control font-mono" />
+            <span asp-validation-for="SerialNumber" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Propiedad</label>
+            <select asp-for="OwnershipType" class="form-select" id="ownership">
+                <option value="@OwnershipType.Owned">Propio</option>
+                <option value="@OwnershipType.Rented">Rentado</option>
+            </select>
+        </div>
+
+        <div class="mb-3" id="supplierWrap">
+            <label class="form-label">Proveedor</label>
+            <select asp-for="SupplierId" class="form-select">
+                <option value="">—</option>
+                @foreach (var s in Model.Suppliers)
+                {
+                    <option value="@s.Id">@s.Name</option>
+                }
+            </select>
+            <span asp-validation-for="SupplierId" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Ubicación</label>
+            <select asp-for="LocationId" class="form-select">
+                <option value="">—</option>
+                @foreach (var l in Model.Locations.Where(x => x.IsActive || x.Id == Model.LocationId))
+                {
+                    <option value="@l.Id">@l.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="row g-2 mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Compra</label>
+                <input asp-for="PurchaseDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Fin garantía</label>
+                <input asp-for="WarrantyEndDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Fin renta</label>
+                <input asp-for="RentalEndDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Contrato</label>
+                <input asp-for="ContractNumber" class="form-control font-mono" maxlength="80" />
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">IMEI</label>
+            <input asp-for="Imei" class="form-control font-mono" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Cancelar</a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+    (function () {
+      const modelSelect = document.getElementById('modelSelect');
+      const filterBrand = document.getElementById('filterBrand');
+      let models = [];
+      try { models = JSON.parse(modelSelect.getAttribute('data-models') || '[]'); } catch { models = []; }
+      const selectedModel = modelSelect.getAttribute('data-selected') || '';
+
+      function fillModels() {
+        const brandId = filterBrand.value ? parseInt(filterBrand.value, 10) : null;
+        modelSelect.innerHTML = '<option value="">Seleccione…</option>';
+        if (!brandId) {
+          modelSelect.disabled = true;
+          return;
+        }
+        modelSelect.disabled = false;
+        const prev = selectedModel;
+        models.filter(m => m.BrandId === brandId).forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m.Id;
+          opt.textContent = `${m.BrandName} ${m.Name} — ${m.CategoryName}`;
+          if (String(m.Id) === String(prev)) opt.selected = true;
+          modelSelect.appendChild(opt);
+        });
+      }
+
+      filterBrand.addEventListener('change', () => {
+        modelSelect.setAttribute('data-selected', '');
+        fillModels();
+      });
+      fillModels();
+
+      const token = document.querySelector('#editForm input[name="__RequestVerificationToken"]').value;
+
+      document.getElementById('btnSaveBrand').addEventListener('click', async () => {
+        const name = document.getElementById('newBrandName').value.trim();
+        if (!name) return;
+        const res = await fetch('@Url.Action("QuickCreateBrand")', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        const data = await res.json();
+        if (!data.ok) { alert(data.message || 'Error'); return; }
+        const opt = document.createElement('option');
+        opt.value = data.id; opt.textContent = data.name; opt.selected = true;
+        filterBrand.appendChild(opt);
+        document.getElementById('newModelBrand').appendChild(opt.cloneNode(true));
+        filterBrand.value = data.id;
+        fillModels();
+        document.getElementById('newBrandName').value = '';
+        bootstrap.Collapse.getOrCreateInstance(document.getElementById('quickBrand')).hide();
+      });
+
+      document.getElementById('btnSaveModel').addEventListener('click', async () => {
+        const brandId = parseInt(document.getElementById('newModelBrand').value, 10);
+        const categoryId = parseInt(document.getElementById('newModelCat').value, 10);
+        const name = document.getElementById('newModelName').value.trim();
+        const specs = document.getElementById('newModelSpecs').value.trim();
+        if (!name || !brandId || !categoryId) return;
+        const res = await fetch('@Url.Action("QuickCreateModel")', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, brandId, categoryId, specs: specs || null })
+        });
+        const data = await res.json();
+        if (!data.ok) { alert(data.message || 'Error'); return; }
+        models.push({ Id: data.id, Name: data.name, BrandId: data.brandId, BrandName: data.brandName, CategoryName: data.categoryName });
+        filterBrand.value = data.brandId;
+        modelSelect.setAttribute('data-selected', String(data.id));
+        fillModels();
+        document.getElementById('newModelName').value = '';
+        document.getElementById('newModelSpecs').value = '';
+        bootstrap.Collapse.getOrCreateInstance(document.getElementById('quickModel')).hide();
+      });
+    })();
+    </script>
+}

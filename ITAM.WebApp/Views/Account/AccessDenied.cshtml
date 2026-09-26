@@ -1,0 +1,14 @@
+@{
+    ViewData["Title"] = "Acceso denegado";
+    Layout = "_LoginLayout";
+}
+
+<div class="login-card">
+    <div class="login-card__brand">ITAM QUOM</div>
+    <h1 class="login-card__title">Acceso denegado</h1>
+    <p class="login-card__subtitle">No tienes permiso para esta sección.</p>
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Ir al inicio</a>
+        <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="LogoutLink">Cerrar sesión</a>
+    </div>
+</div>

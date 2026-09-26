@@ -39,7 +39,7 @@ try
         {
             options.LoginPath = "/Account/Login";
             options.LogoutPath = "/Account/Logout";
-            options.AccessDeniedPath = "/Account/Login";
+            options.AccessDeniedPath = "/Account/AccessDenied";
             options.SlidingExpiration = true;
             options.Cookie.Name = "ITAM.WebApp.Auth";
             options.Cookie.HttpOnly = true;
@@ -52,6 +52,27 @@ try
                 if (context.Request.Path.StartsWithSegments("/api"))
                 {
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                }
+
+                // Evitar bucle Login ↔ Challenge.
+                if (context.Request.Path.StartsWithSegments("/Account/Login")
+                    || context.Request.Path.StartsWithSegments("/Home/Error")
+                    || context.Request.Path.StartsWithSegments("/Account/AccessDenied"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                }
+
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            };
+
+            options.Events.OnRedirectToAccessDenied = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
                     return Task.CompletedTask;
                 }
 
