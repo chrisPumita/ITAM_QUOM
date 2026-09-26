@@ -24,6 +24,7 @@ try
     builder.Host.UseSerilog();
 
     builder.Services.AddControllersWithViews();
+    builder.Services.AddApiConnect(builder.Configuration);
 
     var app = builder.Build();
 
@@ -39,6 +40,7 @@ try
     app.UseRouting();
     app.UseAuthorization();
     app.MapStaticAssets();
+    app.MapControllers();
     app.MapControllerRoute(
             name: "default",
             pattern: "{controller=Home}/{action=Index}/{id?}")

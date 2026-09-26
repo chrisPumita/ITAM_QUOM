@@ -35,4 +35,9 @@ public interface IAuthService
     /// <param name="onlyActive">Si true, solo cuentas activas.</param>
     /// <param name="onlyUnlinked">Si true, excluye usuarios ya asociados a un Employee.</param>
     Task<Result<List<IdentityUserListDto>>> ListUsersAsync(bool? onlyActive, bool? onlyUnlinked);
+
+    /// <summary>
+    /// Quita el bloqueo temporal por intentos fallidos (Admin).
+    /// </summary>
+    Task<Result<bool>> UnlockUserAsync(Guid userId);
 }

@@ -13,9 +13,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    <!-- Solo para `dotnet ef` en desarrollo; contentfiles (BuildHost-*) no deben ir al publish. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
@@ -26,5 +27,15 @@
     <ProjectReference Include="..\ITAM.Infrastructure\ITAM.Infrastructure.csproj" />
     <ProjectReference Include="..\ITAM.Shared\ITAM.Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\branding\" />
+  </ItemGroup>
+
+  <!-- Por si algún transitive vuelve a copiar BuildHost al publish (no se usa en runtime). -->
+  <Target Name="RemoveEfBuildHostsFromPublish" AfterTargets="Publish">
+    <RemoveDir Directories="$(PublishDir)BuildHost-net472;$(PublishDir)BuildHost-netcore"
+               Condition="Exists('$(PublishDir)BuildHost-net472') Or Exists('$(PublishDir)BuildHost-netcore')" />
+  </Target>
 
 </Project>

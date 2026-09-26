@@ -10,4 +10,8 @@
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ITAM.Shared\ITAM.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

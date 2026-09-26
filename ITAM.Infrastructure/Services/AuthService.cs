@@ -13,6 +13,7 @@ namespace ITAM.Infrastructure.Services;
 /// <summary>
 /// Implementación de <see cref="IAuthService"/> con ASP.NET Identity.
 /// No genera JWT; solo valida credenciales y resuelve rol/claims.
+/// Lockout: 3 intentos fallidos → bloqueo temporal (config Identity).
 /// </summary>
 public class AuthService : IAuthService
 {
@@ -35,9 +36,26 @@ public class AuthService : IAuthService
         if (!user.IsActive)
             return FailLogin("La cuenta está inactiva.", "Usuario inactivo");
 
+        if (await _userManager.IsLockedOutAsync(user))
+            return FailLogin(
+                "Cuenta bloqueada temporalmente por intentos fallidos. Intente más tarde.",
+                "LockedOut");
+
         var passwordOk = await _userManager.CheckPasswordAsync(user, dto.Password);
         if (!passwordOk)
+        {
+            await _userManager.AccessFailedAsync(user);
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                return FailLogin(
+                    "Cuenta bloqueada temporalmente tras varios intentos fallidos.",
+                    "LockedOut");
+            }
+
             return FailLogin("Credenciales inválidas.", "Email o contraseña incorrectos");
+        }
+
+        await _userManager.ResetAccessFailedCountAsync(user);
 
         var role = await ResolveRoleAsync(user);
 
@@ -91,6 +109,7 @@ public class AuthService : IAuthService
                 Email = user.Email ?? string.Empty,
                 DisplayName = user.DisplayName,
                 IsActive = user.IsActive,
+                IsLockedOut = await _userManager.IsLockedOutAsync(user),
                 Role = role?.ToString()
             });
         }
@@ -100,6 +119,31 @@ public class AuthService : IAuthService
             IsSuccess = true,
             Message = "Usuarios Identity obtenidos.",
             Data = list
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<bool>> UnlockUserAsync(Guid userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return new Result<bool>
+            {
+                IsSuccess = false,
+                Message = "Usuario no encontrado.",
+                Error = "NotFound"
+            };
+        }
+
+        await _userManager.SetLockoutEndDateAsync(user, null);
+        await _userManager.ResetAccessFailedCountAsync(user);
+
+        return new Result<bool>
+        {
+            IsSuccess = true,
+            Message = "Usuario desbloqueado.",
+            Data = true
         };
     }
 

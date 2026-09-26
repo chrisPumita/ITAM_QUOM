@@ -13,14 +13,23 @@ public class AssetService : IAssetService
 
     public AssetService(IAssetRepository repo) => _repo = repo;
 
-    public async Task<Result<List<AssetListDto>>> ListAsync(
-        AssetStatus? status,
-        AssetKind? kind,
-        int? modelId,
-        int? locationId)
+    public async Task<Result<PagedResult<AssetListDto>>> ListAsync(AssetListQuery query)
     {
-        var items = await _repo.ListAsync(status, kind, modelId, locationId);
-        return Ok(items.Select(Map).ToList(), "Activos obtenidos.");
+        query.Normalize();
+
+        var filterResult = TryBuildFilter(query);
+        if (!filterResult.IsSuccess)
+            return Fail<PagedResult<AssetListDto>>(filterResult.Message, filterResult.Error!);
+
+        var (items, total) = await _repo.SearchAsync(filterResult.Data!, query.Page, query.PageSize);
+
+        return Ok(new PagedResult<AssetListDto>
+        {
+            Items = items.Select(Map).ToList(),
+            TotalCount = total,
+            Page = query.Page,
+            PageSize = query.PageSize
+        }, "Activos obtenidos.");
     }
 
     public async Task<Result<AssetListDto>> GetAsync(Guid id)
@@ -31,24 +40,43 @@ public class AssetService : IAssetService
         return Ok(Map(entity), "OK");
     }
 
-    public async Task<Result<Guid>> CreateAsync(AssetUpsertDto dto)
+    public async Task<Result<Guid>> CreateAsync(AssetUpsertDto dto, Guid performedByUserId)
     {
+        if (performedByUserId == Guid.Empty)
+            return Fail<Guid>("Usuario autenticado requerido.", "Validation");
+
         var validation = await ValidateAsync(dto, excludeId: null);
         if (validation is not null)
             return validation;
 
         var entity = MapToEntity(dto, new Asset());
-        await _repo.AddAsync(entity);
+        var now = DateTime.UtcNow;
+        var audit = new AssetMovement
+        {
+            AssetId = entity.Id,
+            MovementType = MovementType.Created,
+            FromStatus = null,
+            ToStatus = entity.Status,
+            FromLocationId = null,
+            ToLocationId = entity.LocationId,
+            PerformedByUserId = performedByUserId,
+            Notes = $"Alta de activo {entity.AssetCode}",
+            OccurredAt = now
+        };
+
+        await _repo.AddAsync(entity, audit);
         return Ok(entity.Id, "Activo creado.");
     }
 
-    public async Task<Result<bool>> UpdateAsync(Guid id, AssetUpsertDto dto)
+    public async Task<Result<bool>> UpdateAsync(Guid id, AssetUpsertDto dto, Guid performedByUserId)
     {
+        if (performedByUserId == Guid.Empty)
+            return Fail<bool>("Usuario autenticado requerido.", "Validation");
+
         var entity = await _repo.GetByIdAsync(id);
         if (entity is null)
             return Fail<bool>("Activo no encontrado.", "NotFound");
 
-        // Asignación/devolución cambia Assigned vía SP; no forzar Assigned desde CRUD.
         if (entity.Status == AssetStatus.Assigned && dto.Status != AssetStatus.Assigned)
             return Fail<bool>("Un activo asignado solo se libera con devolución.", "Validation");
 
@@ -59,10 +87,101 @@ public class AssetService : IAssetService
         if (validation is not null)
             return Fail<bool>(validation.Message, validation.Error);
 
+        var fromStatus = entity.Status;
+        var fromLocationId = entity.LocationId;
+
         MapToEntity(dto, entity);
         entity.UpdatedAt = DateTime.UtcNow;
-        await _repo.UpdateAsync(entity);
+
+        var audits = BuildUpdateAudits(entity, fromStatus, fromLocationId, performedByUserId);
+        await _repo.UpdateAsync(entity, audits);
         return Ok(true, "Activo actualizado.");
+    }
+
+    /// <summary>Parsea facetas de status; el resto ya viene tipado en el query.</summary>
+    internal static Result<AssetFilterCriteria> TryBuildFilter(AssetListQuery query)
+    {
+        List<AssetStatus>? statuses = null;
+        if (query.Statuses is { Length: > 0 })
+        {
+            statuses = [];
+            foreach (var raw in query.Statuses)
+            {
+                if (!EnumDisplayHelper.TryParseAssetStatus(raw, out var parsed))
+                {
+                    return new Result<AssetFilterCriteria>
+                    {
+                        IsSuccess = false,
+                        Message =
+                            $"Status '{raw}' no válido. Use Disponible, Asignado, Mantenimiento, Baja (o el enum).",
+                        Error = "Validation"
+                    };
+                }
+
+                if (!statuses.Contains(parsed))
+                    statuses.Add(parsed);
+            }
+        }
+
+        return new Result<AssetFilterCriteria>
+        {
+            IsSuccess = true,
+            Message = "OK",
+            Data = new AssetFilterCriteria
+            {
+                Search = query.Search,
+                Statuses = statuses,
+                CategoryNames = query.Categories,
+                Kinds = query.Kinds,
+                ModelIds = query.ModelIds,
+                LocationIds = query.LocationIds,
+                CategoryIds = query.CategoryIds
+            }
+        };
+    }
+
+    private static List<AssetMovement> BuildUpdateAudits(
+        Asset entity,
+        AssetStatus fromStatus,
+        int? fromLocationId,
+        Guid performedByUserId)
+    {
+        var now = DateTime.UtcNow;
+        var audits = new List<AssetMovement>();
+
+        if (fromStatus != entity.Status)
+        {
+            audits.Add(new AssetMovement
+            {
+                AssetId = entity.Id,
+                MovementType = MovementType.StatusChanged,
+                FromStatus = fromStatus,
+                ToStatus = entity.Status,
+                FromLocationId = fromLocationId,
+                ToLocationId = entity.LocationId,
+                PerformedByUserId = performedByUserId,
+                Notes = $"Cambio de estado: {fromStatus.ToSpanish()} → {entity.Status.ToSpanish()}",
+                OccurredAt = now
+            });
+        }
+
+        if (fromLocationId != entity.LocationId)
+        {
+            audits.Add(new AssetMovement
+            {
+                AssetId = entity.Id,
+                MovementType = MovementType.LocationChanged,
+                FromStatus = entity.Status,
+                ToStatus = entity.Status,
+                FromLocationId = fromLocationId,
+                ToLocationId = entity.LocationId,
+                PerformedByUserId = performedByUserId,
+                Notes = "Cambio de ubicación",
+                OccurredAt = now
+            });
+        }
+
+        return audits;
     }
 
     private async Task<Result<Guid>?> ValidateAsync(AssetUpsertDto dto, Guid? excludeId)
@@ -74,14 +193,11 @@ public class AssetService : IAssetService
         if (!Enum.IsDefined(dto.Kind) || !Enum.IsDefined(dto.OwnershipType) || !Enum.IsDefined(dto.Status))
             return Fail<Guid>("Kind, OwnershipType o Status no válidos.", "Validation");
 
+        if (dto.Status == AssetStatus.Assigned)
+            return Fail<Guid>("Use el flujo de asignación para marcar Assigned.", "Validation");
+
         if (dto.OwnershipType == OwnershipType.Rented && !dto.SupplierId.HasValue)
             return Fail<Guid>("Un activo rentado requiere proveedor.", "Validation");
-
-        if (dto.OwnershipType == OwnershipType.Owned && dto.RentalEndDate.HasValue)
-            return Fail<Guid>("RentalEndDate solo aplica a activos rentados.", "Validation");
-
-        if (excludeId is null && dto.Status == AssetStatus.Assigned)
-            return Fail<Guid>("Use el flujo de asignación para marcar Assigned.", "Validation");
 
         if (!await _repo.ModelExistsAsync(dto.ModelId))
             return Fail<Guid>("El modelo no existe.", "Validation");
@@ -134,6 +250,7 @@ public class AssetService : IAssetService
         ModelName = x.Model?.Name ?? string.Empty,
         BrandName = x.Model?.Brand?.Name ?? string.Empty,
         CategoryName = x.Model?.Category?.Name ?? string.Empty,
+        Specs = x.Model?.Specs,
         SupplierId = x.SupplierId,
         SupplierName = x.Supplier?.Name,
         LocationId = x.LocationId,

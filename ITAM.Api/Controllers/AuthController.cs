@@ -11,6 +11,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Text;
 using ITAM.Domain.Interfaces.Services;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ITAM.Api.Controllers;
 
@@ -30,6 +31,7 @@ public class AuthController : ControllerBase
     /// <summary>Autentica un usuario y retorna JWT con claims de rol.</summary>
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("login")]
     public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Login([FromBody] LoginDto model)
     {
         if (!ModelState.IsValid)
@@ -43,20 +45,22 @@ public class AuthController : ControllerBase
         var result = await _authService.LoginAsync(model);
         if (!result.IsSuccess)
         {
-            var inactive = result.Error == "Usuario inactivo";
-            return inactive
-                ? StatusCode(StatusCodes.Status403Forbidden, new ApiResponse<LoginResponseDto>
+            if (result.Error is "Usuario inactivo" or "LockedOut")
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse<LoginResponseDto>
                 {
                     Code = HttpStatusCode.Forbidden,
                     Message = result.Message,
                     Error = result.Error
-                })
-                : Unauthorized(new ApiResponse<LoginResponseDto>
-                {
-                    Code = HttpStatusCode.Unauthorized,
-                    Message = result.Message,
-                    Error = result.Error
                 });
+            }
+
+            return Unauthorized(new ApiResponse<LoginResponseDto>
+            {
+                Code = HttpStatusCode.Unauthorized,
+                Message = result.Message,
+                Error = result.Error
+            });
         }
 
         var data = result.Data!;
@@ -110,6 +114,32 @@ public class AuthController : ControllerBase
             Code = HttpStatusCode.OK,
             Message = result.Message,
             Data = result.Data
+        });
+    }
+
+    /// <summary>Desbloquea un usuario bloqueado por intentos fallidos de login. Solo Administrador.</summary>
+    [HttpPost("users/{id:guid}/unlock")]
+    [Authorize(Roles = AppRoles.Administrador)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> UnlockUser(Guid id)
+    {
+        var result = await _authService.UnlockUserAsync(id);
+        if (!result.IsSuccess)
+        {
+            return StatusCode(StatusCodes.Status404NotFound, new ApiResponse<bool>
+            {
+                Code = HttpStatusCode.NotFound,
+                Message = result.Message,
+                Error = result.Error
+            });
+        }
+
+        return Ok(new ApiResponse<bool>
+        {
+            Code = HttpStatusCode.OK,
+            Message = result.Message,
+            Data = true
         });
     }
 
