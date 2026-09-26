@@ -28,7 +28,7 @@
                 <button type="button" class="btn btn-link btn-sm p-0" data-bs-toggle="collapse" data-bs-target="#quickBrand">+ Nueva marca</button>
             </div>
             <select class="form-select" id="filterBrand" asp-for="FilterBrandId">
-                <option value="">Todas</option>
+                <option value="">Seleccione marca…</option>
                 @foreach (var b in Model.Brands.Where(x => x.IsActive))
                 {
                     <option value="@b.Id">@b.Name</option>
@@ -50,11 +50,12 @@
                 <label class="form-label mb-0">Modelo</label>
                 <button type="button" class="btn btn-link btn-sm p-0" data-bs-toggle="collapse" data-bs-target="#quickModel">+ Nuevo modelo</button>
             </div>
-            <select asp-for="ModelId" class="form-select" id="modelSelect" required
-                    data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Where(x => x.IsActive).Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName, m.CategoryName })))'>
-                <option value="">Seleccione…</option>
+            <select asp-for="ModelId" class="form-select" id="modelSelect" required disabled
+                    data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Where(x => x.IsActive).Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName, m.CategoryName })))'
+                    data-selected="@(Model.ModelId > 0 ? Model.ModelId.ToString() : "")">
+                <option value="">Seleccione marca primero…</option>
             </select>
-            <div class="form-text">Obligatorio. Filtra por marca arriba.</div>
+            <div class="form-text">Obligatorio. Elija marca para cargar modelos.</div>
             <div class="collapse mt-2" id="quickModel">
                 <div class="border rounded p-2 bg-light">
                     <div class="row g-2">
@@ -125,11 +126,12 @@
         <div class="row g-2 mb-3">
             <div class="col-md-6">
                 <label class="form-label">Compra</label>
-                <input asp-for="PurchaseDate" type="date" class="form-control" />
+                <input asp-for="PurchaseDate" type="date" class="form-control" id="purchaseDate" />
             </div>
             <div class="col-md-6">
                 <label class="form-label">Fin garantía</label>
-                <input asp-for="WarrantyEndDate" type="date" class="form-control" />
+                <input asp-for="WarrantyEndDate" type="date" class="form-control" id="warrantyEndDate" />
+                <div class="form-text">Por defecto: compra + 1 año.</div>
             </div>
         </div>
         <div class="mb-3">
@@ -149,15 +151,21 @@
     (function () {
       const modelSelect = document.getElementById('modelSelect');
       const filterBrand = document.getElementById('filterBrand');
-      const selectedModel = '@Model.ModelId';
       let models = [];
       try { models = JSON.parse(modelSelect.getAttribute('data-models') || '[]'); } catch { models = []; }
+      const selectedModel = modelSelect.getAttribute('data-selected') || '';
 
       function fillModels() {
         const brandId = filterBrand.value ? parseInt(filterBrand.value, 10) : null;
-        const prev = modelSelect.value || selectedModel;
         modelSelect.innerHTML = '<option value="">Seleccione…</option>';
-        models.filter(m => !brandId || m.BrandId === brandId).forEach(m => {
+        if (!brandId) {
+          modelSelect.disabled = true;
+          modelSelect.innerHTML = '<option value="">Seleccione marca primero…</option>';
+          return;
+        }
+        modelSelect.disabled = false;
+        const prev = modelSelect.value || selectedModel;
+        models.filter(m => m.BrandId === brandId).forEach(m => {
           const opt = document.createElement('option');
           opt.value = m.Id;
           opt.textContent = `${m.BrandName} ${m.Name} — ${m.CategoryName}`;
@@ -168,6 +176,19 @@
 
       filterBrand.addEventListener('change', fillModels);
       fillModels();
+
+      const purchase = document.getElementById('purchaseDate');
+      const warranty = document.getElementById('warrantyEndDate');
+      function syncWarranty() {
+        if (!purchase.value) return;
+        const d = new Date(purchase.value + 'T00:00:00');
+        d.setFullYear(d.getFullYear() + 1);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        warranty.value = `${yyyy}-${mm}-${dd}`;
+      }
+      purchase.addEventListener('change', syncWarranty);
 
       const token = document.querySelector('#altaForm input[name="__RequestVerificationToken"]').value;
 

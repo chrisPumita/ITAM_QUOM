@@ -32,6 +32,10 @@
         <a class="@LinkClass("Assignments", "Return")" asp-controller="Assignments" asp-action="Return">
             <i class="bi bi-arrow-return-left"></i> Devolver
         </a>
+        <a class="@(controller == "Assignments" && (action == "Responsivas" || action == "Responsiva" || action == "CustodyPdf") ? "sidebar-nav__link active" : LinkClass("Assignments", "Responsivas"))"
+           asp-controller="Assignments" asp-action="Responsivas">
+            <i class="bi bi-file-earmark-text"></i> Responsivas
+        </a>
     </div>
 
     @if (isAdmin)

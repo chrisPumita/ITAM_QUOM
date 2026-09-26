@@ -88,3 +88,59 @@
     if (timerId) window.clearInterval(timerId);
   });
 })();
+
+/** Marca → Modelo: bloquea modelo si no hay marca. */
+window.itamBindBrandModel = function (brandId, modelId) {
+  const brand = document.getElementById(brandId);
+  const model = document.getElementById(modelId);
+  if (!brand || !model) return;
+
+  let models = [];
+  try { models = JSON.parse(model.getAttribute("data-models") || "[]"); } catch { models = []; }
+  const selected = model.getAttribute("data-selected") || "";
+
+  function fill() {
+    const bid = brand.value ? parseInt(brand.value, 10) : null;
+    model.innerHTML = "";
+    if (!bid) {
+      model.disabled = true;
+      model.innerHTML = '<option value="">Seleccione marca…</option>';
+      return;
+    }
+    model.disabled = false;
+    const all = document.createElement("option");
+    all.value = "";
+    all.textContent = "Todos los modelos";
+    model.appendChild(all);
+    models.filter(m => m.BrandId === bid).forEach(m => {
+      const o = document.createElement("option");
+      o.value = m.Id;
+      o.textContent = (m.BrandName ? m.BrandName + " " : "") + m.Name;
+      if (String(m.Id) === selected) o.selected = true;
+      model.appendChild(o);
+    });
+  }
+
+  brand.addEventListener("change", () => {
+    model.setAttribute("data-selected", "");
+    fill();
+  });
+  fill();
+};
+
+document.addEventListener("submit", async function (e) {
+  const form = e.target;
+  if (!(form instanceof HTMLFormElement) || !form.classList.contains("js-confirm-baja")) return;
+  e.preventDefault();
+  const code = form.getAttribute("data-code") || "este activo";
+  const result = await Swal.fire({
+    icon: "warning",
+    title: "¿Dar de baja?",
+    html: `El activo <strong class="font-monospace">${code}</strong> pasará a estado Baja.`,
+    showCancelButton: true,
+    confirmButtonText: "Sí, dar de baja",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#C1432E"
+  });
+  if (result.isConfirmed) form.submit();
+});

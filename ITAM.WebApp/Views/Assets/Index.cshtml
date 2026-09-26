@@ -67,7 +67,7 @@
             <div class="col-md-2">
                 <label class="form-label small mb-1">Marca</label>
                 <select class="form-select form-select-sm" name="brandId" id="invBrand">
-                    <option value="">Todas</option>
+                    <option value="">Todas las marcas</option>
                     @foreach (var b in Model.Brands)
                     {
                         <option value="@b.Id" selected="@(Model.BrandId == b.Id ? "selected" : null)">@b.Name</option>
@@ -76,9 +76,10 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small mb-1">Modelo</label>
-                <select class="form-select form-select-sm" name="modelId" id="invModel"
-                        data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName })))'>
-                    <option value="">Todos</option>
+                <select class="form-select form-select-sm" name="modelId" id="invModel" disabled
+                        data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName })))'
+                        data-selected="@(Model.ModelId?.ToString() ?? "")">
+                    <option value="">Seleccione marca…</option>
                 </select>
             </div>
             <div class="col-md-1">
@@ -166,7 +167,7 @@
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@a.Id">Ver</a>
                         @if (a.Status == AssetStatus.Available)
                         {
-                            <a class="btn btn-sm btn-primary" asp-controller="Assignments" asp-action="Assign">Asignar</a>
+                            <a class="btn btn-sm btn-primary" asp-controller="Assignments" asp-action="Assign" asp-route-assetCode="@a.AssetCode">Asignar</a>
                             <form asp-action="SetMaintenance" method="post" class="d-inline">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@a.Id" />
@@ -175,7 +176,7 @@
                             </form>
                             @if (isAdmin)
                             {
-                                <form asp-action="SetStatus" method="post" class="d-inline" onsubmit="return confirm('¿Dar de baja @a.AssetCode?');">
+                                <form asp-action="SetStatus" method="post" class="d-inline js-confirm-baja" data-code="@a.AssetCode">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@a.Id" />
                                     <input type="hidden" name="status" value="@AssetStatus.Retired" />
@@ -210,24 +211,7 @@
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
 <script>
 (function () {
-  const brand = document.getElementById('invBrand');
-  const model = document.getElementById('invModel');
-  const selected = '@(Model.ModelId?.ToString() ?? "")';
-  let models = [];
-  try { models = JSON.parse(model.getAttribute('data-models') || '[]'); } catch { models = []; }
-  function fill() {
-    const bid = brand.value ? parseInt(brand.value, 10) : null;
-    model.innerHTML = '<option value="">Todos</option>';
-    models.filter(m => !bid || m.BrandId === bid).forEach(m => {
-      const o = document.createElement('option');
-      o.value = m.Id;
-      o.textContent = m.BrandName + ' ' + m.Name;
-      if (String(m.Id) === selected) o.selected = true;
-      model.appendChild(o);
-    });
-  }
-  brand.addEventListener('change', fill);
-  fill();
+  window.itamBindBrandModel && itamBindBrandModel('invBrand', 'invModel');
 
   $('#inventoryTable').DataTable({
     pageLength: 25,

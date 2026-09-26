@@ -619,3 +619,14 @@ a:hover {
   font-size: 0.8rem;
 }
 
+.panel--sticky {
+  position: sticky;
+  top: 1rem;
+}
+
+@media (max-width: 991.98px) {
+  .panel--sticky {
+    position: static;
+  }
+}
+

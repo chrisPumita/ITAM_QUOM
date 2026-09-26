@@ -16,6 +16,7 @@ public class AssignViewModel
     public List<BrandListDto> Brands { get; set; } = [];
     public List<ModelListDto> Models { get; set; } = [];
     public string? Search { get; set; }
+    public string? PrefillAssetCode { get; set; }
     public AssetKind? Kind { get; set; }
     public AssetCondition? Condition { get; set; }
     public int? BrandId { get; set; }
@@ -32,4 +33,14 @@ public class ReturnViewModel
     public CustodyFormDetailDto? Custody { get; set; }
     public AssetListDto? LookupAsset { get; set; }
     public List<AssignmentListDto> ActiveLines { get; set; } = [];
+}
+
+public class ResponsivasViewModel
+{
+    public string? Folio { get; set; }
+    public Guid? EmployeeId { get; set; }
+    public DateTime? From { get; set; }
+    public DateTime? To { get; set; }
+    public List<EmployeeListDto> Employees { get; set; } = [];
+    public List<CustodyFormListDto> Items { get; set; } = [];
 }

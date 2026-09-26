@@ -2,6 +2,7 @@
 @model ITAM.WebApp.Models.Assignments.AssignViewModel
 @{
     ViewData["Title"] = "Asignar";
+    var selected = new HashSet<Guid>(Model.SelectedAssetIds ?? []);
 }
 
 <div class="mb-3">
@@ -11,7 +12,7 @@
 
 <form method="get" class="row g-2 mb-3 align-items-end">
     <div class="col-md-3">
-        <input class="form-control form-control-sm" name="search" value="@Model.Search" placeholder="Filtrar activos…" />
+        <input class="form-control form-control-sm" name="search" value="@Model.Search" placeholder="Código / filtrar…" />
     </div>
     <div class="col-md-2">
         <select class="form-select form-select-sm" name="kind">
@@ -29,7 +30,7 @@
     </div>
     <div class="col-md-2">
         <select class="form-select form-select-sm" name="brandId" id="assignBrand">
-            <option value="">Marca</option>
+            <option value="">Todas las marcas</option>
             @foreach (var b in Model.Brands)
             {
                 <option value="@b.Id" selected="@(Model.BrandId == b.Id ? "selected" : null)">@b.Name</option>
@@ -37,9 +38,10 @@
         </select>
     </div>
     <div class="col-md-2">
-        <select class="form-select form-select-sm" name="modelId" id="assignModel"
-                data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName })))'>
-            <option value="">Modelo</option>
+        <select class="form-select form-select-sm" name="modelId" id="assignModel" disabled
+                data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName })))'
+                data-selected="@(Model.ModelId?.ToString() ?? "")">
+            <option value="">Seleccione marca…</option>
         </select>
     </div>
     <div class="col-md-1">
@@ -47,7 +49,7 @@
     </div>
 </form>
 
-<form asp-action="Assign" method="post" class="panel">
+<form asp-action="Assign" method="post" class="panel" id="assignForm">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Search" />
     <input type="hidden" asp-for="Kind" />
@@ -58,7 +60,7 @@
         <div asp-validation-summary="All" class="text-danger small mb-3"></div>
         <div class="mb-3" style="max-width:420px">
             <label class="form-label">Colaborador</label>
-            <select asp-for="EmployeeId" class="form-select" required>
+            <select asp-for="EmployeeId" class="form-select" id="employeeSelect" required>
                 <option value="">Seleccione…</option>
                 @foreach (var e in Model.Employees)
                 {
@@ -94,7 +96,8 @@
                     {
                         <tr>
                             <td>
-                                <input type="checkbox" name="SelectedAssetIds" value="@a.Id" class="form-check-input" />
+                                <input type="checkbox" name="SelectedAssetIds" value="@a.Id" class="form-check-input asset-check"
+                                       @(selected.Contains(a.Id) ? "checked" : null) />
                             </td>
                             <td class="font-mono">@a.AssetCode</td>
                             <td class="font-mono small">@(a.SerialNumber ?? "—")</td>
@@ -107,31 +110,39 @@
                 </tbody>
             </table>
         </div>
-        <button type="submit" class="btn btn-primary">Asignar y emitir responsiva</button>
+        <button type="submit" class="btn btn-primary" id="btnAssign">Asignar y emitir responsiva</button>
     </div>
 </form>
 
 @section Scripts {
 <script>
 (function () {
-  const brand = document.getElementById('assignBrand');
-  const model = document.getElementById('assignModel');
-  const selected = '@(Model.ModelId?.ToString() ?? "")';
-  let models = [];
-  try { models = JSON.parse(model.getAttribute('data-models') || '[]'); } catch { models = []; }
-  function fill() {
-    const bid = brand.value ? parseInt(brand.value, 10) : null;
-    model.innerHTML = '<option value="">Modelo</option>';
-    models.filter(m => !bid || m.BrandId === bid).forEach(m => {
-      const o = document.createElement('option');
-      o.value = m.Id;
-      o.textContent = m.BrandName + ' ' + m.Name;
-      if (String(m.Id) === selected) o.selected = true;
-      model.appendChild(o);
+  window.itamBindBrandModel && itamBindBrandModel('assignBrand', 'assignModel');
+
+  const form = document.getElementById('assignForm');
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const checks = [...form.querySelectorAll('.asset-check:checked')];
+    if (checks.length === 0) {
+      await Swal.fire({ icon: 'warning', title: 'Seleccione al menos un activo', confirmButtonColor: '#9C5F26' });
+      return;
+    }
+    const emp = document.getElementById('employeeSelect');
+    const empName = emp.options[emp.selectedIndex]?.text || 'colaborador';
+    const codes = checks.map(c => c.closest('tr').querySelector('.font-mono')?.textContent?.trim()).filter(Boolean);
+    const listHtml = codes.slice(0, 8).map(c => `<li class="font-monospace">${c}</li>`).join('')
+      + (codes.length > 8 ? `<li>… y ${codes.length - 8} más</li>` : '');
+    const ok = await Swal.fire({
+      icon: 'question',
+      title: '¿Confirmar asignación?',
+      html: `<p>Se asignarán <strong>${checks.length}</strong> activo(s) a <strong>${empName}</strong> y se emitirá la responsiva.</p><ul class="text-start small">${listHtml}</ul>`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, asignar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#9C5F26'
     });
-  }
-  brand.addEventListener('change', fill);
-  fill();
+    if (ok.isConfirmed) form.submit();
+  });
 })();
 </script>
 }

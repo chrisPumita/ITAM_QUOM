@@ -21,21 +21,36 @@ public class AssignmentsController : Controller
     [HttpGet]
     public async Task<IActionResult> Assign(
         string? search,
+        string? assetCode,
         AssetKind? kind,
         AssetCondition? condition,
         int? brandId,
         int? modelId,
         CancellationToken ct)
     {
+        if (brandId is null or <= 0)
+            modelId = null;
+
+        var code = !string.IsNullOrWhiteSpace(assetCode) ? assetCode.Trim() : search;
         var vm = new AssignViewModel
         {
-            Search = search,
+            Search = code,
             Kind = kind,
             Condition = condition,
             BrandId = brandId,
-            ModelId = modelId
+            ModelId = modelId,
+            PrefillAssetCode = !string.IsNullOrWhiteSpace(assetCode) ? assetCode.Trim() : null
         };
         await FillAssignAsync(vm, ct);
+
+        if (!string.IsNullOrWhiteSpace(vm.PrefillAssetCode))
+        {
+            var match = vm.AvailableAssets.FirstOrDefault(a =>
+                string.Equals(a.AssetCode, vm.PrefillAssetCode, StringComparison.OrdinalIgnoreCase));
+            if (match is not null)
+                vm.SelectedAssetIds = [match.Id];
+        }
+
         return View(vm);
     }
 
@@ -85,7 +100,7 @@ public class AssignmentsController : Controller
             if (result is { IsSuccess: true, Data: not null })
             {
                 TempData["Success"] = $"Asignación OK. Folio {result.Data.Folio}.";
-                return RedirectToAction(nameof(Assign));
+                return RedirectToAction(nameof(Responsiva), new { id = result.Data.CustodyFormId });
             }
 
             ModelState.AddModelError(string.Empty, result?.Message ?? "No se pudo asignar.");
@@ -217,6 +232,82 @@ public class AssignmentsController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Responsivas(
+        string? folio,
+        Guid? employeeId,
+        DateTime? from,
+        DateTime? to,
+        CancellationToken ct)
+    {
+        var vm = new ResponsivasViewModel
+        {
+            Folio = folio,
+            EmployeeId = employeeId,
+            From = from,
+            To = to
+        };
+
+        try
+        {
+            var emp = await _api.Create()
+                .WithEndpoint(ApiEndpoints.Employees)
+                .WithQuery("onlyActive", "true")
+                .SendJsonAsync<ApiResponse<List<EmployeeListDto>>>(ct);
+            vm.Employees = emp?.Data ?? [];
+
+            var b = _api.Create().WithEndpoint(ApiEndpoints.AssignmentsCustody);
+            if (employeeId is Guid g && g != Guid.Empty)
+                b.WithQuery("employeeId", g.ToString());
+            if (from.HasValue)
+                b.WithQuery("from", from.Value.ToUniversalTime().ToString("o"));
+            if (to.HasValue)
+                b.WithQuery("to", to.Value.Date.AddDays(1).ToUniversalTime().ToString("o"));
+
+            var list = await b.SendJsonAsync<ApiResponse<List<CustodyFormListDto>>>(ct);
+            var items = list?.Data ?? [];
+            if (!string.IsNullOrWhiteSpace(folio))
+            {
+                var term = folio.Trim();
+                items = items.Where(x =>
+                    x.Folio.Contains(term, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            vm.Items = items;
+        }
+        catch
+        {
+            TempData["Error"] = "Sin conexión con la API.";
+        }
+
+        return View(vm);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Responsiva(Guid id, CancellationToken ct)
+    {
+        try
+        {
+            var detail = await _api.Create()
+                .WithEndpoint(ApiEndpoints.AssignmentsCustodyById)
+                .WithRoute("id", id)
+                .SendJsonAsync<ApiResponse<CustodyFormDetailDto>>(ct);
+
+            if (detail is not { IsSuccess: true, Data: not null })
+            {
+                TempData["Error"] = detail?.Message ?? "Responsiva no encontrada.";
+                return RedirectToAction(nameof(Responsivas));
+            }
+
+            return View(detail.Data);
+        }
+        catch
+        {
+            TempData["Error"] = "Sin conexión con la API.";
+            return RedirectToAction(nameof(Responsivas));
+        }
+    }
+
+    [HttpGet]
     public async Task<IActionResult> CustodyPdf(Guid id, CancellationToken ct)
     {
         var file = await _api.Create()
@@ -226,7 +317,7 @@ public class AssignmentsController : Controller
         if (file is null)
         {
             TempData["Error"] = "No se pudo descargar el PDF.";
-            return RedirectToAction(nameof(Assign));
+            return RedirectToAction(nameof(Responsiva), new { id });
         }
 
         return File(file.Content, file.ContentType, file.FileName);

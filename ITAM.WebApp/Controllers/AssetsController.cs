@@ -51,6 +51,8 @@ public class AssetsController : Controller
             builder.WithQuery("kind", ((int)kind.Value).ToString());
         if (brandId is > 0)
             builder.WithQuery("brandId", brandId.Value.ToString());
+        else
+            modelId = null; // modelo solo aplica con marca seleccionada
         if (modelId is > 0)
             builder.WithQuery("modelId", modelId.Value.ToString());
 
@@ -106,9 +108,14 @@ public class AssetsController : Controller
             .WithEndpoint(ApiEndpoints.AssetsExport)
             .WithQuery("search", search)
             .WithQuery("condition", condition)
-            .WithQuery("kind", kind.HasValue ? ((int)kind.Value).ToString() : null)
-            .WithQuery("brandId", brandId is > 0 ? brandId.Value.ToString() : null)
-            .WithQuery("modelId", modelId is > 0 ? modelId.Value.ToString() : null);
+            .WithQuery("kind", kind.HasValue ? ((int)kind.Value).ToString() : null);
+
+        if (brandId is > 0)
+            b.WithQuery("brandId", brandId.Value.ToString());
+        else
+            modelId = null;
+        if (modelId is > 0)
+            b.WithQuery("modelId", modelId.Value.ToString());
 
         if (!string.IsNullOrWhiteSpace(status))
             b.WithQuery("status", status);
@@ -156,7 +163,12 @@ public class AssetsController : Controller
     [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
     public async Task<IActionResult> Create(CancellationToken ct)
     {
-        var vm = new AssetCreateViewModel();
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var vm = new AssetCreateViewModel
+        {
+            PurchaseDate = today,
+            WarrantyEndDate = today.AddYears(1)
+        };
         await FillCreateOptionsAsync(vm, ct);
         return View(vm);
     }
