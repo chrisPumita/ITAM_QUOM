@@ -83,6 +83,7 @@ public static class DependencyInjection
         services.AddScoped<IAssetAssignmentRepository, AssetAssignmentRepository>();
         services.AddScoped<IAssetAssignmentService, AssetAssignmentService>();
         services.AddScoped<ICustodyPdfService, CustodyPdfService>();
+        services.AddScoped<IAssignmentExportService, AssignmentExportService>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IBrandRepository, BrandRepository>();
         services.AddScoped<IModelRepository, ModelRepository>();

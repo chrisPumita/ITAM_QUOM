@@ -19,11 +19,16 @@ public class AssignmentsController : ControllerBase
 {
     private readonly IAssetAssignmentService _service;
     private readonly ICustodyPdfService _custodyPdf;
+    private readonly IAssignmentExportService _export;
 
-    public AssignmentsController(IAssetAssignmentService service, ICustodyPdfService custodyPdf)
+    public AssignmentsController(
+        IAssetAssignmentService service,
+        ICustodyPdfService custodyPdf,
+        IAssignmentExportService export)
     {
         _service = service;
         _custodyPdf = custodyPdf;
+        _export = export;
     }
 
     /// <summary>Listado de asignaciones. Por defecto solo activas.</summary>
@@ -37,6 +42,20 @@ public class AssignmentsController : ControllerBase
             await _service.ListAssignmentsAsync(employeeId, assetId, onlyActive),
             HttpStatusCode.OK);
 
+    /// <summary>Export Excel de asignaciones.</summary>
+    [HttpGet("export/assignments.xlsx")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportAssignments(
+        [FromQuery] Guid? employeeId = null,
+        [FromQuery] Guid? assetId = null,
+        [FromQuery] bool onlyActive = true,
+        CancellationToken ct = default)
+    {
+        var result = await _export.ExportAssignmentsAsync(employeeId, assetId, onlyActive, ct);
+        return File(result.Data!.Content, result.Data.ContentType, result.Data.FileName);
+    }
+
     /// <summary>Historial de movimientos (auditoría).</summary>
     [HttpGet("movements")]
     [ProducesResponseType(typeof(ApiResponse<List<AssetMovementListDto>>), StatusCodes.Status200OK)]
@@ -46,6 +65,19 @@ public class AssignmentsController : ControllerBase
         => ApiResponseFactory.FromResult(
             await _service.ListMovementsAsync(assetId, employeeId),
             HttpStatusCode.OK);
+
+    /// <summary>Export Excel de movimientos.</summary>
+    [HttpGet("export/movements.xlsx")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportMovements(
+        [FromQuery] Guid? assetId = null,
+        [FromQuery] Guid? employeeId = null,
+        CancellationToken ct = default)
+    {
+        var result = await _export.ExportMovementsAsync(assetId, employeeId, ct);
+        return File(result.Data!.Content, result.Data.ContentType, result.Data.FileName);
+    }
 
     /// <summary>Listado de responsivas (CustodyForm).</summary>
     [HttpGet("custody")]
