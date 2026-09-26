@@ -4,7 +4,6 @@ using Dapper;
 using ITAM.Domain.Interfaces.DataAccess;
 using ITAM.Domain.Interfaces.Repositories.Assignments;
 using ITAM.Shared.Dtos.Assignments;
-using ITAM.Shared.Enums;
 using Microsoft.Data.SqlClient;
 
 namespace ITAM.Infrastructure.Repositories.Assignments;
@@ -160,7 +159,7 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
                 OnlyActive = onlyActive ? 1 : 0
             }, cancellationToken: ct));
 
-        return rows.Select(MapAssignment).ToList();
+        return rows.Select(AssetAssignmentMappings.ToDto).ToList();
     }
 
     public async Task<AssignmentListDto?> GetAssignmentAsync(Guid id, CancellationToken ct = default)
@@ -194,7 +193,7 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
         await using var connection = await _connections.CreateOpenConnectionAsync(ct);
         var row = await connection.QuerySingleOrDefaultAsync<AssignmentRow>(
             new CommandDefinition(sql, new { Id = id }, cancellationToken: ct));
-        return row is null ? null : MapAssignment(row);
+        return row is null ? null : AssetAssignmentMappings.ToDto(row);
     }
 
     public async Task<List<CustodyFormListDto>> ListCustodyFormsAsync(
@@ -228,7 +227,7 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
         await using var connection = await _connections.CreateOpenConnectionAsync(ct);
         var rows = await connection.QueryAsync<CustodyHeaderRow>(
             new CommandDefinition(sql, new { EmployeeId = employeeId }, cancellationToken: ct));
-        return rows.Select(MapCustodyList).ToList();
+        return rows.Select(AssetAssignmentMappings.ToListDto).ToList();
     }
 
     public async Task<CustodyFormDetailDto?> GetCustodyFormAsync(Guid id, CancellationToken ct = default)
@@ -281,8 +280,8 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
         var lines = await connection.QueryAsync<CustodyLineRow>(
             new CommandDefinition(linesSql, new { Id = id }, cancellationToken: ct));
 
-        var detail = MapCustodyDetail(header);
-        detail.Lines = lines.Select(MapCustodyLine).ToList();
+        var detail = AssetAssignmentMappings.ToDetailDto(header);
+        detail.Lines = lines.Select(AssetAssignmentMappings.ToDto).ToList();
         return detail;
     }
 
@@ -327,101 +326,8 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
         await using var connection = await _connections.CreateOpenConnectionAsync(ct);
         var rows = await connection.QueryAsync<MovementRow>(
             new CommandDefinition(sql, new { AssetId = assetId, EmployeeId = employeeId }, cancellationToken: ct));
-        return rows.Select(MapMovement).ToList();
+        return rows.Select(AssetAssignmentMappings.ToDto).ToList();
     }
-
-    private static AssignmentListDto MapAssignment(AssignmentRow r) => new()
-    {
-        Id = r.Id,
-        AssetId = r.AssetId,
-        AssetCode = r.AssetCode,
-        SerialNumber = r.SerialNumber,
-        AssetKind = ParseEnum<AssetKind>(r.AssetKind),
-        EmployeeId = r.EmployeeId,
-        EmployeeNumber = r.EmployeeNumber,
-        EmployeeName = r.EmployeeName,
-        AssignedAt = r.AssignedAt,
-        ReturnedAt = r.ReturnedAt,
-        ReturnCondition = ParseEnumOrNull<AssetCondition>(r.ReturnCondition),
-        Notes = r.Notes,
-        AssignedByUserId = r.AssignedByUserId,
-        AssignedByUserName = r.AssignedByUserName,
-        ReturnedByUserId = r.ReturnedByUserId,
-        ReturnedByUserName = r.ReturnedByUserName
-    };
-
-    private static CustodyFormListDto MapCustodyList(CustodyHeaderRow r) => new()
-    {
-        Id = r.Id,
-        Folio = r.Folio,
-        EmployeeId = r.EmployeeId,
-        EmployeeNumber = r.EmployeeNumber,
-        EmployeeName = r.EmployeeName,
-        Status = ParseEnum<CustodyFormStatus>(r.Status),
-        IssuedAt = r.IssuedAt,
-        SignedAt = r.SignedAt,
-        Notes = r.Notes,
-        IssuedByUserId = r.IssuedByUserId,
-        IssuedByUserName = r.IssuedByUserName,
-        LineCount = r.LineCount
-    };
-
-    private static CustodyFormDetailDto MapCustodyDetail(CustodyHeaderRow r) => new()
-    {
-        Id = r.Id,
-        Folio = r.Folio,
-        EmployeeId = r.EmployeeId,
-        EmployeeNumber = r.EmployeeNumber,
-        EmployeeName = r.EmployeeName,
-        Status = ParseEnum<CustodyFormStatus>(r.Status),
-        IssuedAt = r.IssuedAt,
-        SignedAt = r.SignedAt,
-        Notes = r.Notes,
-        IssuedByUserId = r.IssuedByUserId,
-        IssuedByUserName = r.IssuedByUserName,
-        LineCount = r.LineCount
-    };
-
-    private static CustodyFormLineDto MapCustodyLine(CustodyLineRow r) => new()
-    {
-        Id = r.Id,
-        AssetId = r.AssetId,
-        AssetCode = r.AssetCode,
-        SerialNumber = r.SerialNumber,
-        AssetKind = ParseEnum<AssetKind>(r.AssetKind),
-        Quantity = r.Quantity,
-        ConditionOnDelivery = ParseEnum<AssetCondition>(r.ConditionOnDelivery),
-        DeliveryNotes = r.DeliveryNotes,
-        ReturnNotes = r.ReturnNotes
-    };
-
-    private static AssetMovementListDto MapMovement(MovementRow r) => new()
-    {
-        Id = r.Id,
-        AssetId = r.AssetId,
-        AssetCode = r.AssetCode,
-        MovementType = ParseEnum<MovementType>(r.MovementType),
-        FromStatus = ParseEnumOrNull<AssetStatus>(r.FromStatus),
-        ToStatus = ParseEnumOrNull<AssetStatus>(r.ToStatus),
-        FromLocationId = r.FromLocationId,
-        FromLocationName = r.FromLocationName,
-        ToLocationId = r.ToLocationId,
-        ToLocationName = r.ToLocationName,
-        EmployeeId = r.EmployeeId,
-        EmployeeName = r.EmployeeName,
-        PerformedByUserId = r.PerformedByUserId,
-        PerformedByUserName = r.PerformedByUserName,
-        CustodyFormId = r.CustodyFormId,
-        CustodyFolio = r.CustodyFolio,
-        Notes = r.Notes,
-        OccurredAt = r.OccurredAt
-    };
-
-    private static T ParseEnum<T>(string value) where T : struct, Enum =>
-        Enum.Parse<T>(value, ignoreCase: true);
-
-    private static T? ParseEnumOrNull<T>(string? value) where T : struct, Enum =>
-        string.IsNullOrWhiteSpace(value) ? null : Enum.Parse<T>(value, ignoreCase: true);
 
     private static string MapAssignError(int number) => number switch
     {
@@ -438,77 +344,6 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
         50012 => "Validation",
         _ => "Validation"
     };
-
-    private sealed class AssignmentRow
-    {
-        public Guid Id { get; set; }
-        public Guid AssetId { get; set; }
-        public string AssetCode { get; set; } = string.Empty;
-        public string? SerialNumber { get; set; }
-        public string AssetKind { get; set; } = string.Empty;
-        public Guid EmployeeId { get; set; }
-        public string EmployeeNumber { get; set; } = string.Empty;
-        public string EmployeeName { get; set; } = string.Empty;
-        public DateTime AssignedAt { get; set; }
-        public DateTime? ReturnedAt { get; set; }
-        public string? ReturnCondition { get; set; }
-        public string? Notes { get; set; }
-        public Guid AssignedByUserId { get; set; }
-        public string? AssignedByUserName { get; set; }
-        public Guid? ReturnedByUserId { get; set; }
-        public string? ReturnedByUserName { get; set; }
-    }
-
-    private sealed class CustodyHeaderRow
-    {
-        public Guid Id { get; set; }
-        public string Folio { get; set; } = string.Empty;
-        public Guid EmployeeId { get; set; }
-        public string EmployeeNumber { get; set; } = string.Empty;
-        public string EmployeeName { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public DateTime? IssuedAt { get; set; }
-        public DateTime? SignedAt { get; set; }
-        public string? Notes { get; set; }
-        public Guid IssuedByUserId { get; set; }
-        public string? IssuedByUserName { get; set; }
-        public int LineCount { get; set; }
-    }
-
-    private sealed class CustodyLineRow
-    {
-        public Guid Id { get; set; }
-        public Guid AssetId { get; set; }
-        public string AssetCode { get; set; } = string.Empty;
-        public string? SerialNumber { get; set; }
-        public string AssetKind { get; set; } = string.Empty;
-        public int Quantity { get; set; }
-        public string ConditionOnDelivery { get; set; } = string.Empty;
-        public string? DeliveryNotes { get; set; }
-        public string? ReturnNotes { get; set; }
-    }
-
-    private sealed class MovementRow
-    {
-        public Guid Id { get; set; }
-        public Guid AssetId { get; set; }
-        public string AssetCode { get; set; } = string.Empty;
-        public string MovementType { get; set; } = string.Empty;
-        public string? FromStatus { get; set; }
-        public string? ToStatus { get; set; }
-        public int? FromLocationId { get; set; }
-        public string? FromLocationName { get; set; }
-        public int? ToLocationId { get; set; }
-        public string? ToLocationName { get; set; }
-        public Guid? EmployeeId { get; set; }
-        public string? EmployeeName { get; set; }
-        public Guid PerformedByUserId { get; set; }
-        public string? PerformedByUserName { get; set; }
-        public Guid? CustodyFormId { get; set; }
-        public string? CustodyFolio { get; set; }
-        public string? Notes { get; set; }
-        public DateTime OccurredAt { get; set; }
-    }
 }
 
 /// <summary>Error de negocio levantado por el SP (números 500xx).</summary>
