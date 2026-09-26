@@ -36,10 +36,10 @@
 
 | Método | Ruta | Auth |
 |---|---|---|
-| GET | `/api/Assets` | Admin/Operador (`status`, `kind`, `modelId`, `locationId`, `categoryIds` repetible) |
-| GET | `/api/Assets/export.xlsx` | ClosedXML inventario (mismos filtros) |
+| GET | `/api/Assets` | Admin/Operador — paginado + facetas (OR dentro / AND entre): `search`, `statuses`/`status`, `categories`/`category`, `kinds`/`kind`, `modelIds`/`modelId`, `locationIds`/`locationId`, `categoryIds`; `page`, `pageSize≤100` |
+| GET | `/api/Assets/export.xlsx` | ClosedXML inventario (mismas facetas, sin paginar) |
 | GET | `/api/Assets/{id}` | Admin/Operador |
-| POST/PUT | `/api/Assets`, `/api/Assets/{id}` | Administrador (`Assigned` no se setea por CRUD) |
+| POST/PUT | `/api/Assets`, `/api/Assets/{id}` | Administrador — escribe movimientos `Created` / `StatusChanged` / `LocationChanged` (`Assigned` solo por flujo de asignación) |
 
 ### Assignments
 

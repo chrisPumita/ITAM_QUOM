@@ -4,6 +4,7 @@ using ITAM.Domain.Interfaces.Repositories.Assets;
 using ITAM.Domain.Interfaces.Services;
 using ITAM.Domain.Interfaces.Services.Assets;
 using ITAM.Shared.Dtos.Apis;
+using ITAM.Shared.Dtos.Assets;
 using ITAM.Shared.Enums;
 
 namespace ITAM.Infrastructure.Services.Assets;
@@ -15,15 +16,23 @@ public sealed class AssetExportService : IAssetExportService
 
     public AssetExportService(IAssetRepository repo) => _repo = repo;
 
-    public async Task<Result<ExportFile>> ExportAsync(
-        AssetStatus? status,
-        AssetKind? kind,
-        int? modelId,
-        int? locationId,
-        IReadOnlyList<int>? categoryIds,
-        CancellationToken ct = default)
+    public async Task<Result<ExportFile>> ExportAsync(AssetListQuery query, CancellationToken ct = default)
     {
-        var items = await _repo.ListAsync(status, kind, modelId, locationId, categoryIds, ct);
+        query.Normalize();
+
+        var filterResult = AssetService.TryBuildFilter(query);
+        if (!filterResult.IsSuccess || filterResult.Data is null)
+        {
+            return new Result<ExportFile>
+            {
+                IsSuccess = false,
+                Message = filterResult.Message,
+                Error = filterResult.Error ?? "Validation"
+            };
+        }
+
+        var items = await _repo.ListAsync(filterResult.Data, ct);
+
         if (items.Count == 0)
         {
             return new Result<ExportFile>

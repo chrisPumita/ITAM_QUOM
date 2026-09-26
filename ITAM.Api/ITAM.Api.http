@@ -1,11 +1,13 @@
 @ITAM.Api_HostAddress = http://localhost:5151
-@token = 
+@token =
 
+### Status
 GET {{ITAM.Api_HostAddress}}/api/Status
 Accept: application/json
 
 ###
 
+### Login
 POST {{ITAM.Api_HostAddress}}/api/Auth/login
 Content-Type: application/json
 
@@ -16,7 +18,29 @@ Content-Type: application/json
 
 ###
 
+### Me
 GET {{ITAM.Api_HostAddress}}/api/Auth/me
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+
+### Assets paged + facets
+GET {{ITAM.Api_HostAddress}}/api/Assets?search=DELL&status=Disponible&category=Laptop&page=1&pageSize=20
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+
+### Assets multi location / kind
+GET {{ITAM.Api_HostAddress}}/api/Assets?locationIds=1&locationIds=2&kinds=1&kinds=2&page=1&pageSize=20
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+
+### Movements history
+GET {{ITAM.Api_HostAddress}}/api/Assignments/movements
 Authorization: Bearer {{token}}
 Accept: application/json
 

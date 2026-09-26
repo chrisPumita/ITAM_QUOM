@@ -28,6 +28,37 @@ public static class EnumDisplayHelper
         _ => status.ToString()
     };
 
+    /// <summary>
+    /// Acepta enum name, número o etiqueta ES del requerimiento (Disponible, Asignado…).
+    /// </summary>
+    public static bool TryParseAssetStatus(string? raw, out AssetStatus status)
+    {
+        status = default;
+        if (string.IsNullOrWhiteSpace(raw))
+            return false;
+
+        var value = raw.Trim();
+        if (Enum.TryParse(value, ignoreCase: true, out status) && Enum.IsDefined(status))
+            return true;
+
+        if (int.TryParse(value, out var n) && Enum.IsDefined(typeof(AssetStatus), n))
+        {
+            status = (AssetStatus)n;
+            return true;
+        }
+
+        foreach (AssetStatus candidate in Enum.GetValues<AssetStatus>())
+        {
+            if (string.Equals(candidate.ToSpanish(), value, StringComparison.OrdinalIgnoreCase))
+            {
+                status = candidate;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static string ToSpanish(this AssetKind kind) => kind switch
     {
         AssetKind.Equipment => "Equipo",
