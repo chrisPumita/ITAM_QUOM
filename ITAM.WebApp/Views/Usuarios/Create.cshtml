@@ -7,7 +7,7 @@
 
 <div class="mb-3">
     <h1 class="h4 fw-bold mb-1">Nuevo administrador / operador</h1>
-    <p class="text-muted small mb-0">Se genera una contraseña temporal. Si SMTP está configurado, se envía por correo con el enlace de acceso.</p>
+    <p class="text-muted small mb-0">Se genera una contraseña temporal y, si hay correo configurado, se envía al usuario.</p>
 </div>
 
 <form asp-action="Create" method="post" class="panel" style="max-width:520px">
@@ -31,12 +31,12 @@
         </div>
         <div class="mb-3">
             <label class="form-label" asp-for="PublicAppBaseUrl">URL de acceso (Web)</label>
-            <input asp-for="PublicAppBaseUrl" class="form-control font-mono" />
-            <div class="form-text">Se usa en el correo / enlace. Ej. https://localhost:7048 o su dominio hospedado.</div>
+            <input asp-for="PublicAppBaseUrl" class="form-control font-mono" placeholder="https://…" />
+            <div class="form-text">URL base del sitio en el enlace del correo.</div>
         </div>
         <div class="form-check mb-3">
             <input class="form-check-input" asp-for="SendEmail" />
-            <label class="form-check-label" asp-for="SendEmail">Intentar enviar correo con contraseña</label>
+            <label class="form-check-label" asp-for="SendEmail">Enviar correo con la contraseña</label>
         </div>
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary">Crear</button>

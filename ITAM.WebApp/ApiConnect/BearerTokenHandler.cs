@@ -4,10 +4,7 @@ using ITAM.WebApp.Security;
 
 namespace ITAM.WebApp.ApiConnect;
 
-/// <summary>
-/// Adjunta automáticamente el JWT de la cookie de sesión a las llamadas ApiConnect.
-/// Más limpio que Daikin (token en NameIdentifier): claim dedicado + handler central.
-/// </summary>
+/// <summary>Adjunta el JWT de sesión a las llamadas ApiConnect.</summary>
 public sealed class BearerTokenHandler : DelegatingHandler
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -23,7 +20,7 @@ public sealed class BearerTokenHandler : DelegatingHandler
         if (user?.Identity?.IsAuthenticated == true)
         {
             var token = user.FindFirstValue(AuthClaimTypes.AccessToken);
-            if (!string.IsNullOrWhiteSpace(token) && request.Headers.Authorization is null)
+            if (!string.IsNullOrEmpty(token))
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 

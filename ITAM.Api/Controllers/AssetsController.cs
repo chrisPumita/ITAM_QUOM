@@ -11,10 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ITAM.Api.Controllers;
 
-/// <summary>
-/// Inventario de activos. Lectura: Admin/Operador. Alta: ambos. Edición/baja: Administrador.
-/// Assigned se gestiona por flujo de asignación (no por este CRUD).
-/// </summary>
+/// <summary>Inventario de activos.</summary>
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]

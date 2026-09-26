@@ -1,9 +1,6 @@
 namespace ITAM.Domain.Entities.Company;
 
-/// <summary>
-/// Colaborador / empleado de negocio. No hereda Identity (patrón Daikin):
-/// puede existir sin cuenta de login. <see cref="IdentityUserId"/> opcional.
-/// </summary>
+/// <summary>Colaborador. Puede existir sin cuenta de login.</summary>
 public class Employee : BaseEntity
 {
     /// <summary>Número de empleado único (nómina / RH).</summary>

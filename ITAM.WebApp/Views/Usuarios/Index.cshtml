@@ -24,8 +24,8 @@
 <div class="panel mb-3">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
         <div>
-            <div class="fw-semibold">Probar correo (SMTP)</div>
-            <div class="text-muted small">Envía un mensaje de prueba con la configuración de la API.</div>
+            <div class="fw-semibold">Probar correo</div>
+            <div class="text-muted small">Envía un mensaje de prueba.</div>
         </div>
     </div>
     <form asp-action="TestEmail" method="post" class="row g-2 align-items-end">
@@ -33,7 +33,7 @@
         <div class="col-md-6">
             <label class="form-label small mb-0">Destinatario</label>
             <input type="email" name="toEmail" class="form-control form-control-sm"
-                   placeholder="Dejar vacío = FromEmail de SmtpSettings" />
+                   placeholder="Escriba el correo" />
         </div>
         <div class="col-auto">
             <button type="submit" class="btn btn-outline-primary btn-sm">

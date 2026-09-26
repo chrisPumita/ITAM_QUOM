@@ -5,9 +5,7 @@ namespace ITAM.Domain.Interfaces.Repositories.Assets;
 
 public interface IAssetRepository
 {
-    /// <summary>
-    /// Filtros facetados + búsqueda libre; Count antes de paginar (patrón Daikin / ecommerce).
-    /// </summary>
+    /// <summary>Busca activos con filtros y paginación.</summary>
     Task<(IReadOnlyList<Asset> Items, int TotalCount)> SearchAsync(
         AssetFilterCriteria filter,
         int page,

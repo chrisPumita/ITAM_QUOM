@@ -5,16 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace ITAM.WebApp.ApiConnect;
 
-/// <summary>
-/// Cliente fluent hacia ITAM.Api. Uso típico:
-/// <code>
-/// var response = await _api.Create()
-///     .WithEndpoint(ApiEndpoints.AuthLogin)
-///     .WithMethod(HttpMethod.Post)
-///     .WithJsonBody(dto)
-///     .SendAsync(ct);
-/// </code>
-/// </summary>
+/// <summary>Cliente HTTP hacia ITAM.Api.</summary>
 public sealed class HttpRequestBuilder
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -42,14 +33,14 @@ public sealed class HttpRequestBuilder
         _settings = options.Value;
     }
 
-    /// <summary>Clave de <see cref="ApiConnectSettings.Endpoints"/>.</summary>
+    /// <summary>Clave de endpoint en appsettings.</summary>
     public HttpRequestBuilder WithEndpoint(string endpointKey)
     {
         _endpointKey = endpointKey;
         return this;
     }
 
-    /// <summary>Ruta relativa explícita (si no usas clave de appsettings).</summary>
+    /// <summary>Ruta relativa (alternativa a la clave de endpoint).</summary>
     public HttpRequestBuilder WithPath(string relativePath)
     {
         _relativePath = relativePath;
@@ -206,7 +197,7 @@ public static class ApiConnectDefaults
     public const string HttpClientName = "ITAM.Api";
 }
 
-/// <summary>Claves de endpoints (deben coincidir con appsettings ApiConnect:Endpoints).</summary>
+/// <summary>Claves de endpoints (ApiConnect:Endpoints).</summary>
 public static class ApiEndpoints
 {
     public const string Status = "Status";
@@ -253,7 +244,7 @@ public static class ApiEndpoints
     public const string AssignmentsCustodyPdf = "Assignments.CustodyPdf";
 }
 
-/// <summary>Factory DI: cada llamada a <see cref="Create"/> inicia un builder limpio.</summary>
+/// <summary>Crea builders ApiConnect.</summary>
 public sealed class ApiConnectFactory
 {
     private readonly IHttpClientFactory _httpClientFactory;

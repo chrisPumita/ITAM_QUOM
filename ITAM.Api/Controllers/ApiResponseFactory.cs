@@ -4,16 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ITAM.Api.Controllers;
 
-/// <summary>
-/// Mapea <see cref="Result{T}"/> → HTTP + <see cref="ApiResponse{T}"/>.
-/// El status del response y el campo <c>code</c> del body siempre coinciden.
-/// </summary>
+/// <summary>Convierte Result a respuesta HTTP ApiResponse.</summary>
 internal static class ApiResponseFactory
 {
-    /// <summary>
-    /// Éxito: usa <paramref name="successCode"/> (200, 201…).
-    /// Error: NotFound→404, Duplicate→409, resto→400.
-    /// </summary>
+    /// <summary>Éxito con el código indicado; errores NotFound/Duplicate/Conflict o 400.</summary>
     public static ActionResult<ApiResponse<T>> FromResult<T>(Result<T> result, HttpStatusCode successCode)
     {
         if (!result.IsSuccess)

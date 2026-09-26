@@ -19,420 +19,177 @@
         modelId = a.ModelId,
         categoryName = a.CategoryName
     }));
+    var modelsJson = JsonSerializer.Serialize(
+        Model.Models.Where(m => m.IsActive).Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName }));
 }
 
 <div class="mb-3">
     <h1 class="h4 fw-bold mb-1">Asignar activos</h1>
-    <p class="text-muted small mb-0">Solo disponibles. Filtra sin recargar; al confirmar se emite la responsiva RES.</p>
 </div>
 
-<form asp-action="Assign" method="post" class="assign-workbench" id="assignForm">
+<form asp-action="Assign" method="post" class="assign-workbench" id="assignForm"
+      data-available-url="@Url.Action("AvailableAssets", "Assignments")"
+      data-emp-url="@Url.Action("EmployeeAssignments", "Assignments")"
+      data-preselected='@Html.Raw(JsonSerializer.Serialize(preselected))'
+      data-initial-assets='@Html.Raw(initialAssetsJson)'>
     @Html.AntiForgeryToken()
     <div id="selectedIdsHost"></div>
 
     <div asp-validation-summary="All" class="text-danger small mb-3"></div>
 
-    <div class="panel mb-3">
-        <div class="panel__body py-3">
-            <div class="row g-2 align-items-center mb-3">
-                <div class="col-md-6 col-lg-5">
-                    <label class="form-label small mb-1" for="assetSearch">Buscar</label>
-                    <input type="search" id="assetSearch" class="form-control form-control-sm"
-                           placeholder="Código, serie o descripción…" autocomplete="off" />
+    <div class="row g-3 align-items-start">
+        <aside class="col-lg-3">
+            <div class="panel assign-filters panel--sticky mb-0" id="assignFilters">
+                <div class="panel__header">
+                    <h2 class="panel__title">Filtros</h2>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnClearFilters">Limpiar</button>
                 </div>
-                <div class="col-auto ms-md-auto">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnClearFilters">Limpiar filtros</button>
-                </div>
-            </div>
-
-            <div class="filter-bar">
-                <div class="filter-bar__group">
-                    <span class="filter-bar__label">Tipo</span>
-                    <div class="filter-chips" data-filter="kinds">
-                        <label class="filter-chip">
-                            <input type="checkbox" value="1" />
-                            <span>Equipo</span>
-                        </label>
-                        <label class="filter-chip">
-                            <input type="checkbox" value="2" />
-                            <span>Accesorio</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="filter-bar__group">
-                    <span class="filter-bar__label">Condición</span>
-                    <div class="filter-chips" data-filter="conditions">
-                        <label class="filter-chip">
-                            <input type="checkbox" value="New" />
-                            <span>Nuevo</span>
-                        </label>
-                        <label class="filter-chip">
-                            <input type="checkbox" value="Used" />
-                            <span>Usado</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="filter-bar__group">
-                    <span class="filter-bar__label">Categoría</span>
-                    <div class="filter-chips filter-chips--wrap" data-filter="categoryIds">
-                        @foreach (var c in Model.Categories.Where(x => x.IsActive))
-                        {
-                            <label class="filter-chip">
-                                <input type="checkbox" value="@c.Id" />
-                                <span>@c.Name</span>
-                            </label>
-                        }
-                    </div>
-                </div>
-                <div class="filter-bar__group">
-                    <span class="filter-bar__label">Marca</span>
-                    <div class="filter-chips filter-chips--wrap" data-filter="brandIds">
-                        @foreach (var b in Model.Brands.Where(x => x.IsActive))
-                        {
-                            <label class="filter-chip">
-                                <input type="checkbox" value="@b.Id" data-brand="@b.Id" />
-                                <span>@b.Name</span>
-                            </label>
-                        }
-                    </div>
-                </div>
-                <div class="filter-bar__group" id="modelFilterGroup">
-                    <span class="filter-bar__label">Modelo</span>
-                    <div class="filter-chips filter-chips--wrap" data-filter="modelIds" id="modelChips"
-                         data-models='@Html.Raw(JsonSerializer.Serialize(Model.Models.Where(m => m.IsActive).Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName })))'>
-                        <span class="text-muted small align-self-center" id="modelHint">Marca una o más marcas para ver modelos.</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-3 mb-3 align-items-start">
-        <div class="col-lg-7">
-            <div class="panel mb-0">
                 <div class="panel__body">
                     <div class="mb-3">
-                        <label class="form-label" for="employeeSelect">Colaborador</label>
-                        <select asp-for="EmployeeId" class="form-select" id="employeeSelect" required>
-                            <option value="">Seleccione…</option>
-                            @foreach (var e in Model.Employees)
-                            {
-                                <option value="@e.Id">@e.FullName (@e.EmployeeNumber)</option>
-                            }
-                        </select>
+                        <label class="form-label small mb-1" for="assetSearch">Buscar</label>
+                        <input type="search" id="assetSearch" class="form-control form-control-sm"
+                               placeholder="Código, serie o descripción…" autocomplete="off" />
                     </div>
 
-                    <div id="empAssignmentsWrap" class="mb-3 d-none">
-                        <div class="assign-existing">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <strong class="small">Ya tiene asignados</strong>
-                                <span class="badge text-bg-secondary" id="empAssignCount">0</span>
+                    <div class="filter-bar filter-bar--sidebar">
+                        <div class="filter-bar__group">
+                            <span class="filter-bar__label">Tipo</span>
+                            <div class="filter-chips" data-filter="kinds">
+                                <label class="filter-chip">
+                                    <input type="checkbox" value="1" />
+                                    <span>Equipo</span>
+                                </label>
+                                <label class="filter-chip">
+                                    <input type="checkbox" value="2" />
+                                    <span>Accesorio</span>
+                                </label>
                             </div>
-                            <p class="small text-muted mb-2">Revise antes de entregar más equipo.</p>
-                            <ul class="small mb-0 ps-3" id="empAssignList"></ul>
+                        </div>
+                        <div class="filter-bar__group">
+                            <span class="filter-bar__label">Condición</span>
+                            <div class="filter-chips" data-filter="conditions">
+                                <label class="filter-chip">
+                                    <input type="checkbox" value="New" />
+                                    <span>Nuevo</span>
+                                </label>
+                                <label class="filter-chip">
+                                    <input type="checkbox" value="Used" />
+                                    <span>Usado</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="filter-bar__group">
+                            <span class="filter-bar__label">Categoría</span>
+                            <div class="filter-chips filter-chips--wrap" data-filter="categoryIds">
+                                @foreach (var c in Model.Categories.Where(x => x.IsActive))
+                                {
+                                    <label class="filter-chip">
+                                        <input type="checkbox" value="@c.Id" />
+                                        <span>@c.Name</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                        <div class="filter-bar__group">
+                            <span class="filter-bar__label">Marca</span>
+                            <div class="filter-chips filter-chips--wrap" data-filter="brandIds">
+                                @foreach (var b in Model.Brands.Where(x => x.IsActive))
+                                {
+                                    <label class="filter-chip">
+                                        <input type="checkbox" value="@b.Id" data-brand="@b.Id" />
+                                        <span>@b.Name</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                        <div class="filter-bar__group" id="modelFilterGroup">
+                            <span class="filter-bar__label">Modelo</span>
+                            <div class="filter-chips filter-chips--wrap" data-filter="modelIds" id="modelChips"
+                                 data-models='@Html.Raw(modelsJson)'>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </aside>
 
-                    <div class="mb-0">
-                        <label class="form-label" for="Notes">Notas (opcional)</label>
-                        <input asp-for="Notes" class="form-control" maxlength="1000" id="Notes" />
+        <div class="col-lg-9">
+            <div class="row g-3 mb-3 align-items-start">
+                <div class="col-lg-7">
+                    <div class="panel mb-0">
+                        <div class="panel__body">
+                            <div class="mb-3">
+                                <label class="form-label" for="employeeSelect">Colaborador</label>
+                                <select asp-for="EmployeeId" class="form-select" id="employeeSelect" required>
+                                    <option value="">Seleccione…</option>
+                                    @foreach (var e in Model.Employees)
+                                    {
+                                        <option value="@e.Id">@e.FullName (@e.EmployeeNumber)</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div id="empAssignmentsWrap" class="mb-3 d-none">
+                                <div class="assign-existing">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong class="small">Ya tiene asignados</strong>
+                                        <span class="badge text-bg-secondary" id="empAssignCount">0</span>
+                                    </div>
+                                    <ul class="small mb-0 ps-3" id="empAssignList"></ul>
+                                </div>
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label" for="Notes">Notas (opcional)</label>
+                                <input asp-for="Notes" class="form-control" maxlength="1000" id="Notes" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="panel assign-summary panel--sticky mb-0">
+                        <div class="panel__header">
+                            <h2 class="panel__title">Resumen</h2>
+                            <span class="badge text-bg-primary" id="summaryCount">0</span>
+                        </div>
+                        <div class="panel__body">
+                            <p class="small text-muted mb-2" id="summaryEmployeeHint">Seleccione colaborador y activos.</p>
+                            <ul class="assign-summary__list" id="summaryList"></ul>
+                            <p class="small text-muted mb-3 d-none" id="summaryEmpty">Ningún activo seleccionado.</p>
+                            <button type="submit" class="btn btn-primary w-100" id="btnAssign" disabled>
+                                Asignar y emitir responsiva
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-5">
-            <div class="panel assign-summary panel--sticky mb-0">
+            <div class="panel mb-0">
                 <div class="panel__header">
-                    <h2 class="panel__title">Resumen de asignación</h2>
-                    <span class="badge text-bg-primary" id="summaryCount">0</span>
+                    <h2 class="panel__title">Disponibles</h2>
+                    <span class="small text-muted" id="tableCount">0</span>
                 </div>
-                <div class="panel__body">
-                    <p class="small text-muted mb-2" id="summaryEmployeeHint">Seleccione colaborador y activos.</p>
-                    <ul class="assign-summary__list" id="summaryList"></ul>
-                    <p class="small text-muted mb-3 d-none" id="summaryEmpty">Ningún activo seleccionado.</p>
-                    <button type="submit" class="btn btn-primary w-100" id="btnAssign" disabled>
-                        Asignar y emitir responsiva
-                    </button>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0" id="assetsTable">
+                        <thead>
+                            <tr>
+                                <th style="width:2rem"></th>
+                                <th>SKU</th>
+                                <th>SN</th>
+                                <th>Descripción</th>
+                                <th>Condición</th>
+                                <th>Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assetsTbody"></tbody>
+                    </table>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="panel">
-        <div class="panel__header">
-            <h2 class="panel__title">Disponibles</h2>
-            <span class="small text-muted" id="tableCount">0</span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-sm table-hover align-middle mb-0" id="assetsTable">
-                <thead>
-                    <tr>
-                        <th style="width:2rem"></th>
-                        <th>SKU</th>
-                        <th>SN</th>
-                        <th>Descripción</th>
-                        <th>Condición</th>
-                        <th>Tipo</th>
-                    </tr>
-                </thead>
-                <tbody id="assetsTbody"></tbody>
-            </table>
         </div>
     </div>
 </form>
 
 @section Scripts {
-<script>
-(function () {
-  const availableUrl = '@Url.Action("AvailableAssets", "Assignments")';
-  const empUrl = '@Url.Action("EmployeeAssignments", "Assignments")';
-  const preselected = @Html.Raw(JsonSerializer.Serialize(preselected));
-  const initialAssets = @Html.Raw(initialAssetsJson);
-
-  /** @@type {Map<string, {id:string, assetCode:string, description:string}>} */
-  const selected = new Map();
-  (preselected || []).forEach(id => {
-    const hit = (initialAssets || []).find(a => String(a.id) === String(id));
-    if (hit) selected.set(String(hit.id), { id: String(hit.id), assetCode: hit.assetCode, description: hit.description });
-    else selected.set(String(id), { id: String(id), assetCode: '…', description: '' });
-  });
-
-  const tbody = document.getElementById('assetsTbody');
-  const tableCount = document.getElementById('tableCount');
-  const summaryList = document.getElementById('summaryList');
-  const summaryCount = document.getElementById('summaryCount');
-  const summaryEmpty = document.getElementById('summaryEmpty');
-  const summaryHint = document.getElementById('summaryEmployeeHint');
-  const btnAssign = document.getElementById('btnAssign');
-  const selectedHost = document.getElementById('selectedIdsHost');
-  const empSelect = document.getElementById('employeeSelect');
-  const searchInput = document.getElementById('assetSearch');
-  const modelChips = document.getElementById('modelChips');
-  const modelHint = document.getElementById('modelHint');
-  let allModels = [];
-  try { allModels = JSON.parse(modelChips.getAttribute('data-models') || '[]'); } catch { allModels = []; }
-
-  function checkedValues(group) {
-    return [...document.querySelectorAll(`[data-filter="${group}"] input:checked`)].map(i => i.value);
-  }
-
-  function syncChipStyles() {
-    document.querySelectorAll('.filter-chip').forEach(lab => {
-      const on = lab.querySelector('input')?.checked;
-      lab.classList.toggle('is-active', !!on);
-    });
-  }
-
-  function rebuildModelChips() {
-    const brandIds = new Set(checkedValues('brandIds').map(Number));
-    const prev = new Set(checkedValues('modelIds'));
-    modelChips.querySelectorAll('label.filter-chip').forEach(n => n.remove());
-    if (modelHint) modelHint.classList.toggle('d-none', brandIds.size > 0);
-
-    if (brandIds.size === 0) {
-      syncChipStyles();
-      return;
-    }
-
-    allModels.filter(m => brandIds.has(m.BrandId)).forEach(m => {
-      const lab = document.createElement('label');
-      lab.className = 'filter-chip';
-      lab.innerHTML = `<input type="checkbox" value="${m.Id}" ${prev.has(String(m.Id)) ? 'checked' : ''} /><span>${m.BrandName} ${m.Name}</span>`;
-      modelChips.appendChild(lab);
-    });
-    syncChipStyles();
-  }
-
-  function buildQuery() {
-    const params = new URLSearchParams();
-    const q = searchInput.value.trim();
-    if (q) params.set('search', q);
-    checkedValues('kinds').forEach(v => params.append('kinds', v));
-    checkedValues('conditions').forEach(v => params.append('conditions', v));
-    checkedValues('brandIds').forEach(v => params.append('brandIds', v));
-    checkedValues('categoryIds').forEach(v => params.append('categoryIds', v));
-    checkedValues('modelIds').forEach(v => params.append('modelIds', v));
-    return params.toString();
-  }
-
-  function renderTable(items) {
-    tbody.innerHTML = '';
-    tableCount.textContent = `${items.length} disponible${items.length === 1 ? '' : 's'}`;
-    if (!items.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-muted text-center py-3">No hay activos con esos filtros.</td></tr>';
-      return;
-    }
-    items.forEach(a => {
-      const id = String(a.id);
-      const tr = document.createElement('tr');
-      tr.dataset.id = id;
-      const checked = selected.has(id) ? 'checked' : '';
-      tr.innerHTML = `
-        <td><input type="checkbox" class="form-check-input asset-check" value="${id}" ${checked} /></td>
-        <td class="font-mono">${escapeHtml(a.assetCode)}</td>
-        <td class="font-mono small">${escapeHtml(a.serialNumber || '—')}</td>
-        <td>${escapeHtml(a.description || '')}</td>
-        <td>${escapeHtml(a.conditionLabel || a.condition || '')}</td>
-        <td>${escapeHtml(a.kindLabel || '')}</td>`;
-      const cb = tr.querySelector('.asset-check');
-      cb.addEventListener('change', () => {
-        if (cb.checked) {
-          selected.set(id, { id, assetCode: a.assetCode, description: a.description || '' });
-        } else {
-          selected.delete(id);
-        }
-        renderSummary();
-      });
-      tbody.appendChild(tr);
-    });
-  }
-
-  function renderSummary() {
-    summaryList.innerHTML = '';
-    summaryCount.textContent = String(selected.size);
-    summaryEmpty.classList.toggle('d-none', selected.size > 0);
-    selected.forEach(item => {
-      const li = document.createElement('li');
-      li.innerHTML = `
-        <div>
-          <span class="font-mono fw-semibold">${escapeHtml(item.assetCode)}</span>
-          <div class="small text-muted">${escapeHtml(item.description || '')}</div>
-        </div>
-        <button type="button" class="btn btn-sm btn-link text-danger p-0" data-remove="${item.id}" title="Quitar">×</button>`;
-      summaryList.appendChild(li);
-    });
-    summaryList.querySelectorAll('[data-remove]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        selected.delete(btn.getAttribute('data-remove'));
-        const rowCb = tbody.querySelector(`.asset-check[value="${btn.getAttribute('data-remove')}"]`);
-        if (rowCb) rowCb.checked = false;
-        renderSummary();
-      });
-    });
-
-    selectedHost.innerHTML = '';
-    selected.forEach((_, id) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'SelectedAssetIds';
-      input.value = id;
-      selectedHost.appendChild(input);
-    });
-
-    const empOk = !!empSelect.value;
-    const empName = empOk ? (empSelect.options[empSelect.selectedIndex]?.text || '') : '';
-    summaryHint.textContent = empOk
-      ? `Entrega a ${empName}`
-      : 'Seleccione colaborador y activos.';
-    btnAssign.disabled = !(empOk && selected.size > 0);
-  }
-
-  function escapeHtml(s) {
-    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  let debounceTimer;
-  async function reloadAssets() {
-    syncChipStyles();
-    tbody.innerHTML = '<tr><td colspan="6" class="text-muted text-center py-3">Cargando…</td></tr>';
-    try {
-      const qs = buildQuery();
-      const res = await fetch(availableUrl + (qs ? '?' + qs : ''), { headers: { Accept: 'application/json' } });
-      const data = await res.json();
-      renderTable(Array.isArray(data) ? data : []);
-    } catch {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-danger text-center py-3">No se pudo cargar el listado.</td></tr>';
-    }
-    renderSummary();
-  }
-
-  function scheduleReload() {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(reloadAssets, 280);
-  }
-
-  document.querySelector('.filter-bar').addEventListener('change', (e) => {
-    if (!(e.target instanceof HTMLInputElement)) return;
-    if (e.target.closest('[data-filter="brandIds"]')) rebuildModelChips();
-    scheduleReload();
-  });
-  searchInput.addEventListener('input', scheduleReload);
-  document.getElementById('btnClearFilters').addEventListener('click', () => {
-    searchInput.value = '';
-    document.querySelectorAll('.filter-chip input').forEach(i => { i.checked = false; });
-    rebuildModelChips();
-    reloadAssets();
-  });
-
-  const wrap = document.getElementById('empAssignmentsWrap');
-  const list = document.getElementById('empAssignList');
-  const countBadge = document.getElementById('empAssignCount');
-
-  async function loadEmpAssignments() {
-    const id = empSelect.value;
-    renderSummary();
-    if (!id) {
-      wrap.classList.add('d-none');
-      list.innerHTML = '';
-      return;
-    }
-    try {
-      const res = await fetch(empUrl + '?employeeId=' + encodeURIComponent(id), { headers: { Accept: 'application/json' } });
-      const data = await res.json();
-      list.innerHTML = '';
-      if (!Array.isArray(data) || data.length === 0) {
-        countBadge.textContent = '0';
-        list.innerHTML = '<li class="text-muted">Sin activos asignados actualmente.</li>';
-      } else {
-        countBadge.textContent = String(data.length);
-        data.forEach(a => {
-          const li = document.createElement('li');
-          li.innerHTML = `<span class="font-monospace">${escapeHtml(a.assetCode)}</span> · ${escapeHtml(a.description || '')} <span class="text-muted">(${escapeHtml(a.assignedAt || '')})</span>`;
-          list.appendChild(li);
-        });
-      }
-      wrap.classList.remove('d-none');
-    } catch {
-      wrap.classList.add('d-none');
-    }
-  }
-  empSelect.addEventListener('change', loadEmpAssignments);
-
-  document.getElementById('assignForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    renderSummary();
-    if (!empSelect.value) {
-      await Swal.fire({ icon: 'warning', title: 'Seleccione un colaborador', confirmButtonColor: '#9C5F26' });
-      return;
-    }
-    if (selected.size === 0) {
-      await Swal.fire({ icon: 'warning', title: 'Seleccione al menos un activo', confirmButtonColor: '#9C5F26' });
-      return;
-    }
-    const empName = empSelect.options[empSelect.selectedIndex]?.text || 'colaborador';
-    const codes = [...selected.values()].map(x => x.assetCode);
-    const listHtml = codes.slice(0, 8).map(c => `<li class="font-monospace">${escapeHtml(c)}</li>`).join('')
-      + (codes.length > 8 ? `<li>… y ${codes.length - 8} más</li>` : '');
-    const ok = await Swal.fire({
-      icon: 'question',
-      title: '¿Confirmar asignación?',
-      html: `<p>Se asignarán <strong>${selected.size}</strong> activo(s) a <strong>${escapeHtml(empName)}</strong> y se emitirá la responsiva.</p><ul class="text-start small">${listHtml}</ul>`,
-      showCancelButton: true,
-      confirmButtonText: 'Sí, asignar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#9C5F26'
-    });
-    if (ok.isConfirmed) {
-      renderSummary();
-      e.target.submit();
-    }
-  });
-
-  rebuildModelChips();
-  renderTable(initialAssets || []);
-  renderSummary();
-  if (empSelect.value) loadEmpAssignments();
-})();
-</script>
+    <script src="~/js/assign.js" asp-append-version="true"></script>
 }

@@ -4,7 +4,7 @@ namespace ITAM.Shared.Dtos.Auth;
 
 public class TestEmailDto
 {
-    /// <summary>Destino. Si vacío, se usa FromEmail de SmtpSettings.</summary>
+    /// <summary>Correo destinatario (opcional).</summary>
     [EmailAddress, MaxLength(256)]
     public string? ToEmail { get; set; }
 }

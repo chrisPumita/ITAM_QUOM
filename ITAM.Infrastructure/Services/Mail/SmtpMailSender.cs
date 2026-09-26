@@ -34,16 +34,16 @@ public sealed class SmtpMailSender : ISmtpMailSender
         var user = (_settings.UserName ?? "").Trim();
         var hints = new List<string>();
         if (string.IsNullOrWhiteSpace(_settings.Host))
-            hints.Add("SmtpSettings.Host está vacío. Para Gmail use smtp.gmail.com.");
+            hints.Add("Falta el servidor SMTP (Host). Para Gmail use smtp.gmail.com.");
         if (string.IsNullOrWhiteSpace(_settings.FromEmail))
-            hints.Add("SmtpSettings.FromEmail está vacío.");
+            hints.Add("Falta el correo remitente (FromEmail).");
         if (!string.IsNullOrWhiteSpace(user) && !user.Contains('@'))
-            hints.Add("SmtpSettings.UserName debe ser el correo (ej. usuario@gmail.com), no el nombre para mostrar.");
+            hints.Add("El usuario SMTP debe ser un correo, no el nombre para mostrar.");
         if (string.IsNullOrWhiteSpace(_settings.Password))
-            hints.Add("SmtpSettings.Password vacío. En Gmail use una Contraseña de aplicación (16 caracteres).");
+            hints.Add("Falta la contraseña SMTP. En Gmail use una contraseña de aplicación.");
         if (string.Equals(_settings.Host, "smtp.gmail.com", StringComparison.OrdinalIgnoreCase)
             && _settings.Port is not (587 or 465))
-            hints.Add("Gmail normalmente usa puerto 587 (STARTTLS) o 465 (SSL).");
+            hints.Add("Gmail normalmente usa el puerto 587 o 465.");
 
         return new SmtpDiagnosticsDto
         {
@@ -64,7 +64,7 @@ public sealed class SmtpMailSender : ISmtpMailSender
         string toEmail, string subject, string bodyHtml, CancellationToken ct = default)
     {
         if (!IsConfigured)
-            return (false, "SMTP no configurado: falta Host y/o FromEmail. Revise SmtpSettings en appsettings de la API.");
+            return (false, "Correo no configurado: falta servidor o remitente SMTP.");
 
         var userName = (_settings.UserName ?? "").Trim();
         var password = (_settings.Password ?? "").Replace(" ", "");

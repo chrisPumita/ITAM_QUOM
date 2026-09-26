@@ -31,7 +31,7 @@ public class AuthController : ControllerBase
         _jwt = jwtOptions.Value;
     }
 
-    /// <summary>Autentica un usuario y retorna JWT con claims de rol.</summary>
+    /// <summary>Login y emisión de JWT.</summary>
     [HttpPost("login")]
     [AllowAnonymous]
     [EnableRateLimiting("login")]
@@ -86,7 +86,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>Endpoint de prueba protegido: valida JWT y expone claims.</summary>
+    /// <summary>Usuario autenticado actual.</summary>
     [HttpGet("me")]
     [Authorize]
     public ActionResult<object> Me()
@@ -100,10 +100,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Lista usuarios Identity para asociar a empleados (identityUserId).
-    /// Solo Administrador. Filtros: onlyActive, onlyUnlinked.
-    /// </summary>
+    /// <summary>Lista usuarios.</summary>
     [HttpGet("users")]
     [Authorize(Roles = AppRoles.Administrador)]
     [ProducesResponseType(typeof(ApiResponse<List<IdentityUserListDto>>), StatusCodes.Status200OK)]
@@ -120,7 +117,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>Desbloquea un usuario bloqueado por intentos fallidos de login. Solo Administrador.</summary>
+    /// <summary>Desbloquea un usuario.</summary>
     [HttpPost("users/{id:guid}/unlock")]
     [Authorize(Roles = AppRoles.Administrador)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
@@ -146,7 +143,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>Crea un Administrador u Operador con contraseña temporal. Solo Administrador.</summary>
+    /// <summary>Crea Administrador u Operador.</summary>
     [HttpPost("users")]
     [Authorize(Roles = AppRoles.Administrador)]
     [ProducesResponseType(typeof(ApiResponse<CreateAdminUserResultDto>), StatusCodes.Status201Created)]
@@ -184,7 +181,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>Diagnóstico SMTP + envío de correo de prueba. Solo Administrador.</summary>
+    /// <summary>Envía un correo de prueba.</summary>
     [HttpPost("test-email")]
     [Authorize(Roles = AppRoles.Administrador)]
     [ProducesResponseType(typeof(ApiResponse<TestEmailResultDto>), StatusCodes.Status200OK)]
@@ -201,7 +198,7 @@ public class AuthController : ControllerBase
             return BadRequest(new ApiResponse<TestEmailResultDto>
             {
                 Code = HttpStatusCode.BadRequest,
-                Message = "Indique ToEmail o configure FromEmail en SmtpSettings.",
+                Message = "Indique un correo destinatario o configure el remitente SMTP.",
                 Data = new TestEmailResultDto
                 {
                     Sent = false,
@@ -283,7 +280,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>Admin: restablece la contraseña de un usuario.</summary>
+    /// <summary>Restablece la contraseña de un usuario.</summary>
     [HttpPost("users/{id:guid}/reset-password")]
     [Authorize(Roles = AppRoles.Administrador)]
     [ProducesResponseType(typeof(ApiResponse<AdminResetPasswordResultDto>), StatusCodes.Status200OK)]
