@@ -1,6 +1,6 @@
-namespace ITAM.Domain.Enums;
+namespace ITAM.Shared.Enums;
 
-/// <summary>Propiedad patrimonial del activo (sin comodato — solo lo del requerimiento).</summary>
+/// <summary>Propiedad patrimonial del activo (sin comodato).</summary>
 public enum OwnershipType
 {
     Owned = 1,

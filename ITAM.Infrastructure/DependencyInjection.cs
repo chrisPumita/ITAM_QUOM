@@ -60,11 +60,15 @@ public static class DependencyInjection
         services.AddScoped<IModelRepository, ModelRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        services.AddScoped<ISupplierRepository, SupplierRepository>();
+        services.AddScoped<IAssetRepository, AssetRepository>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IBrandService, BrandService>();
         services.AddScoped<IModelService, ModelService>();
         services.AddScoped<ILocationService, LocationService>();
         services.AddScoped<IEmployeeService, EmployeeService>();
+        services.AddScoped<ISupplierService, SupplierService>();
+        services.AddScoped<IAssetService, AssetService>();
 
         return services;
     }

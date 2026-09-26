@@ -1,5 +1,5 @@
 using ITAM.Domain.Entities.Company;
-using ITAM.Domain.Enums;
+using ITAM.Shared.Enums;
 
 namespace ITAM.Domain.Entities.Custody;
 
