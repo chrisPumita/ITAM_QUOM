@@ -1,0 +1,1770 @@
+﻿{
+  "info": {
+    "_postman_id": "de2c18ea-9b79-456a-ada0-918d8042226c",
+    "name": "ITAM",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "23053001"
+  },
+  "item": [
+    {
+      "name": "marcas",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Brands?onlyActive=true",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Brands"
+              ],
+              "query": [
+                {
+                  "key": "onlyActive",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dell\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Brands",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Brands"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Brands/1",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Brands",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"LENOVO\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Brands/1",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Brands",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Categorias",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Categories?onlyActive=true",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Categories"
+              ],
+              "query": [
+                {
+                  "key": "onlyActive",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Laptops\",\n  \"sortOrder\": 10,\n  \"isActive\": true,\n  \"parentCategoryId\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Categories",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Categories/1",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Categories",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Laptops\",\n  \"sortOrder\": 10,\n  \"isActive\": true,\n  \"parentCategoryId\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Categories/1",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Categories",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "modelos",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Models?onlyActive=true",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Models"
+              ],
+              "query": [
+                {
+                  "key": "onlyActive",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Latitude 5440\", \"specs\": \"i7 / 16GB\", \"categoryId\": 1, \"brandId\": 1, \"isActive\": true }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Models",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Models"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Models/1",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Models",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Latitude 5440\",\n  \"specs\": \"i7 / 16GB\",\n  \"categoryId\": 1,\n  \"brandId\": 1,\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Models/1",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Models",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Empleados",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Employees?onlyActive=true",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Employees"
+              ],
+              "query": [
+                {
+                  "key": "onlyActive",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeNumber\": \"5555\",\n  \"fullName\": \"Juan Perez Sanchez\",\n  \"email\": \"juan@example.com\",\n  \"department\": \"SALES\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Employees",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Employees"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Employees/26f92248-6c71-4d8e-b814-43994b82ca03",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Employees",
+                "26f92248-6c71-4d8e-b814-43994b82ca03"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeNumber\": \"2525\",\n  \"fullName\": \"Christian R. Pioquinto Hdz.\",\n  \"email\": \"christian@example.com\",\n  \"department\": \"SALES\",\n  \"isActive\": true,\n  \"identityUserId\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Employees/26f92248-6c71-4d8e-b814-43994b82ca03",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Employees",
+                "26f92248-6c71-4d8e-b814-43994b82ca03"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Lugares",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Locations?onlyActive=true&onlyWarehouses=true",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Locations"
+              ],
+              "query": [
+                {
+                  "key": "onlyActive",
+                  "value": "true"
+                },
+                {
+                  "key": "onlyWarehouses",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Almacen Principal\",\n  \"isWarehouse\": true,\n  \"parentLocationId\": null,\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Locations",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Locations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Locations/1",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Locations",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Almacen Central\",\n  \"parentLocationId\": null,\n  \"isWarehouse\": true,\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Locations/1",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Locations",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Proveedores",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Suppliers?onlyActive=true",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Suppliers"
+              ],
+              "query": [
+                {
+                  "key": "onlyActive",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Azus México\",\n  \"contact\": \"Karla Torres\",\n  \"email\": \"ventas@azus.example\",\n  \"phone\": \"55123445678\",\n  \"offersPurchase\": true,\n  \"offersMaintenance\": true,\n  \"offersRental\": true,\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Suppliers",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Suppliers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Suppliers/2ddf660f-d52d-419c-bda8-52680248e90f",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Suppliers",
+                "2ddf660f-d52d-419c-bda8-52680248e90f"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Azus México\",\n    \"contact\": \"Karla Torres\",\n    \"email\": \"ventas@azus.example\",\n    \"phone\": \"55123445678\",\n    \"offersPurchase\": true,\n    \"offersMaintenance\": true,\n    \"offersRental\": true,\n    \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Suppliers/2ddf660f-d52d-419c-bda8-52680248e90f",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Suppliers",
+                "2ddf660f-d52d-419c-bda8-52680248e90f"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Activos",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assets",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assets"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "kind",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "modelId",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "locationId",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetCode\": \"IT-001\",\n  \"serialNumber\": \"SN123\",\n  \"kind\": 1,\n  \"modelId\": 1,\n  \"ownershipType\": 1,\n  \"supplierId\": null,\n  \"status\": 1,\n  \"locationId\": 1,\n  \"purchaseDate\": \"2026-01-15\",\n  \"rentalEndDate\": null,\n  \"warrantyEndDate\": \"2027-01-15\",\n  \"imei\": null,\n  \"contractNumber\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Assets",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assets"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assets/25430dcf-beb5-4485-8f6c-2a0603ef9e89",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assets",
+                "25430dcf-beb5-4485-8f6c-2a0603ef9e89"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetCode\": \"IT-001\",\n  \"serialNumber\": \"SN123\",\n  \"kind\": 1,\n  \"modelId\": 1,\n  \"ownershipType\": 1,\n  \"supplierId\": null,\n  \"status\": 1,\n  \"locationId\": 1,\n  \"purchaseDate\": \"2026-01-15\",\n  \"rentalEndDate\": null,\n  \"warrantyEndDate\": \"2027-01-15\",\n  \"imei\": null,\n  \"contractNumber\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Assets/25430dcf-beb5-4485-8f6c-2a0603ef9e89",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assets",
+                "25430dcf-beb5-4485-8f6c-2a0603ef9e89"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resumen",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assets/summary",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assets",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Exportar Excel",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assets/export.xlsx",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assets",
+                "export.xlsx"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "kind",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "modelId",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "locationId",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Plantilla de importacion",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assets/import/template.xlsx",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assets",
+                "import",
+                "template.xlsx"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Importar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{uri}}/api/Assets/import",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assets",
+                "import"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar por codigo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assets/by-code/IT-001",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assets",
+                "by-code",
+                "IT-001"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Operaciones",
+      "item": [
+        {
+          "name": "Asignar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"26f92248-6c71-4d8e-b814-43994b82ca03\",\n  \"notes\": \"Prueba de asignacion\",\n  \"lines\": [\n    {\n      \"assetId\": \"25430dcf-beb5-4485-8f6c-2a0603ef9e89\",\n      \"quantity\": 1,\n      \"conditionOnDelivery\": 1,\n      \"deliveryNotes\": \"Prueba de linea entrega\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Assignments/assign",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assignments",
+                "assign"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Devolucion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"25430dcf-beb5-4485-8f6c-2a0603ef9e89\",\n  \"returnCondition\": 1,\n  \"notes\": \"Devolucion Prueba\",\n  \"toLocationId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri}}/api/Assignments/return",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assignments",
+                "return"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Asignaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assignments?employeeId=26f92248-6c71-4d8e-b814-43994b82ca03&assetId=25430dcf-beb5-4485-8f6c-2a0603ef9e89&onlyActive=true",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assignments"
+              ],
+              "query": [
+                {
+                  "key": "employeeId",
+                  "value": "26f92248-6c71-4d8e-b814-43994b82ca03"
+                },
+                {
+                  "key": "assetId",
+                  "value": "25430dcf-beb5-4485-8f6c-2a0603ef9e89"
+                },
+                {
+                  "key": "onlyActive",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Historial",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assignments/movements?employeeId=26f92248-6c71-4d8e-b814-43994b82ca03",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assignments",
+                "movements"
+              ],
+              "query": [
+                {
+                  "key": "assetId",
+                  "value": "25430dcf-beb5-4485-8f6c-2a0603ef9e89",
+                  "disabled": true
+                },
+                {
+                  "key": "employeeId",
+                  "value": "26f92248-6c71-4d8e-b814-43994b82ca03"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Responsivas Empleado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assignments/custody?employeeId=26f92248-6c71-4d8e-b814-43994b82ca03",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assignments",
+                "custody"
+              ],
+              "query": [
+                {
+                  "key": "employeeId",
+                  "value": "26f92248-6c71-4d8e-b814-43994b82ca03"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Responsiva Detalle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assignments/custody/3a17262c-9561-4c1c-8703-d32d8800793a",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assignments",
+                "custody",
+                "3a17262c-9561-4c1c-8703-d32d8800793a"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Asignacion por Id (usar Id de ASIGNACION, no de activo)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assignments/25430dcf-beb5-4485-8f6c-2a0603ef9e89",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assignments",
+                "25430dcf-beb5-4485-8f6c-2a0603ef9e89"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Responsiva PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assignments/custody/3a17262c-9561-4c1c-8703-d32d8800793a/pdf",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assignments",
+                "custody",
+                "3a17262c-9561-4c1c-8703-d32d8800793a",
+                "pdf"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reportes",
+      "item": [
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{uri}}/api/Assignments/export/movements.xlsx?employeeId=26f92248-6c71-4d8e-b814-43994b82ca03",
+              "host": ["{{uri}}"], "path": [
+                "api",
+                "Assignments",
+                "export",
+                "movements.xlsx"
+              ],
+              "query": [
+                {
+                  "key": "employeeId",
+                  "value": "26f92248-6c71-4d8e-b814-43994b82ca03"
+                },
+                {
+                  "key": "assetId",
+                  "value": "25430dcf-beb5-4485-8f6c-2a0603ef9e89",
+                  "disabled": true
+                },
+                {
+                  "key": "onlyActive",
+                  "value": "false",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const json = pm.response.json();",
+              "    if (json && json.data && json.data.token) {",
+              "        pm.collectionVariables.set('token', json.data.token);",
+              "        console.log('Token guardado en {{token}}');",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "accept",
+            "value": "text/plain"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@itam.local\",\n  \"password\": \"Admin123!\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{uri}}/api/Auth/login",
+          "host": [
+            "{{uri}}"
+          ],
+          "path": [
+            "api",
+            "Auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "me",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "accept",
+            "value": "*/*"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{uri}}/api/Auth/me",
+          "host": ["{{uri}}"], "path": [
+            "api",
+            "Auth",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "accept",
+            "value": "text/plain"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{uri}}/api/Auth/users?onlyActive=true&onlyUnlinked=true",
+          "host": ["{{uri}}"], "path": [
+            "api",
+            "Auth",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "onlyActive",
+              "value": "true"
+            },
+            {
+              "key": "onlyUnlinked",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear usuario",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "accept",
+            "value": "text/plain"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"nuevo.operador@itam.local\",\n  \"displayName\": \"Nuevo Operador\",\n  \"role\": \"Operador\",\n  \"publicAppBaseUrl\": null,\n  \"sendEmail\": false\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{uri}}/api/Auth/users",
+          "host": ["{{uri}}"], "path": [
+            "api",
+            "Auth",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Desbloquear usuario",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "accept",
+            "value": "text/plain"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{uri}}/api/Auth/users/b95eeada-8766-47cf-8a29-25a30ff5550f/unlock",
+          "host": ["{{uri}}"], "path": [
+            "api",
+            "Auth",
+            "users",
+            "b95eeada-8766-47cf-8a29-25a30ff5550f",
+            "unlock"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Restablecer contrasena",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "accept",
+            "value": "text/plain"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"newPassword\": null,\n  \"sendEmail\": false,\n  \"publicAppBaseUrl\": null\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{uri}}/api/Auth/users/b95eeada-8766-47cf-8a29-25a30ff5550f/reset-password",
+          "host": ["{{uri}}"], "path": [
+            "api",
+            "Auth",
+            "users",
+            "b95eeada-8766-47cf-8a29-25a30ff5550f",
+            "reset-password"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cambiar contrasena",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "accept",
+            "value": "text/plain"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"currentPassword\": \"Admin123!\",\n  \"newPassword\": \"Admin123!\",\n  \"confirmPassword\": \"Admin123!\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{uri}}/api/Auth/change-password",
+          "host": ["{{uri}}"], "path": [
+            "api",
+            "Auth",
+            "change-password"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Probar SMTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "accept",
+            "value": "text/plain"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"toEmail\": null\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{uri}}/api/Auth/test-email",
+          "host": ["{{uri}}"], "path": [
+            "api",
+            "Auth",
+            "test-email"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "accept",
+            "value": "text/plain"
+          }
+        ],
+        "url": {
+          "raw": "{{uri}}/api/Status",
+          "host": ["{{uri}}"], "path": [
+            "api",
+            "Status"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "uri",
+      "value": "http://itam-api.runasp.net"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}

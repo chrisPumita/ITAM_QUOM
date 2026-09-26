@@ -8,7 +8,11 @@
 | POST | `/api/Auth/login` | Anónimo (rate limit + lockout vía `LockoutSettings`) |
 | GET | `/api/Auth/me` | Bearer JWT |
 | GET | `/api/Auth/users` | Administrador (`onlyActive`, `onlyUnlinked`) |
+| POST | `/api/Auth/users` | Administrador — crea Admin/Operador con contraseña temporal, envía correo (SMTP) |
 | POST | `/api/Auth/users/{id}/unlock` | Administrador |
+| POST | `/api/Auth/users/{id}/reset-password` | Administrador — resetea contraseña, opcionalmente envía correo |
+| POST | `/api/Auth/change-password` | Bearer JWT — cambia la contraseña del usuario autenticado |
+| POST | `/api/Auth/test-email` | Administrador — diagnóstico SMTP |
 
 ### Catálogos
 
@@ -61,3 +65,38 @@
 - WebApp: `ApiConnect:BaseUrl` + `ApiConnect:Endpoints` (HttpRequestBuilder / `ApiConnectFactory`).
 
 **CORS / MonsterASP:** llamadas server-side WebApp→API (ApiConnect) no atraviesan CORS. CORS solo aplica si el navegador llama a la API (JS/fetch). Al publicar WebApp, agrega su URL HTTPS a `CorsSettings:AllowedOrigins` en la API.
+
+## Capas y deuda técnica: `ITAM.Application` sin uso
+
+El PDF deja la estructura del proyecto a criterio del candidato ("se evaluará la lógica del
+negocio, modelos, acceso a datos, base de datos y pruebas"), así que esto **no es un
+incumplimiento**, pero conviene dejarlo explícito para la revisión técnica.
+
+**Estado actual:** `ITAM.Application` existe en el `.sln` pero solo tiene su `.csproj` (referencia
+a Domain y Shared, cero clases). La orquestación de reglas de negocio (`AssetService`,
+`AssetAssignmentService`, `EmployeeService`, `SupplierService`, `BrandService`, `CategoryService`,
+`ModelService`, `LocationService`, `FolioCounterService`, `AuthService`, más los servicios de
+exportación Excel/PDF) vive en `ITAM.Infrastructure/Services/**`, junto con el acceso a datos
+(EF Core, ADO.NET+SP, Dapper) y los detalles técnicos (Identity, SMTP, QuestPDF, ClosedXML). Los
+**contratos** (`IAssetService`, `IEmployeeService`, etc.) sí están correctamente en
+`ITAM.Domain/Interfaces/Services/**`, separados de su implementación.
+
+**Por qué quedó así:** decisión pragmática por tiempo (prueba de 3 días) — se priorizó completar
+las 8 funciones obligatorias y las reglas críticas antes que formalizar una cuarta capa.
+
+**Cómo se vería la separación correcta (Clean Architecture / Application layer):**
+
+| Debería vivir en `ITAM.Application` | Debería quedarse en `ITAM.Infrastructure` |
+|---|---|
+| `AssetService`, `AssetAssignmentService`, `EmployeeService`, `SupplierService`, `BrandService`, `CategoryService`, `ModelService`, `LocationService`, `FolioCounterService` — dependen solo de interfaces de `Domain`, la migración sería casi mecánica (mover archivo, cambiar namespace, referenciar `ITAM.Application` desde `ITAM.Api`) | `AssetRepository`, `AssetAssignmentRepository`, repos EF/Dapper, `SqlConnectionFactory` |
+| — | `AssetExportService`, `AssignmentExportService`, `CustodyPdfService` (atados a ClosedXML/QuestPDF, son detalle técnico legítimo) |
+| — | `AuthService` **tal como está hoy no se puede mover tal cual**: depende directo de `ApplicationDbContext` y `ApplicationUser` (tipos concretos de Infrastructure/Identity), rompiendo la regla de dependencia. Para moverlo primero habría que introducir una abstracción en `Domain` (p. ej. `IIdentityGateway`) que `Infrastructure` implemente. |
+
+**Costo de migrar ahora:** ~13 archivos de servicios + `DependencyInjection.cs` (registro) + los
+`using` de ~11 archivos de `ITAM.Tests` que referencian esos namespaces. Riesgo de romper las 52
+pruebas unitarias y la entrega si se hace apurado cerca de la fecha límite.
+
+**Recomendación:** si el tiempo lo permite, migrar los servicios "puros" (todos excepto Auth,
+export y PDF) a `ITAM.Application` como mejora post-entrega; si no, dejar este documento como
+evidencia de que la brecha es conocida y deliberada — es exactamente el tipo de "funcionalidad
+pendiente + cómo continuaría la implementación + riesgo identificado" que el PDF pide declarar.
