@@ -389,6 +389,16 @@ a:hover {
   padding: 1rem;
   border-top: 1px solid var(--line);
   background: var(--surface);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.app-footer__meta {
+  font-size: 0.75rem;
+  opacity: 0.9;
 }
 
 /* Cards de contenido — borde fino, sombra mínima (nunca el mismo glow genérico en todo) */
@@ -454,5 +464,158 @@ a:hover {
   .app-main {
     padding: 1.25rem 0.9rem;
   }
+}
+
+/* Home KPIs / workbench */
+.kpi-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  color: var(--ink-900);
+  height: 100%;
+  transition: border-color 0.15s ease;
+}
+
+.kpi-tile:hover {
+  border-color: var(--accent);
+  color: var(--ink-900);
+}
+
+.kpi-tile__label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-600);
+}
+
+.kpi-tile__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.kpi-tile--new .kpi-tile__value { color: var(--status-available); }
+.kpi-tile--available .kpi-tile__value { color: var(--ink-900); }
+.kpi-tile--assigned .kpi-tile__value { color: var(--status-assigned); }
+.kpi-tile--maintenance .kpi-tile__value { color: var(--status-maintenance); }
+.kpi-tile--retired .kpi-tile__value { color: var(--status-retired); }
+
+.workbench-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.5rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  color: var(--ink-900);
+  height: 100%;
+  min-height: 140px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.workbench-tile:hover {
+  border-color: var(--accent);
+  background: #FBF8F5;
+  color: var(--ink-900);
+}
+
+.workbench-tile__icon {
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+
+.workbench-tile__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.workbench-tile__desc {
+  font-size: 0.85rem;
+  color: var(--ink-600);
+}
+
+/* Timeline detalle */
+.asset-tl {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 2px solid var(--line);
+}
+
+.asset-tl__item {
+  position: relative;
+  padding: 0 0 1.25rem 1.25rem;
+}
+
+.asset-tl__item:last-child {
+  padding-bottom: 0;
+}
+
+.asset-tl__dot {
+  position: absolute;
+  left: -0.4rem;
+  top: 0.35rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: var(--ink-600);
+  border: 2px solid var(--surface);
+}
+
+.asset-tl__item--created .asset-tl__dot { background: var(--status-available); }
+.asset-tl__item--assigned .asset-tl__dot { background: var(--status-assigned); }
+.asset-tl__item--returned .asset-tl__dot { background: var(--accent); }
+.asset-tl__item--status .asset-tl__dot { background: var(--status-maintenance); }
+.asset-tl__item--location .asset-tl__dot { background: var(--ink-600); }
+
+.asset-tl__meta {
+  font-size: 0.8rem;
+  color: var(--ink-600);
+}
+
+.asset-tl__title {
+  font-weight: 600;
+  margin: 0.1rem 0;
+}
+
+.row-retired {
+  opacity: 0.65;
+}
+
+.custodian-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--status-assigned);
+  background: #E9F0FB;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+
+.status-new { color: #0F5A3B; background: #E9F6EF; }
+.status-new .status-badge__dot { background: var(--status-available); }
+
+/* Inventario: tipografía -2pt + DataTables */
+.table-inventory,
+.table-inventory th,
+.table-inventory td {
+  font-size: 0.75rem;
+}
+
+.table-catalog,
+.table-catalog th,
+.table-catalog td {
+  font-size: 0.8125rem;
+}
+
+#inventoryTable_wrapper .dataTables_filter input,
+#inventoryTable_wrapper .dataTables_length select {
+  font-size: 0.8rem;
 }
 

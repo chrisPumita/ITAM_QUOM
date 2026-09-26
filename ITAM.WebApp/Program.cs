@@ -1,3 +1,4 @@
+using ITAM.WebApp;
 using ITAM.WebApp.Middleware;
 using ITAM.WebApp.Security;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -30,6 +31,7 @@ try
     builder.Services.AddControllersWithViews();
     builder.Services.AddApiConnect(builder.Configuration);
     builder.Services.AddScoped<IWebAuthSession, WebAuthSession>();
+    builder.Services.AddSingleton<WebAppMetaData>();
 
     builder.Services
         .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

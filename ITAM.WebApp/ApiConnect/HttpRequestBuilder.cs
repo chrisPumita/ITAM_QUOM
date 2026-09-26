@@ -30,6 +30,7 @@ public sealed class HttpRequestBuilder
     private string? _relativePath;
     private HttpMethod _method = HttpMethod.Get;
     private object? _body;
+    private HttpContent? _content;
     private string? _bearerToken;
     private readonly List<KeyValuePair<string, string>> _query = [];
     private readonly Dictionary<string, string> _headers = new(StringComparer.OrdinalIgnoreCase);
@@ -70,6 +71,19 @@ public sealed class HttpRequestBuilder
     public HttpRequestBuilder WithJsonBody(object body)
     {
         _body = body;
+        _content = null;
+        return this;
+    }
+
+    public HttpRequestBuilder WithMultipartFile(string fieldName, Stream stream, string fileName, string? contentType = null)
+    {
+        var form = new MultipartFormDataContent();
+        var fileContent = new StreamContent(stream);
+        if (!string.IsNullOrWhiteSpace(contentType))
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        form.Add(fileContent, fieldName, fileName);
+        _content = form;
+        _body = null;
         return this;
     }
 
@@ -115,7 +129,9 @@ public sealed class HttpRequestBuilder
         foreach (var (k, v) in _headers)
             request.Headers.TryAddWithoutValidation(k, v);
 
-        if (_body is not null)
+        if (_content is not null)
+            request.Content = _content;
+        else if (_body is not null)
         {
             var json = JsonSerializer.Serialize(_body, JsonOptions);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -216,7 +232,11 @@ public static class ApiEndpoints
 
     public const string Assets = "Assets";
     public const string AssetById = "Assets.ById";
+    public const string AssetByCode = "Assets.ByCode";
     public const string AssetsExport = "Assets.Export";
+    public const string AssetsSummary = "Assets.Summary";
+    public const string AssetsImport = "Assets.Import";
+    public const string AssetsImportTemplate = "Assets.ImportTemplate";
 
     public const string Assignments = "Assignments";
     public const string AssignmentById = "Assignments.ById";

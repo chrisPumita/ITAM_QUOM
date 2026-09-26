@@ -1,11 +1,96 @@
+@model ITAM.WebApp.Models.HomeDashboardViewModel
 @{
     ViewData["Title"] = "Inicio";
 }
 
-<div class="py-4">
-    <h1 class="h3 mb-2">Bienvenido, @User.Identity?.Name</h1>
-    <p class="text-muted mb-0">
-        Sesión activa. La API se consume con ApiConnect (builder + endpoints de appsettings).
-        Siguiente: pantallas de inventario, asignación e historial.
-    </p>
-</div>
+@if (Model.IsAdmin)
+{
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-2">
+        <div>
+            <h1 class="h4 fw-bold mb-1">Resumen</h1>
+            <p class="text-muted mb-0 small">Inventario de activos ITAM QUOM</p>
+        </div>
+        <span class="text-muted small">@User.Identity?.Name</span>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SummaryError))
+    {
+        <div class="alert alert-warning py-2">@Model.SummaryError — los atajos siguen disponibles.</div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg">
+            <a asp-controller="Assets" asp-action="Index" asp-route-condition="New" asp-route-status="Available" class="kpi-tile kpi-tile--new text-decoration-none">
+                <span class="kpi-tile__label">Nuevos</span>
+                <span class="kpi-tile__value">@(Model.SummaryLoaded ? Model.Nuevos.ToString() : "—")</span>
+            </a>
+        </div>
+        <div class="col-6 col-lg">
+            <a asp-controller="Assets" asp-action="Index" asp-route-condition="Used" asp-route-status="Available" class="kpi-tile kpi-tile--available text-decoration-none">
+                <span class="kpi-tile__label">Disponibles</span>
+                <span class="kpi-tile__value">@(Model.SummaryLoaded ? Model.Disponibles.ToString() : "—")</span>
+            </a>
+        </div>
+        <div class="col-6 col-lg">
+            <a asp-controller="Assets" asp-action="Index" asp-route-status="Assigned" class="kpi-tile kpi-tile--assigned text-decoration-none">
+                <span class="kpi-tile__label">Asignados</span>
+                <span class="kpi-tile__value">@(Model.SummaryLoaded ? Model.Asignados.ToString() : "—")</span>
+            </a>
+        </div>
+        <div class="col-6 col-lg">
+            <a asp-controller="Assets" asp-action="Index" asp-route-status="Maintenance" class="kpi-tile kpi-tile--maintenance text-decoration-none">
+                <span class="kpi-tile__label">Mantenimiento</span>
+                <span class="kpi-tile__value">@(Model.SummaryLoaded ? Model.Mantenimiento.ToString() : "—")</span>
+            </a>
+        </div>
+        <div class="col-6 col-lg">
+            <a asp-controller="Assets" asp-action="Index" asp-route-status="Retired" asp-route-showRetired="true" class="kpi-tile kpi-tile--retired text-decoration-none">
+                <span class="kpi-tile__label">Baja</span>
+                <span class="kpi-tile__value">@(Model.SummaryLoaded ? Model.Baja.ToString() : "—")</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" asp-controller="Assets" asp-action="Index"><i class="bi bi-laptop"></i> Inventario</a>
+        <a class="btn btn-outline-secondary" asp-controller="Assignments" asp-action="Assign"><i class="bi bi-person-check"></i> Asignar</a>
+        <a class="btn btn-outline-secondary" asp-controller="Catalogos" asp-action="Index"><i class="bi bi-journal-bookmark"></i> Catálogos</a>
+    </div>
+}
+else
+{
+    <div class="mb-4">
+        <h1 class="h4 fw-bold mb-1">Operación</h1>
+        <p class="text-muted mb-0 small">Acciones rápidas · @User.Identity?.Name</p>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <a asp-controller="Assets" asp-action="Create" class="workbench-tile text-decoration-none">
+                <i class="bi bi-plus-square workbench-tile__icon"></i>
+                <span class="workbench-tile__title">Alta</span>
+                <span class="workbench-tile__desc">Registrar equipo o accesorio</span>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a asp-controller="Assignments" asp-action="Assign" class="workbench-tile text-decoration-none">
+                <i class="bi bi-person-check workbench-tile__icon"></i>
+                <span class="workbench-tile__title">Asignar</span>
+                <span class="workbench-tile__desc">Entregar a un colaborador</span>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a asp-controller="Assignments" asp-action="Return" class="workbench-tile text-decoration-none">
+                <i class="bi bi-arrow-return-left workbench-tile__icon"></i>
+                <span class="workbench-tile__title">Devolver</span>
+                <span class="workbench-tile__desc">Por responsiva o etiqueta</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a class="btn btn-outline-secondary btn-sm" asp-controller="Assets" asp-action="Index">
+            <i class="bi bi-laptop"></i> Ver inventario
+        </a>
+    </div>
+}

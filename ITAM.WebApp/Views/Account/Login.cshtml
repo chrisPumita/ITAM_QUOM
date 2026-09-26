@@ -1,3 +1,4 @@
+@inject ITAM.WebApp.WebAppMetaData AppMeta
 @{
     ViewData["Title"] = "Iniciar sesión";
     Layout = "_LoginLayout";
@@ -13,7 +14,9 @@
          class="api-connection api-connection--checking login-card__status"
          title="Comprobando API…"
          role="status"
-         aria-live="polite">
+         aria-live="polite"
+         data-web-version="@AppMeta.Version"
+         data-web-updated="@AppMeta.LastUpdate">
         <span class="api-connection__dot" aria-hidden="true"></span>
         <span class="api-connection__label">API…</span>
     </div>
