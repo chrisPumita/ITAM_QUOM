@@ -116,5 +116,6 @@ Si `migrations add` genera un `Up()` vacío, el modelo ya está cubierto por una
 | Método | Ruta | Auth |
 |---|---|---|
 | GET | `/api/Status` | Anónimo |
-| POST | `/api/Auth/login` | Anónimo |
+| POST | `/api/Auth/login` | Anónimo (rate limit + lockout Identity 3/15 min) |
 | GET | `/api/Auth/me` | Bearer JWT |
+| GET | `/api/Assignments/custody/{id}/pdf` | Admin/Operador — PDF responsiva (cabecero `Company`) |

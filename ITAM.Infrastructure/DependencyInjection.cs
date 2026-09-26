@@ -43,11 +43,21 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.Configure<LockoutSettings>(configuration.GetSection(LockoutSettings.SectionName));
         services.Configure<ITAM.Shared.Services.Mail.SmtpSettings>(
             configuration.GetSection(ITAM.Shared.Services.Mail.SmtpSettings.SectionName));
+        services.Configure<ITAM.Shared.Services.Company.CompanySettings>(
+            configuration.GetSection(ITAM.Shared.Services.Company.CompanySettings.SectionName));
 
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' no configurada.");
+
+        var lockout = configuration.GetSection(LockoutSettings.SectionName).Get<LockoutSettings>()
+                      ?? new LockoutSettings();
+        if (lockout.MaxFailedAccessAttempts < 1)
+            lockout.MaxFailedAccessAttempts = 1;
+        if (lockout.DefaultLockoutMinutes < 1)
+            lockout.DefaultLockoutMinutes = 1;
 
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
@@ -60,14 +70,19 @@ public static class DependencyInjection
                 options.Password.RequireNonAlphanumeric = true;
                 options.Password.RequiredLength = 8;
                 options.User.RequireUniqueEmail = true;
+                options.Lockout.AllowedForNewUsers = lockout.AllowedForNewUsers;
+                options.Lockout.MaxFailedAccessAttempts = lockout.MaxFailedAccessAttempts;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(lockout.DefaultLockoutMinutes);
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+
 
         services.AddScoped<IAuthService, AuthService>();
         services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
         services.AddScoped<IAssetAssignmentRepository, AssetAssignmentRepository>();
         services.AddScoped<IAssetAssignmentService, AssetAssignmentService>();
+        services.AddScoped<ICustodyPdfService, CustodyPdfService>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IBrandRepository, BrandRepository>();
         services.AddScoped<IModelRepository, ModelRepository>();
@@ -134,7 +149,14 @@ public static class DependencyInjection
     {
         var existing = await userManager.FindByEmailAsync(email);
         if (existing is not null)
+        {
+            if (!existing.LockoutEnabled)
+            {
+                existing.LockoutEnabled = true;
+                await userManager.UpdateAsync(existing);
+            }
             return;
+        }
 
         var user = new ApplicationUser
         {
@@ -144,6 +166,7 @@ public static class DependencyInjection
             EmailConfirmed = true,
             DisplayName = displayName,
             IsActive = true,
+            LockoutEnabled = true,
             CreatedAt = DateTime.UtcNow
         };
 

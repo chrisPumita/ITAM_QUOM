@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ITAM.Api.Controllers;
 
 /// <summary>
-/// Asignación / devolución (ADO.NET + SP) y consultas (Dapper). Admin y Operador.
+/// Asignación / devolución (ADO.NET + SP), consultas (Dapper) y PDF responsiva.
 /// </summary>
 [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
 [Route("api/[controller]")]
@@ -18,8 +18,13 @@ namespace ITAM.Api.Controllers;
 public class AssignmentsController : ControllerBase
 {
     private readonly IAssetAssignmentService _service;
+    private readonly ICustodyPdfService _custodyPdf;
 
-    public AssignmentsController(IAssetAssignmentService service) => _service = service;
+    public AssignmentsController(IAssetAssignmentService service, ICustodyPdfService custodyPdf)
+    {
+        _service = service;
+        _custodyPdf = custodyPdf;
+    }
 
     /// <summary>Listado de asignaciones. Por defecto solo activas.</summary>
     [HttpGet]
@@ -57,6 +62,30 @@ public class AssignmentsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<CustodyFormDetailDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<CustodyFormDetailDto>>> GetCustody(Guid id)
         => ApiResponseFactory.FromResult(await _service.GetCustodyFormAsync(id), HttpStatusCode.OK);
+
+    /// <summary>PDF de responsiva (cabecero empresa desde appsettings Company).</summary>
+    [HttpGet("custody/{id:guid}/pdf")]
+    [Produces("application/pdf")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetCustodyPdf(Guid id, CancellationToken ct)
+    {
+        var result = await _custodyPdf.GenerateAsync(id, ct);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            return new ObjectResult(new ApiResponse<object>
+            {
+                Code = HttpStatusCode.NotFound,
+                Message = result.Message,
+                Error = result.Error
+            })
+            {
+                StatusCode = StatusCodes.Status404NotFound
+            };
+        }
+
+        return File(result.Data.Content, result.Data.ContentType, result.Data.FileName);
+    }
 
     /// <summary>Detalle de una asignación.</summary>
     [HttpGet("{id:guid}")]
