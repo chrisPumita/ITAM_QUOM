@@ -12,6 +12,37 @@
     <a class="btn btn-primary btn-sm" asp-action="Create"><i class="bi bi-person-plus"></i> Nuevo usuario</a>
 </div>
 
+@if (TempData["ResetPassword"] is string tempPw)
+{
+    <div class="alert alert-warning">
+        Contraseña temporal para <strong>@TempData["ResetEmail"]</strong>:
+        <code class="user-select-all">@tempPw</code>
+        — cópiela ahora; no se mostrará de nuevo.
+    </div>
+}
+
+<div class="panel mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <div>
+            <div class="fw-semibold">Probar correo (SMTP)</div>
+            <div class="text-muted small">Envía un mensaje de prueba con la configuración de la API.</div>
+        </div>
+    </div>
+    <form asp-action="TestEmail" method="post" class="row g-2 align-items-end">
+        @Html.AntiForgeryToken()
+        <div class="col-md-6">
+            <label class="form-label small mb-0">Destinatario</label>
+            <input type="email" name="toEmail" class="form-control form-control-sm"
+                   placeholder="Dejar vacío = FromEmail de SmtpSettings" />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-envelope-check"></i> Enviar prueba
+            </button>
+        </div>
+    </form>
+</div>
+
 <div class="panel">
     <div class="table-responsive">
         <table class="table table-sm table-hover mb-0 align-middle">
@@ -22,12 +53,13 @@
                     <th>Rol</th>
                     <th>Activo</th>
                     <th>Bloqueo</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
             @if (Model.Count == 0)
             {
-                <tr><td colspan="5" class="text-center text-muted py-4">Sin usuarios.</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">Sin usuarios.</td></tr>
             }
             else
             {
@@ -39,6 +71,17 @@
                         <td>@(u.Role ?? "—")</td>
                         <td>@(u.IsActive ? "Sí" : "No")</td>
                         <td>@(u.IsLockedOut ? "Bloqueado" : "—")</td>
+                        <td class="text-end text-nowrap">
+                            <form asp-action="ResetPassword" method="post" class="d-inline"
+                                  onsubmit="return confirm('¿Restablecer contraseña de @u.Email? Se generará una temporal.');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@u.Id" />
+                                <input type="hidden" name="sendEmail" value="true" />
+                                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Restablecer contraseña">
+                                    <i class="bi bi-key"></i>
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                 }
             }

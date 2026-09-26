@@ -66,4 +66,86 @@ public class UsuariosController : Controller
             return View(dto);
         }
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(Guid id, string? newPassword, bool sendEmail = true, CancellationToken ct = default)
+    {
+        try
+        {
+            var result = await _api.Create()
+                .WithEndpoint(ApiEndpoints.AuthResetPassword)
+                .WithRoute("id", id)
+                .WithMethod(HttpMethod.Post)
+                .WithJsonBody(new AdminResetPasswordDto
+                {
+                    NewPassword = string.IsNullOrWhiteSpace(newPassword) ? null : newPassword,
+                    SendEmail = sendEmail,
+                    PublicAppBaseUrl = $"{Request.Scheme}://{Request.Host}"
+                })
+                .SendJsonAsync<ApiResponse<AdminResetPasswordResultDto>>(ct);
+
+            if (result is not { IsSuccess: true, Data: not null })
+            {
+                TempData["Error"] = result?.Message ?? "No se pudo restablecer la contraseña.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["Success"] = result.Message;
+            TempData["ResetPassword"] = result.Data.TemporaryPassword;
+            TempData["ResetEmail"] = result.Data.Email;
+            if (!string.IsNullOrWhiteSpace(result.Data.EmailError))
+                TempData["Error"] = result.Data.EmailError;
+
+            return RedirectToAction(nameof(Index));
+        }
+        catch
+        {
+            TempData["Error"] = "Sin conexión con la API.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TestEmail(string? toEmail, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.Create()
+                .WithEndpoint(ApiEndpoints.AuthTestEmail)
+                .WithMethod(HttpMethod.Post)
+                .WithJsonBody(new TestEmailDto { ToEmail = toEmail })
+                .SendJsonAsync<ApiResponse<TestEmailResultDto>>(ct);
+
+            if (result?.Data is null)
+            {
+                TempData["Error"] = result?.Message ?? "No se pudo probar el correo.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var d = result.Data;
+            if (d.Sent)
+            {
+                TempData["Success"] = $"Correo de prueba enviado a {d.ToEmail}.";
+            }
+            else
+            {
+                var hints = d.Diagnostics.Hints.Count > 0
+                    ? " " + string.Join(" ", d.Diagnostics.Hints)
+                    : "";
+                TempData["Error"] =
+                    $"No se envió el correo: {d.Error ?? result.Message}.{hints} " +
+                    $"(Host={d.Diagnostics.Host}, User={d.Diagnostics.UserNameHint}, " +
+                    $"Password={(d.Diagnostics.HasPassword ? "sí" : "no")})";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+        catch
+        {
+            TempData["Error"] = "Sin conexión con la API.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
 }

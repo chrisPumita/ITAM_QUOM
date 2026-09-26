@@ -216,6 +216,9 @@ public static class ApiEndpoints
     public const string AuthUsers = "Auth.Users";
     public const string AuthUnlock = "Auth.Unlock";
     public const string AuthCreateUser = "Auth.Users"; // POST mismo endpoint
+    public const string AuthTestEmail = "Auth.TestEmail";
+    public const string AuthChangePassword = "Auth.ChangePassword";
+    public const string AuthResetPassword = "Auth.ResetPassword";
 
     public const string Categories = "Categories";
     public const string CategoryById = "Categories.ById";

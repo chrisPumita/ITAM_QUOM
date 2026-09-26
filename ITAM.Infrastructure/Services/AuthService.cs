@@ -260,6 +260,109 @@ public class AuthService : IAuthService
         };
     }
 
+    /// <inheritdoc />
+    public async Task<Result<bool>> ChangePasswordAsync(Guid userId, ChangePasswordDto dto)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return new Result<bool>
+            {
+                IsSuccess = false,
+                Message = "Usuario no encontrado.",
+                Error = "NotFound"
+            };
+        }
+
+        var result = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
+        if (!result.Succeeded)
+        {
+            return new Result<bool>
+            {
+                IsSuccess = false,
+                Message = string.Join("; ", result.Errors.Select(e => e.Description)),
+                Error = "Validation"
+            };
+        }
+
+        return new Result<bool>
+        {
+            IsSuccess = true,
+            Message = "Contraseña actualizada.",
+            Data = true
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<AdminResetPasswordResultDto>> AdminResetPasswordAsync(
+        Guid userId, AdminResetPasswordDto dto, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return new Result<AdminResetPasswordResultDto>
+            {
+                IsSuccess = false,
+                Message = "Usuario no encontrado.",
+                Error = "NotFound"
+            };
+        }
+
+        var password = string.IsNullOrWhiteSpace(dto.NewPassword)
+            ? GenerateTemporaryPassword()
+            : dto.NewPassword.Trim();
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var reset = await _userManager.ResetPasswordAsync(user, token, password);
+        if (!reset.Succeeded)
+        {
+            return new Result<AdminResetPasswordResultDto>
+            {
+                IsSuccess = false,
+                Message = string.Join("; ", reset.Errors.Select(e => e.Description)),
+                Error = "Validation"
+            };
+        }
+
+        await _userManager.SetLockoutEndDateAsync(user, null);
+        await _userManager.ResetAccessFailedCountAsync(user);
+
+        var baseUrl = !string.IsNullOrWhiteSpace(dto.PublicAppBaseUrl)
+            ? dto.PublicAppBaseUrl.Trim().TrimEnd('/')
+            : (_smtp.PublicAppBaseUrl ?? "").Trim().TrimEnd('/');
+        if (string.IsNullOrWhiteSpace(baseUrl))
+            baseUrl = "https://localhost:7048";
+
+        var resultDto = new AdminResetPasswordResultDto
+        {
+            UserId = user.Id,
+            Email = user.Email ?? "",
+            TemporaryPassword = password
+        };
+
+        if (dto.SendEmail && !string.IsNullOrWhiteSpace(user.Email))
+        {
+            var body = $"""
+                <p>Hola <strong>{System.Net.WebUtility.HtmlEncode(user.DisplayName)}</strong>,</p>
+                <p>Se restableció tu contraseña en <strong>ITAM QUOM</strong>.</p>
+                <p>Nueva contraseña temporal: <code>{System.Net.WebUtility.HtmlEncode(password)}</code></p>
+                <p><a href="{System.Net.WebUtility.HtmlEncode(baseUrl + "/Account/Login")}">Iniciar sesión</a></p>
+                """;
+            var (sent, err) = await _mail.SendAsync(user.Email, "ITAM QUOM — contraseña restablecida", body, ct);
+            resultDto.EmailSent = sent;
+            resultDto.EmailError = err;
+        }
+
+        return new Result<AdminResetPasswordResultDto>
+        {
+            IsSuccess = true,
+            Message = resultDto.EmailSent
+                ? "Contraseña restablecida y correo enviado."
+                : "Contraseña restablecida. Copie la temporal si el correo no se envió.",
+            Data = resultDto
+        };
+    }
+
     private static string GenerateTemporaryPassword()
     {
         const string alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$";

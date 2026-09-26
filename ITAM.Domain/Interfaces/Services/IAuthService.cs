@@ -45,4 +45,11 @@ public interface IAuthService
     /// Crea un usuario Administrador u Operador con contraseña temporal y opcionalmente envía correo.
     /// </summary>
     Task<Result<CreateAdminUserResultDto>> CreateAdminUserAsync(CreateAdminUserDto dto, CancellationToken ct = default);
+
+    /// <summary>Cambio de contraseña del usuario autenticado.</summary>
+    Task<Result<bool>> ChangePasswordAsync(Guid userId, ChangePasswordDto dto);
+
+    /// <summary>Admin: restablece contraseña de otro usuario (genera temporal si no se indica).</summary>
+    Task<Result<AdminResetPasswordResultDto>> AdminResetPasswordAsync(
+        Guid userId, AdminResetPasswordDto dto, CancellationToken ct = default);
 }
