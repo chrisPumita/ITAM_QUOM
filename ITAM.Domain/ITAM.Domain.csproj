@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ITAM.Shared\ITAM.Shared.csproj" />
+  </ItemGroup>
+
 </Project>
