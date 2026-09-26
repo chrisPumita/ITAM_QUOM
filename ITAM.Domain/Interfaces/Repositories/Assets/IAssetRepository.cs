@@ -1,4 +1,5 @@
 using ITAM.Domain.Entities.Assets;
+using ITAM.Domain.Interfaces.Repositories.Assets;
 using ITAM.Shared.Enums;
 
 namespace ITAM.Domain.Interfaces.Repositories.Assets;
@@ -10,6 +11,7 @@ public interface IAssetRepository
         AssetKind? kind,
         int? modelId,
         int? locationId,
+        IReadOnlyList<int>? categoryIds,
         CancellationToken ct = default);
 
     Task<Asset?> GetByIdAsync(Guid id, CancellationToken ct = default);

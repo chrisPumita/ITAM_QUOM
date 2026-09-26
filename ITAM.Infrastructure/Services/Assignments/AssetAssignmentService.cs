@@ -65,9 +65,10 @@ public sealed class AssetAssignmentService : IAssetAssignmentService
             : Ok(item, "OK");
     }
 
-    public async Task<Result<List<CustodyFormListDto>>> ListCustodyFormsAsync(Guid? employeeId)
+    public async Task<Result<List<CustodyFormListDto>>> ListCustodyFormsAsync(
+        Guid? employeeId, DateTime? fromUtc, DateTime? toUtc)
     {
-        var items = await _repo.ListCustodyFormsAsync(employeeId);
+        var items = await _repo.ListCustodyFormsAsync(employeeId, fromUtc, toUtc);
         return Ok(items, "OK");
     }
 
@@ -79,9 +80,10 @@ public sealed class AssetAssignmentService : IAssetAssignmentService
             : Ok(item, "OK");
     }
 
-    public async Task<Result<List<AssetMovementListDto>>> ListMovementsAsync(Guid? assetId, Guid? employeeId)
+    public async Task<Result<List<AssetMovementListDto>>> ListMovementsAsync(
+        Guid? assetId, Guid? employeeId, DateTime? fromUtc, DateTime? toUtc)
     {
-        var items = await _repo.ListMovementsAsync(assetId, employeeId);
+        var items = await _repo.ListMovementsAsync(assetId, employeeId, fromUtc, toUtc);
         return Ok(items, "OK");
     }
 

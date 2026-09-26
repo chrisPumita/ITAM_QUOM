@@ -10,7 +10,8 @@ public interface IAssetAssignmentService
 
     Task<Result<List<AssignmentListDto>>> ListAssignmentsAsync(Guid? employeeId, Guid? assetId, bool onlyActive);
     Task<Result<AssignmentListDto>> GetAssignmentAsync(Guid id);
-    Task<Result<List<CustodyFormListDto>>> ListCustodyFormsAsync(Guid? employeeId);
+    Task<Result<List<CustodyFormListDto>>> ListCustodyFormsAsync(Guid? employeeId, DateTime? fromUtc, DateTime? toUtc);
     Task<Result<CustodyFormDetailDto>> GetCustodyFormAsync(Guid id);
-    Task<Result<List<AssetMovementListDto>>> ListMovementsAsync(Guid? assetId, Guid? employeeId);
+    Task<Result<List<AssetMovementListDto>>> ListMovementsAsync(
+        Guid? assetId, Guid? employeeId, DateTime? fromUtc, DateTime? toUtc);
 }

@@ -17,9 +17,10 @@ public class AssetService : IAssetService
         AssetStatus? status,
         AssetKind? kind,
         int? modelId,
-        int? locationId)
+        int? locationId,
+        IReadOnlyList<int>? categoryIds)
     {
-        var items = await _repo.ListAsync(status, kind, modelId, locationId);
+        var items = await _repo.ListAsync(status, kind, modelId, locationId, categoryIds);
         return Ok(items.Select(Map).ToList(), "Activos obtenidos.");
     }
 
@@ -134,6 +135,7 @@ public class AssetService : IAssetService
         ModelName = x.Model?.Name ?? string.Empty,
         BrandName = x.Model?.Brand?.Name ?? string.Empty,
         CategoryName = x.Model?.Category?.Name ?? string.Empty,
+        Specs = x.Model?.Specs,
         SupplierId = x.SupplierId,
         SupplierName = x.Supplier?.Name,
         LocationId = x.LocationId,

@@ -142,6 +142,24 @@ public class AssetMovementListDto
     public Guid Id { get; set; }
     public Guid AssetId { get; set; }
     public string AssetCode { get; set; } = string.Empty;
+    public string? SerialNumber { get; set; }
+    public AssetKind AssetKind { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
+    public string ModelName { get; set; } = string.Empty;
+    public string? Specs { get; set; }
+
+    public string Description
+    {
+        get
+        {
+            var title = string.Join(" ", new[] { BrandName, ModelName }
+                .Where(s => !string.IsNullOrWhiteSpace(s)));
+            return string.Join(" · ", new[] { title, Specs }
+                .Where(s => !string.IsNullOrWhiteSpace(s)));
+        }
+    }
+
     public MovementType MovementType { get; set; }
     public AssetStatus? FromStatus { get; set; }
     public AssetStatus? ToStatus { get; set; }

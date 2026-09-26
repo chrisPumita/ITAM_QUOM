@@ -212,6 +212,8 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
 
     public async Task<List<CustodyFormListDto>> ListCustodyFormsAsync(
         Guid? employeeId,
+        DateTime? fromUtc,
+        DateTime? toUtc,
         CancellationToken ct = default)
     {
         const string sql = """
@@ -235,12 +237,19 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
             LEFT JOIN dbo.AspNetUsers u ON u.Id = cf.IssuedByUserId
             WHERE cf.IsDeleted = 0
               AND (@EmployeeId IS NULL OR cf.EmployeeId = @EmployeeId)
+              AND (@FromUtc IS NULL OR cf.IssuedAt >= @FromUtc)
+              AND (@ToUtc IS NULL OR cf.IssuedAt < @ToUtc)
             ORDER BY cf.IssuedAt DESC, cf.CreatedAt DESC
             """;
 
         await using var connection = await _connections.CreateOpenConnectionAsync(ct);
         var rows = await connection.QueryAsync<CustodyHeaderRow>(
-            new CommandDefinition(sql, new { EmployeeId = employeeId }, cancellationToken: ct));
+            new CommandDefinition(sql, new
+            {
+                EmployeeId = employeeId,
+                FromUtc = fromUtc,
+                ToUtc = toUtc
+            }, cancellationToken: ct));
         return rows.Select(AssetAssignmentMappings.ToListDto).ToList();
     }
 
@@ -309,6 +318,8 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
     public async Task<List<AssetMovementListDto>> ListMovementsAsync(
         Guid? assetId,
         Guid? employeeId,
+        DateTime? fromUtc,
+        DateTime? toUtc,
         CancellationToken ct = default)
     {
         const string sql = """
@@ -316,6 +327,12 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
                 m.Id,
                 m.AssetId,
                 a.AssetCode,
+                a.SerialNumber,
+                a.Kind            AS AssetKind,
+                c.Name            AS CategoryName,
+                b.Name            AS BrandName,
+                md.Name           AS ModelName,
+                md.Specs,
                 m.MovementType,
                 m.FromStatus,
                 m.ToStatus,
@@ -333,6 +350,9 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
                 m.OccurredAt
             FROM dbo.AssetMovements m
             INNER JOIN dbo.Assets a ON a.Id = m.AssetId AND a.IsDeleted = 0
+            INNER JOIN dbo.Models md ON md.Id = a.ModelId
+            INNER JOIN dbo.Brands b ON b.Id = md.BrandId
+            INNER JOIN dbo.Categories c ON c.Id = md.CategoryId
             LEFT JOIN dbo.Locations fl ON fl.Id = m.FromLocationId
             LEFT JOIN dbo.Locations tl ON tl.Id = m.ToLocationId
             LEFT JOIN dbo.Employees e ON e.Id = m.EmployeeId AND e.IsDeleted = 0
@@ -341,12 +361,20 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
             WHERE m.IsDeleted = 0
               AND (@AssetId IS NULL OR m.AssetId = @AssetId)
               AND (@EmployeeId IS NULL OR m.EmployeeId = @EmployeeId)
+              AND (@FromUtc IS NULL OR m.OccurredAt >= @FromUtc)
+              AND (@ToUtc IS NULL OR m.OccurredAt < @ToUtc)
             ORDER BY m.OccurredAt DESC
             """;
 
         await using var connection = await _connections.CreateOpenConnectionAsync(ct);
         var rows = await connection.QueryAsync<MovementRow>(
-            new CommandDefinition(sql, new { AssetId = assetId, EmployeeId = employeeId }, cancellationToken: ct));
+            new CommandDefinition(sql, new
+            {
+                AssetId = assetId,
+                EmployeeId = employeeId,
+                FromUtc = fromUtc,
+                ToUtc = toUtc
+            }, cancellationToken: ct));
         return rows.Select(AssetAssignmentMappings.ToDto).ToList();
     }
 

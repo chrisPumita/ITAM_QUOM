@@ -1,5 +1,6 @@
 using System.Net;
 using System.Security.Claims;
+using ITAM.Domain.Interfaces.Services;
 using ITAM.Domain.Interfaces.Services.Assignments;
 using ITAM.Shared.Dtos.Apis;
 using ITAM.Shared.Dtos.Assignments;
@@ -42,32 +43,19 @@ public class AssignmentsController : ControllerBase
             await _service.ListAssignmentsAsync(employeeId, assetId, onlyActive),
             HttpStatusCode.OK);
 
-    /// <summary>Export Excel de asignaciones.</summary>
-    [HttpGet("export/assignments.xlsx")]
-    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ExportAssignments(
-        [FromQuery] Guid? employeeId = null,
-        [FromQuery] Guid? assetId = null,
-        [FromQuery] bool onlyActive = true,
-        CancellationToken ct = default)
-    {
-        var result = await _export.ExportAssignmentsAsync(employeeId, assetId, onlyActive, ct);
-        return ToExportFileResult(result);
-    }
-
-    /// <summary>Historial de movimientos (auditoría).</summary>
+    /// <summary>Historial de movimientos (auditoría). Filtro de fechas: from inclusive, to exclusive (UTC).</summary>
     [HttpGet("movements")]
     [ProducesResponseType(typeof(ApiResponse<List<AssetMovementListDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<AssetMovementListDto>>>> ListMovements(
         [FromQuery] Guid? assetId = null,
-        [FromQuery] Guid? employeeId = null)
+        [FromQuery] Guid? employeeId = null,
+        [FromQuery] DateTime? from = null,
+        [FromQuery] DateTime? to = null)
         => ApiResponseFactory.FromResult(
-            await _service.ListMovementsAsync(assetId, employeeId),
+            await _service.ListMovementsAsync(assetId, employeeId, from, to),
             HttpStatusCode.OK);
 
-    /// <summary>Export Excel de movimientos.</summary>
+    /// <summary>Export Excel de movimientos (mismos filtros que el listado).</summary>
     [HttpGet("export/movements.xlsx")]
     [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -75,19 +63,23 @@ public class AssignmentsController : ControllerBase
     public async Task<IActionResult> ExportMovements(
         [FromQuery] Guid? assetId = null,
         [FromQuery] Guid? employeeId = null,
+        [FromQuery] DateTime? from = null,
+        [FromQuery] DateTime? to = null,
         CancellationToken ct = default)
     {
-        var result = await _export.ExportMovementsAsync(assetId, employeeId, ct);
+        var result = await _export.ExportMovementsAsync(assetId, employeeId, from, to, ct);
         return ToExportFileResult(result);
     }
 
-    /// <summary>Listado de responsivas (CustodyForm).</summary>
+    /// <summary>Listado de responsivas. Filtro IssuedAt: from inclusive, to exclusive (UTC).</summary>
     [HttpGet("custody")]
     [ProducesResponseType(typeof(ApiResponse<List<CustodyFormListDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<CustodyFormListDto>>>> ListCustody(
-        [FromQuery] Guid? employeeId = null)
+        [FromQuery] Guid? employeeId = null,
+        [FromQuery] DateTime? from = null,
+        [FromQuery] DateTime? to = null)
         => ApiResponseFactory.FromResult(
-            await _service.ListCustodyFormsAsync(employeeId),
+            await _service.ListCustodyFormsAsync(employeeId, from, to),
             HttpStatusCode.OK);
 
     /// <summary>Detalle de responsiva con renglones.</summary>

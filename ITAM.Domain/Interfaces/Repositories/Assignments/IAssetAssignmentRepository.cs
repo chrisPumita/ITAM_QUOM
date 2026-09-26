@@ -27,6 +27,8 @@ public interface IAssetAssignmentRepository
 
     Task<List<CustodyFormListDto>> ListCustodyFormsAsync(
         Guid? employeeId,
+        DateTime? fromUtc,
+        DateTime? toUtc,
         CancellationToken ct = default);
 
     Task<CustodyFormDetailDto?> GetCustodyFormAsync(Guid id, CancellationToken ct = default);
@@ -34,5 +36,7 @@ public interface IAssetAssignmentRepository
     Task<List<AssetMovementListDto>> ListMovementsAsync(
         Guid? assetId,
         Guid? employeeId,
+        DateTime? fromUtc,
+        DateTime? toUtc,
         CancellationToken ct = default);
 }

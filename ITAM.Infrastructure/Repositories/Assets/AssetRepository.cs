@@ -17,6 +17,7 @@ public class AssetRepository : IAssetRepository
         AssetKind? kind,
         int? modelId,
         int? locationId,
+        IReadOnlyList<int>? categoryIds,
         CancellationToken ct = default)
     {
         var q = _db.Assets
@@ -36,6 +37,8 @@ public class AssetRepository : IAssetRepository
             q = q.Where(x => x.ModelId == modelId.Value);
         if (locationId.HasValue)
             q = q.Where(x => x.LocationId == locationId.Value);
+        if (categoryIds is { Count: > 0 })
+            q = q.Where(x => categoryIds.Contains(x.Model.CategoryId));
 
         return q.OrderBy(x => x.AssetCode).ToListAsync(ct);
     }

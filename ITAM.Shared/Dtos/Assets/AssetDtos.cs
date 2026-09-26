@@ -16,6 +16,18 @@ public class AssetListDto
     public string ModelName { get; set; } = string.Empty;
     public string BrandName { get; set; } = string.Empty;
     public string CategoryName { get; set; } = string.Empty;
+    public string? Specs { get; set; }
+
+    public string Description
+    {
+        get
+        {
+            var title = string.Join(" ", new[] { BrandName, ModelName }
+                .Where(s => !string.IsNullOrWhiteSpace(s)));
+            return string.Join(" · ", new[] { title, Specs }
+                .Where(s => !string.IsNullOrWhiteSpace(s)));
+        }
+    }
 
     public Guid? SupplierId { get; set; }
     public string? SupplierName { get; set; }

@@ -87,6 +87,12 @@ internal static class AssetAssignmentMappings
         Id = r.Id,
         AssetId = r.AssetId,
         AssetCode = r.AssetCode,
+        SerialNumber = r.SerialNumber,
+        AssetKind = ParseEnum<AssetKind>(r.AssetKind),
+        CategoryName = r.CategoryName,
+        BrandName = r.BrandName,
+        ModelName = r.ModelName,
+        Specs = r.Specs,
         MovementType = ParseEnum<MovementType>(r.MovementType),
         FromStatus = ParseEnumOrNull<AssetStatus>(r.FromStatus),
         ToStatus = ParseEnumOrNull<AssetStatus>(r.ToStatus),
@@ -173,6 +179,12 @@ internal sealed class MovementRow
     public Guid Id { get; set; }
     public Guid AssetId { get; set; }
     public string AssetCode { get; set; } = string.Empty;
+    public string? SerialNumber { get; set; }
+    public string AssetKind { get; set; } = string.Empty;
+    public string CategoryName { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
+    public string ModelName { get; set; } = string.Empty;
+    public string? Specs { get; set; }
     public string MovementType { get; set; } = string.Empty;
     public string? FromStatus { get; set; }
     public string? ToStatus { get; set; }

@@ -10,7 +10,8 @@ public interface IAssetService
         AssetStatus? status,
         AssetKind? kind,
         int? modelId,
-        int? locationId);
+        int? locationId,
+        IReadOnlyList<int>? categoryIds);
 
     Task<Result<AssetListDto>> GetAsync(Guid id);
     Task<Result<Guid>> CreateAsync(AssetUpsertDto dto);
