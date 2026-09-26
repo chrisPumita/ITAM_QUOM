@@ -21,6 +21,8 @@ public class AssetConfiguration : IEntityTypeConfiguration<Asset>
         builder.Property(x => x.Kind).HasConversion<string>().HasMaxLength(30);
         builder.Property(x => x.OwnershipType).HasConversion<string>().HasMaxLength(30);
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
+        builder.Property(x => x.Condition).HasConversion<string>().HasMaxLength(30)
+            .HasDefaultValue(ITAM.Shared.Enums.AssetCondition.New);
 
         builder.Property(x => x.RowVersion).IsRowVersion();
 
@@ -29,6 +31,7 @@ public class AssetConfiguration : IEntityTypeConfiguration<Asset>
             .HasFilter("[SerialNumber] IS NOT NULL");
         builder.HasIndex(x => x.Status);
         builder.HasIndex(x => x.Kind);
+        builder.HasIndex(x => x.Condition);
 
         builder.HasOne(x => x.Model).WithMany().HasForeignKey(x => x.ModelId)
             .OnDelete(DeleteBehavior.Restrict);

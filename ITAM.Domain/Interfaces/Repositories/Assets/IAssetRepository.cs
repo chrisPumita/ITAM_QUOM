@@ -1,4 +1,5 @@
 using ITAM.Domain.Entities.Assets;
+using ITAM.Shared.Dtos.Assets;
 
 namespace ITAM.Domain.Interfaces.Repositories.Assets;
 
@@ -19,6 +20,8 @@ public interface IAssetRepository
         CancellationToken ct = default);
 
     Task<Asset?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<Asset?> GetByCodeAsync(string assetCode, CancellationToken ct = default);
+    Task<AssetSummaryDto> GetSummaryAsync(CancellationToken ct = default);
     Task<bool> CodeExistsAsync(string assetCode, Guid? excludeId, CancellationToken ct = default);
     Task<bool> SerialExistsAsync(string serialNumber, Guid? excludeId, CancellationToken ct = default);
     Task<bool> ModelExistsAsync(int modelId, CancellationToken ct = default);

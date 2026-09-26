@@ -28,7 +28,7 @@ public class BrandService : IBrandService
 
     public async Task<Result<int>> CreateAsync(BrandUpsertDto dto)
     {
-        var name = dto.Name.Trim();
+        var name = dto.Name.Trim().ToUpperInvariant();
         if (string.IsNullOrWhiteSpace(name))
             return Fail<int>("El nombre es obligatorio.", "Validation");
 
@@ -46,7 +46,7 @@ public class BrandService : IBrandService
         if (entity is null)
             return Fail<bool>("Marca no encontrada.", "NotFound");
 
-        var name = dto.Name.Trim();
+        var name = dto.Name.Trim().ToUpperInvariant();
         if (string.IsNullOrWhiteSpace(name))
             return Fail<bool>("El nombre es obligatorio.", "Validation");
 

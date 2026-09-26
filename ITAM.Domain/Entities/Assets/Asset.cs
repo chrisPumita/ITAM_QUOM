@@ -28,6 +28,9 @@ public class Asset : BaseEntity
 
     public AssetStatus Status { get; set; } = AssetStatus.Available;
 
+    /// <summary>Nuevo solo en alta; al devolver pasa a Used y no vuelve a New.</summary>
+    public AssetCondition Condition { get; set; } = AssetCondition.New;
+
     public int? LocationId { get; set; }
     public Location? Location { get; set; }
 

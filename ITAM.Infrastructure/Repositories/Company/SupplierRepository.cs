@@ -22,6 +22,13 @@ public class SupplierRepository : ISupplierRepository
     public Task<Supplier?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => _db.Suppliers.FirstOrDefaultAsync(x => x.Id == id, ct);
 
+    public Task<Supplier?> FindByNameAsync(string name, CancellationToken ct = default)
+    {
+        var normalized = name.Trim();
+        return _db.Suppliers.FirstOrDefaultAsync(
+            x => x.Name.ToLower() == normalized.ToLower(), ct);
+    }
+
     public Task<bool> NameExistsAsync(string name, Guid? excludeId, CancellationToken ct = default)
     {
         var normalized = name.Trim();

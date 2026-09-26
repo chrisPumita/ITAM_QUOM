@@ -1,5 +1,29 @@
--- sp_ReturnAsset: cierra asignación activa y deja el activo Available.
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
+#nullable disable
+
+namespace ITAM.Infrastructure.Persistence.Migrations
+{
+    /// <inheritdoc />
+    public partial class AddAssetConditionAndReturnUsed : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<string>(
+                name: "Condition",
+                table: "Assets",
+                type: "nvarchar(30)",
+                maxLength: 30,
+                nullable: false,
+                defaultValue: "New");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Assets_Condition",
+                table: "Assets",
+                column: "Condition");
+
+            migrationBuilder.Sql(@"
 CREATE OR ALTER PROCEDURE dbo.sp_ReturnAsset
     @AssetId            UNIQUEIDENTIFIER,
     @ReturnedByUserId   UNIQUEIDENTIFIER,
@@ -63,4 +87,19 @@ BEGIN
 
     COMMIT TRAN;
 END
-GO
+");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropIndex(
+                name: "IX_Assets_Condition",
+                table: "Assets");
+
+            migrationBuilder.DropColumn(
+                name: "Condition",
+                table: "Assets");
+        }
+    }
+}

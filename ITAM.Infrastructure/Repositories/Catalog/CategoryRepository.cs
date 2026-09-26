@@ -22,6 +22,13 @@ public class CategoryRepository : ICategoryRepository
     public Task<Category?> GetByIdAsync(int id, CancellationToken ct = default)
         => _db.Categories.FirstOrDefaultAsync(x => x.Id == id, ct);
 
+    public Task<Category?> FindByNameAsync(string name, CancellationToken ct = default)
+    {
+        var normalized = name.Trim();
+        return _db.Categories.FirstOrDefaultAsync(
+            x => x.Name.ToLower() == normalized.ToLower(), ct);
+    }
+
     public Task<bool> NameExistsAsync(string name, int? excludeId, CancellationToken ct = default)
     {
         var normalized = name.Trim();

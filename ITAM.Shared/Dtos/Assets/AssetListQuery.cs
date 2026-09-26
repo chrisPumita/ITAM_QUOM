@@ -48,6 +48,18 @@ public sealed class AssetListQuery
     /// <summary>Varios Ids de categoría. OR.</summary>
     public int[]? CategoryIds { get; set; }
 
+    /// <summary>Compat: una marca. Se fusiona en <see cref="BrandIds"/>.</summary>
+    public int? BrandId { get; set; }
+
+    /// <summary>Varias marcas. OR.</summary>
+    public int[]? BrandIds { get; set; }
+
+    /// <summary>Compat: una condición. Se fusiona en <see cref="Conditions"/>.</summary>
+    public AssetCondition? Condition { get; set; }
+
+    /// <summary>Varias condiciones (New / Used). OR.</summary>
+    public AssetCondition[]? Conditions { get; set; }
+
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = DefaultPageSize;
 
@@ -68,12 +80,17 @@ public sealed class AssetListQuery
         Kinds = MergeEnums(Kinds, Kind);
         Kind = null;
 
+        Conditions = MergeConditions(Conditions, Condition);
+        Condition = null;
+
         ModelIds = MergeInts(ModelIds, ModelId);
         LocationIds = MergeInts(LocationIds, LocationId);
         CategoryIds = DistinctPositive(CategoryIds);
+        BrandIds = MergeInts(BrandIds, BrandId);
 
         ModelId = null;
         LocationId = null;
+        BrandId = null;
     }
 
     private static string[]? MergeStrings(string[]? many, string? one)
@@ -103,6 +120,24 @@ public sealed class AssetListQuery
             {
                 if (Enum.IsDefined(k))
                     set.Add(k);
+            }
+        }
+
+        if (one.HasValue && Enum.IsDefined(one.Value))
+            set.Add(one.Value);
+
+        return set.Count == 0 ? null : set.ToArray();
+    }
+
+    private static AssetCondition[]? MergeConditions(AssetCondition[]? many, AssetCondition? one)
+    {
+        var set = new HashSet<AssetCondition>();
+        if (many is not null)
+        {
+            foreach (var c in many)
+            {
+                if (Enum.IsDefined(c))
+                    set.Add(c);
             }
         }
 

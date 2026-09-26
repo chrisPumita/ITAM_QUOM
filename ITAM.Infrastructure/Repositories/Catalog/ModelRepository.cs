@@ -35,6 +35,13 @@ public class ModelRepository : IModelRepository
             .Include(x => x.Brand)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
+    public Task<Model?> FindByBrandAndNameAsync(int brandId, string name, CancellationToken ct = default)
+    {
+        var normalized = name.Trim();
+        return _db.Models.FirstOrDefaultAsync(
+            x => x.BrandId == brandId && x.Name.ToLower() == normalized.ToLower(), ct);
+    }
+
     public Task<bool> ExistsAsync(int categoryId, int brandId, string name, int? excludeId, CancellationToken ct = default)
     {
         var normalized = name.Trim();

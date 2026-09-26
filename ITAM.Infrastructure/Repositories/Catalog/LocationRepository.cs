@@ -31,6 +31,13 @@ public class LocationRepository : ILocationRepository
             .Include(x => x.ParentLocation)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
+    public Task<Location?> FindByNameAsync(string name, CancellationToken ct = default)
+    {
+        var normalized = name.Trim();
+        return _db.Locations.FirstOrDefaultAsync(
+            x => x.Name.ToLower() == normalized.ToLower(), ct);
+    }
+
     public Task<bool> ExistsAsync(string name, int? parentLocationId, int? excludeId, CancellationToken ct = default)
     {
         var normalized = name.Trim();

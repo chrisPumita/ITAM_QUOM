@@ -14,7 +14,7 @@ public class BrandServiceTests
     [Fact]
     public async Task CreateAsync_WhenValid_ReturnsId()
     {
-        _repo.Setup(r => r.NameExistsAsync("Dell", null, default)).ReturnsAsync(false);
+        _repo.Setup(r => r.NameExistsAsync("DELL", null, default)).ReturnsAsync(false);
         _repo.Setup(r => r.AddAsync(It.IsAny<Brand>(), default))
             .ReturnsAsync((Brand e, CancellationToken _) =>
             {
@@ -26,12 +26,13 @@ public class BrandServiceTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(3, result.Data);
+        _repo.Verify(r => r.AddAsync(It.Is<Brand>(b => b.Name == "DELL"), default), Times.Once);
     }
 
     [Fact]
     public async Task CreateAsync_WhenDuplicate_ReturnsDuplicateError()
     {
-        _repo.Setup(r => r.NameExistsAsync("Dell", null, default)).ReturnsAsync(true);
+        _repo.Setup(r => r.NameExistsAsync("DELL", null, default)).ReturnsAsync(true);
 
         var result = await Sut.CreateAsync(new BrandUpsertDto { Name = "Dell" });
 

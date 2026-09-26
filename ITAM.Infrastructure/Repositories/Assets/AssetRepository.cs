@@ -1,6 +1,8 @@
 using ITAM.Domain.Entities.Assets;
 using ITAM.Domain.Interfaces.Repositories.Assets;
 using ITAM.Infrastructure.Persistence;
+using ITAM.Shared.Dtos.Assets;
+using ITAM.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace ITAM.Infrastructure.Repositories.Assets;
@@ -88,11 +90,13 @@ public class AssetRepository : IAssetRepository
         {
             Search = filter.Search,
             Statuses = filter.Statuses,
+            Conditions = filter.Conditions,
             CategoryNames = null,
             Kinds = filter.Kinds,
             ModelIds = filter.ModelIds,
             LocationIds = filter.LocationIds,
-            CategoryIds = matched.ToArray()
+            CategoryIds = matched.ToArray(),
+            BrandIds = filter.BrandIds
         };
     }
 
@@ -124,6 +128,12 @@ public class AssetRepository : IAssetRepository
             q = q.Where(x => statuses.Contains(x.Status));
         }
 
+        if (filter.Conditions is { Count: > 0 })
+        {
+            var conditions = filter.Conditions.ToArray();
+            q = q.Where(x => conditions.Contains(x.Condition));
+        }
+
         if (filter.Kinds is { Count: > 0 })
         {
             var kinds = filter.Kinds.ToArray();
@@ -148,6 +158,12 @@ public class AssetRepository : IAssetRepository
             q = q.Where(x => ids.Contains(x.Model.CategoryId));
         }
 
+        if (filter.BrandIds is { Count: > 0 })
+        {
+            var ids = filter.BrandIds.ToArray();
+            q = q.Where(x => ids.Contains(x.Model.BrandId));
+        }
+
         return q;
     }
 
@@ -159,6 +175,52 @@ public class AssetRepository : IAssetRepository
             .Include(x => x.Location)
             .Include(x => x.CurrentEmployee)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
+
+    public Task<Asset?> GetByCodeAsync(string assetCode, CancellationToken ct = default)
+    {
+        var code = assetCode.Trim();
+        return _db.Assets
+            .Include(x => x.Model).ThenInclude(m => m!.Brand)
+            .Include(x => x.Model).ThenInclude(m => m!.Category)
+            .Include(x => x.Supplier)
+            .Include(x => x.Location)
+            .Include(x => x.CurrentEmployee)
+            .FirstOrDefaultAsync(x => x.AssetCode == code, ct);
+    }
+
+    public async Task<AssetSummaryDto> GetSummaryAsync(CancellationToken ct = default)
+    {
+        var rows = await _db.Assets.AsNoTracking()
+            .GroupBy(a => new { a.Status, a.Condition })
+            .Select(g => new { g.Key.Status, g.Key.Condition, Count = g.Count() })
+            .ToListAsync(ct);
+
+        var summary = new AssetSummaryDto();
+        foreach (var row in rows)
+        {
+            summary.Total += row.Count;
+            switch (row.Status)
+            {
+                case AssetStatus.Available when row.Condition == AssetCondition.New:
+                    summary.Nuevos += row.Count;
+                    break;
+                case AssetStatus.Available:
+                    summary.Disponibles += row.Count;
+                    break;
+                case AssetStatus.Assigned:
+                    summary.Asignados += row.Count;
+                    break;
+                case AssetStatus.Maintenance:
+                    summary.Mantenimiento += row.Count;
+                    break;
+                case AssetStatus.Retired:
+                    summary.Baja += row.Count;
+                    break;
+            }
+        }
+
+        return summary;
+    }
 
     public Task<bool> CodeExistsAsync(string assetCode, Guid? excludeId, CancellationToken ct = default)
     {

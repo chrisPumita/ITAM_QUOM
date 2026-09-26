@@ -92,6 +92,7 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<ISupplierRepository, SupplierRepository>();
         services.AddScoped<IAssetRepository, AssetRepository>();
+        services.AddScoped<IFolioCounterService, FolioCounterService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IBrandService, BrandService>();
         services.AddScoped<IModelService, ModelService>();
