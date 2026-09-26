@@ -18,4 +18,15 @@ public class CompanySettings
 
     /// <summary>Ruta relativa al ContentRoot (ej. wwwroot/branding/logo.png). Opcional.</summary>
     public string? LogoPath { get; set; }
+
+    /// <summary>
+    /// Leyenda legal de la responsiva (entre tabla y firmas). Editable por empresa.
+    /// </summary>
+    public string CustodyLegend { get; set; } =
+        "Por medio de la presente, el colaborador abajo firmante declara haber recibido a su entera satisfacción " +
+        "el(los) equipo(s) y/o accesorio(s) descritos en este documento, comprometiéndose a: (1) utilizarlos " +
+        "exclusivamente para actividades laborales; (2) custodiarlos y mantenerlos en buen estado; (3) reportar " +
+        "de inmediato cualquier falla, daño o extravío; y (4) devolverlos a la empresa al término de la relación " +
+        "laboral o cuando le sea solicitado. El colaborador será responsable del costo de reposición o reparación " +
+        "en caso de extravío, daño por negligencia o mal uso.";
 }

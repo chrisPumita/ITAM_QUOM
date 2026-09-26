@@ -110,6 +110,10 @@ public class CustodyFormLineDto
     public string AssetCode { get; set; } = string.Empty;
     public string? SerialNumber { get; set; }
     public AssetKind AssetKind { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
+    public string ModelName { get; set; } = string.Empty;
+    public string? Specs { get; set; }
     public int Quantity { get; set; }
     public AssetCondition ConditionOnDelivery { get; set; }
     public string? DeliveryNotes { get; set; }

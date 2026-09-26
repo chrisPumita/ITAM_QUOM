@@ -69,6 +69,10 @@ public class CustodyPdfServiceTests
                     AssetCode = "EQ-001",
                     SerialNumber = "SN-1",
                     AssetKind = AssetKind.Equipment,
+                    CategoryName = "Laptop",
+                    BrandName = "Dell",
+                    ModelName = "Latitude",
+                    Specs = "Core i7 16GB",
                     Quantity = 1,
                     ConditionOnDelivery = AssetCondition.New
                 }

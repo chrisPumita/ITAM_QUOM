@@ -2,6 +2,7 @@ using ITAM.Domain.Interfaces.Repositories.Assignments;
 using ITAM.Domain.Interfaces.Services.Assignments;
 using ITAM.Shared.Dtos.Apis;
 using ITAM.Shared.Dtos.Assignments;
+using ITAM.Shared.Enums;
 using ITAM.Shared.Services.Company;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -126,7 +127,7 @@ public sealed class CustodyPdfService : ICustodyPdfService
         });
     }
 
-    private static void ComposeBody(IContainer container, CustodyFormDetailDto form, string issued)
+    private void ComposeBody(IContainer container, CustodyFormDetailDto form, string issued)
     {
         container.PaddingTop(12).Column(col =>
         {
@@ -145,7 +146,7 @@ public sealed class CustodyPdfService : ICustodyPdfService
                 c.Item().Text(t =>
                 {
                     t.Span("Estado: ").Bold();
-                    t.Span(form.Status.ToString());
+                    t.Span(form.Status.ToSpanish());
                 });
                 c.Item().Text(t =>
                 {
@@ -168,51 +169,119 @@ public sealed class CustodyPdfService : ICustodyPdfService
             {
                 table.ColumnsDefinition(cols =>
                 {
-                    cols.ConstantColumn(28);
-                    cols.RelativeColumn(2);
-                    cols.RelativeColumn(1.5f);
-                    cols.ConstantColumn(40);
-                    cols.RelativeColumn(1.2f);
-                    cols.RelativeColumn(2);
+                    cols.RelativeColumn(1.3f); // Código
+                    cols.RelativeColumn(1.4f); // Serie
+                    cols.RelativeColumn(1.4f); // Categoría
+                    cols.RelativeColumn(2.6f); // Descripción
+                    cols.RelativeColumn(1.8f); // Notas
                 });
 
                 table.Header(h =>
                 {
-                    HeaderCell(h.Cell(), "#");
                     HeaderCell(h.Cell(), "Código");
                     HeaderCell(h.Cell(), "Serie");
-                    HeaderCell(h.Cell(), "Cant.");
-                    HeaderCell(h.Cell(), "Condición");
-                    HeaderCell(h.Cell(), "Notas entrega");
+                    HeaderCell(h.Cell(), "Categoría");
+                    HeaderCell(h.Cell(), "Descripción");
+                    HeaderCell(h.Cell(), "Notas");
                 });
 
-                var i = 1;
                 foreach (var line in form.Lines)
                 {
-                    table.Cell().Padding(3).Text(i.ToString());
-                    table.Cell().Padding(3).Text(line.AssetCode);
-                    table.Cell().Padding(3).Text(line.SerialNumber ?? "—");
-                    table.Cell().Padding(3).AlignCenter().Text(line.Quantity.ToString());
-                    table.Cell().Padding(3).Text(line.ConditionOnDelivery.ToString());
-                    table.Cell().Padding(3).Text(line.DeliveryNotes ?? string.Empty);
-                    i++;
+                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten1)
+                        .PaddingVertical(5).PaddingHorizontal(3).AlignMiddle()
+                        .Text(line.AssetCode).FontSize(9);
+
+                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten1)
+                        .PaddingVertical(5).PaddingHorizontal(3)
+                        .Element(c => ComposeSerialCell(c, line));
+
+                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten1)
+                        .PaddingVertical(5).PaddingHorizontal(3)
+                        .Element(c => ComposeCategoryCell(c, line));
+
+                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten1)
+                        .PaddingVertical(5).PaddingHorizontal(3)
+                        .Element(c => ComposeDescriptionCell(c, line));
+
+                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten1)
+                        .PaddingVertical(5).PaddingHorizontal(3).AlignMiddle()
+                        .Text(line.DeliveryNotes ?? string.Empty).FontSize(8);
                 }
             });
 
-            col.Item().PaddingTop(24).Row(row =>
+            if (!string.IsNullOrWhiteSpace(_company.CustodyLegend))
             {
-                row.RelativeItem().Column(c =>
-                {
-                    c.Item().LineHorizontal(1);
-                    c.Item().PaddingTop(4).AlignCenter().Text("Firma del colaborador").FontSize(8);
-                });
-                row.ConstantItem(40);
-                row.RelativeItem().Column(c =>
-                {
-                    c.Item().LineHorizontal(1);
-                    c.Item().PaddingTop(4).AlignCenter().Text("Firma de quien entrega").FontSize(8);
-                });
+                col.Item().PaddingTop(14).Border(0.75f).BorderColor(Colors.Grey.Medium)
+                    .Background(Colors.Grey.Lighten4)
+                    .Padding(8)
+                    .Column(c =>
+                    {
+                        c.Item().Text("Declaración de resguardo").Bold().FontSize(9);
+                        c.Item().PaddingTop(4)
+                            .Text(_company.CustodyLegend)
+                            .FontSize(7.5f)
+                            .LineHeight(1.25f)
+                            .Justify();
+                    });
+            }
+
+            col.Item().PaddingTop(20).Row(row =>
+            {
+                row.RelativeItem().Element(c => ComposeSignatureBox(c, "Firma del colaborador"));
+                row.ConstantItem(30);
+                row.RelativeItem().Element(c => ComposeSignatureBox(c, "Firma de quien entrega"));
             });
+        });
+    }
+
+    private static void ComposeSerialCell(IContainer container, CustodyFormLineDto line)
+    {
+        container.Column(c =>
+        {
+            c.Spacing(1);
+            c.Item().Text(line.SerialNumber ?? "—").FontSize(9);
+            c.Item().Text(line.ConditionOnDelivery.ToSpanish()).FontSize(8).FontColor(Colors.Grey.Darken1);
+        });
+    }
+
+    private static void ComposeCategoryCell(IContainer container, CustodyFormLineDto line)
+    {
+        container.Column(c =>
+        {
+            c.Spacing(1);
+            c.Item().Text(line.AssetKind.ToSpanish()).Bold().FontSize(8);
+            if (!string.IsNullOrWhiteSpace(line.CategoryName))
+                c.Item().Text(line.CategoryName).FontSize(8).FontColor(Colors.Grey.Darken1);
+        });
+    }
+
+    private static void ComposeDescriptionCell(IContainer container, CustodyFormLineDto line)
+    {
+        container.Column(c =>
+        {
+            c.Spacing(1);
+            var title = string.Join(" ", new[] { line.BrandName, line.ModelName }
+                .Where(s => !string.IsNullOrWhiteSpace(s)));
+            c.Item().Text(string.IsNullOrWhiteSpace(title) ? "—" : title).Bold().FontSize(9);
+            if (!string.IsNullOrWhiteSpace(line.Specs))
+                c.Item().Text(line.Specs).FontSize(8).FontColor(Colors.Grey.Darken2);
+        });
+    }
+
+    private static void ComposeSignatureBox(IContainer container, string label)
+    {
+        container.Column(c =>
+        {
+            c.Item()
+                .Border(1)
+                .BorderColor(Colors.Grey.Darken1)
+                .Height(70)
+                .Padding(6)
+                .AlignBottom()
+                .AlignCenter()
+                .Text(string.Empty);
+
+            c.Item().PaddingTop(6).AlignCenter().Text(label).FontSize(8);
         });
     }
 

@@ -68,6 +68,10 @@ internal static class AssetAssignmentMappings
         AssetCode = r.AssetCode,
         SerialNumber = r.SerialNumber,
         AssetKind = ParseEnum<AssetKind>(r.AssetKind),
+        CategoryName = r.CategoryName,
+        BrandName = r.BrandName,
+        ModelName = r.ModelName,
+        Specs = r.Specs,
         Quantity = r.Quantity,
         ConditionOnDelivery = ParseEnum<AssetCondition>(r.ConditionOnDelivery),
         DeliveryNotes = r.DeliveryNotes,
@@ -146,6 +150,10 @@ internal sealed class CustodyLineRow
     public string AssetCode { get; set; } = string.Empty;
     public string? SerialNumber { get; set; }
     public string AssetKind { get; set; } = string.Empty;
+    public string CategoryName { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
+    public string ModelName { get; set; } = string.Empty;
+    public string? Specs { get; set; }
     public int Quantity { get; set; }
     public string ConditionOnDelivery { get; set; } = string.Empty;
     public string? DeliveryNotes { get; set; }

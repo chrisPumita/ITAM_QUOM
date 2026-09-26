@@ -261,12 +261,19 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
                 a.AssetCode,
                 a.SerialNumber,
                 a.Kind            AS AssetKind,
+                c.Name            AS CategoryName,
+                b.Name            AS BrandName,
+                m.Name            AS ModelName,
+                m.Specs,
                 l.Quantity,
                 l.ConditionOnDelivery,
                 l.DeliveryNotes,
                 l.ReturnNotes
             FROM dbo.CustodyFormLines l
             INNER JOIN dbo.Assets a ON a.Id = l.AssetId AND a.IsDeleted = 0
+            INNER JOIN dbo.Models m ON m.Id = a.ModelId
+            INNER JOIN dbo.Brands b ON b.Id = m.BrandId
+            INNER JOIN dbo.Categories c ON c.Id = m.CategoryId
             WHERE l.IsDeleted = 0 AND l.CustodyFormId = @Id
             ORDER BY a.AssetCode
             """;
