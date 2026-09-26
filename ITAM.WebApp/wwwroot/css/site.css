@@ -1,3 +1,28 @@
+/* ITAM QUOM — tokens (ver docs/03-diseno-ui.md) */
+:root {
+  --ink-900: #131B2C;
+  --ink-600: #4B5768;
+  --canvas: #F4F6F9;
+  --surface: #FFFFFF;
+  --line: #E1E5EC;
+  --accent: #9C5F26;
+  --accent-ink: #7C4A1D;
+
+  --status-available: #1B8A5A;
+  --status-assigned: #2F63B8;
+  --status-maintenance: #C98A16;
+  --status-retired: #6B7385;
+  --danger: #C1432E;
+
+  --bs-primary: var(--accent);
+  --bs-primary-rgb: 156, 95, 38;
+  --bs-body-color: var(--ink-900);
+  --bs-body-bg: var(--canvas);
+  --bs-border-color: var(--line);
+  --bs-link-color: var(--accent-ink);
+  --bs-link-hover-color: var(--ink-900);
+}
+
 html {
   font-size: 14px;
 }
@@ -8,10 +33,6 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
 html {
   position: relative;
   min-height: 100%;
@@ -19,6 +40,53 @@ html {
 
 body {
   margin-bottom: 60px;
+  font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  color: var(--ink-900);
+  background-color: var(--canvas);
+}
+
+.font-mono {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Foco de teclado visible — usa el acento en vez del azul por defecto de Bootstrap */
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus,
+.form-control:focus, .form-check-input:focus, .form-select:focus {
+  box-shadow: 0 0 0 0.1rem var(--surface), 0 0 0 0.25rem rgba(156, 95, 38, 0.45);
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--accent);
+}
+
+.form-check-input:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Botón primario — Bootstrap 5.3 fija el color por componente (--bs-btn-*),
+   no basta con redefinir --bs-primary a nivel global. */
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--accent);
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--accent-ink);
+  --bs-btn-hover-border-color: var(--accent-ink);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--accent-ink);
+  --bs-btn-active-border-color: var(--accent-ink);
+  --bs-btn-disabled-bg: var(--accent);
+  --bs-btn-disabled-border-color: var(--accent);
+}
+
+a {
+  color: var(--accent-ink);
+}
+
+a:hover {
+  color: var(--ink-900);
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
@@ -38,52 +106,51 @@ body {
   padding: 0.25rem 0.65rem;
   border-radius: 999px;
   font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 500;
   user-select: none;
   white-space: nowrap;
   border: 1px solid transparent;
 }
 
 .api-connection__dot {
-  width: 0.65rem;
-  height: 0.65rem;
+  width: 0.6rem;
+  height: 0.6rem;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .api-connection--checking {
-  color: #6c757d;
-  background: #f8f9fa;
-  border-color: #dee2e6;
+  color: var(--ink-600);
+  background: var(--canvas);
+  border-color: var(--line);
 }
 
 .api-connection--checking .api-connection__dot {
-  background: #adb5bd;
+  background: var(--ink-600);
   animation: api-pulse 1.1s ease-in-out infinite;
 }
 
 .api-connection--ok {
-  color: #0f5132;
-  background: #d1e7dd;
-  border-color: #a3cfbb;
+  color: var(--status-available);
+  background: #E9F6EF;
+  border-color: #BFE4D1;
 }
 
 .api-connection--ok .api-connection__dot {
-  background: #198754;
-  box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.55);
+  background: var(--status-available);
+  box-shadow: 0 0 0 0 rgba(27, 138, 90, 0.55);
   animation: api-glow-ok 2s ease-out infinite;
 }
 
 .api-connection--down {
-  color: #842029;
-  background: #f8d7da;
-  border-color: #f1aeb5;
+  color: var(--danger);
+  background: #FBEAE7;
+  border-color: #EFC3BA;
 }
 
 .api-connection--down .api-connection__dot {
-  background: #dc3545;
-  box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.55);
+  background: var(--danger);
+  box-shadow: 0 0 0 0 rgba(193, 67, 46, 0.55);
   animation: api-glow-down 1.4s ease-out infinite;
 }
 
@@ -93,13 +160,299 @@ body {
 }
 
 @keyframes api-glow-ok {
-  0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.45); }
-  70% { box-shadow: 0 0 0 0.45rem rgba(25, 135, 84, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(27, 138, 90, 0.45); }
+  70% { box-shadow: 0 0 0 0.45rem rgba(27, 138, 90, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(27, 138, 90, 0); }
 }
 
 @keyframes api-glow-down {
-  0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.5); }
-  70% { box-shadow: 0 0 0 0.4rem rgba(220, 53, 69, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(193, 67, 46, 0.5); }
+  70% { box-shadow: 0 0 0 0.4rem rgba(193, 67, 46, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(193, 67, 46, 0); }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .api-connection__dot {
+    animation: none !important;
+  }
+}
+
+/* Login */
+.login-page {
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--canvas);
+}
+
+.login-page__main {
+  width: 100%;
+  max-width: 400px;
+  padding: 1.5rem;
+}
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  padding: 2rem 1.75rem 1.75rem;
+  box-shadow: 0 8px 24px rgba(19, 27, 44, 0.06);
+}
+
+.login-card__brand {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: 1.25rem;
+}
+
+.login-card__brand::before {
+  content: "";
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  background: var(--accent);
+  margin-right: 0.55rem;
+}
+
+.login-card__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ink-900);
+  margin: 0 0 0.35rem;
+}
+
+.login-card__subtitle {
+  color: var(--ink-600);
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.login-card__status {
+  margin-bottom: 1.25rem;
+}
+
+.login-card__errors {
+  margin-bottom: 1rem;
+}
+
+.login-card__submit {
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+}
+
+/* Shell (topbar + sidebar) */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 56px;
+  padding: 0 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.topbar__toggle {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-900);
+  border-radius: 0.4rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbar__brand {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 700;
+  color: var(--ink-900);
+  text-decoration: none;
+  font-size: 1.05rem;
+}
+
+.topbar__brand:hover {
+  color: var(--ink-900);
+}
+
+.topbar__mark {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  background: var(--accent);
+  margin-right: 0.55rem;
+}
+
+.topbar__right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.topbar__user {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.app-shell {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 56px - 49px);
+}
+
+.sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 1rem 0;
+}
+
+.sidebar-nav__group + .sidebar-nav__group {
+  margin-top: 1.25rem;
+}
+
+.sidebar-nav__heading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-600);
+  padding: 0.25rem 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-nav__link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1.25rem;
+  color: var(--ink-900);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  font-size: 0.92rem;
+}
+
+.sidebar-nav__link:hover {
+  background: var(--canvas);
+  color: var(--ink-900);
+}
+
+.sidebar-nav__link.active {
+  background: var(--canvas);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+
+.sidebar-nav__link i {
+  font-size: 1rem;
+  color: var(--ink-600);
+  width: 1.1rem;
+  text-align: center;
+}
+
+.sidebar-nav__link.active i {
+  color: var(--accent);
+}
+
+.offcanvas-body .sidebar-nav__link {
+  border-radius: 0.4rem;
+  border-left: none;
+}
+
+.offcanvas-body .sidebar-nav__link.active {
+  background: var(--canvas);
+  color: var(--accent-ink);
+}
+
+.app-main {
+  flex: 1 1 auto;
+  padding: 1.5rem 1.25rem;
+  min-width: 0;
+}
+
+.app-footer {
+  text-align: center;
+  color: var(--ink-600);
+  font-size: 0.85rem;
+  padding: 1rem;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+/* Cards de contenido — borde fino, sombra mínima (nunca el mismo glow genérico en todo) */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+}
+
+.panel__header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.panel__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink-900);
+  margin: 0;
+}
+
+.panel__body {
+  padding: 1.25rem;
+}
+
+/* Estados de activo — color + texto, nunca solo el punto */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-badge__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-available { color: #0F5A3B; background: #E9F6EF; }
+.status-available .status-badge__dot { background: var(--status-available); }
+
+.status-assigned { color: #1E4685; background: #E9F0FB; }
+.status-assigned .status-badge__dot { background: var(--status-assigned); }
+
+.status-maintenance { color: #8A5C0E; background: #FBF0DD; }
+.status-maintenance .status-badge__dot { background: var(--status-maintenance); }
+
+.status-retired { color: #454B58; background: #EEF0F3; }
+.status-retired .status-badge__dot { background: var(--status-retired); }
+
+@media (max-width: 991.98px) {
+  .app-main {
+    padding: 1.25rem 0.9rem;
+  }
+}
+

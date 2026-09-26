@@ -14,12 +14,15 @@ public static class ApiConnectServiceCollectionExtensions
         if (string.IsNullOrWhiteSpace(settings.BaseUrl))
             throw new InvalidOperationException("ApiConnect:BaseUrl es obligatorio.");
 
+        services.AddTransient<BearerTokenHandler>();
+
         services.AddHttpClient(ApiConnectDefaults.HttpClientName, client =>
-        {
-            client.BaseAddress = new Uri(settings.BaseUrl.TrimEnd('/') + "/");
-            client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds <= 0 ? 60 : settings.TimeoutSeconds);
-            client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-        });
+            {
+                client.BaseAddress = new Uri(settings.BaseUrl.TrimEnd('/') + "/");
+                client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds <= 0 ? 60 : settings.TimeoutSeconds);
+                client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+            })
+            .AddHttpMessageHandler<BearerTokenHandler>();
 
         services.AddTransient<HttpRequestBuilder>();
         services.AddSingleton<ApiConnectFactory>();

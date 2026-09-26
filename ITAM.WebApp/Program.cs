@@ -1,4 +1,7 @@
 using ITAM.WebApp.Middleware;
+using ITAM.WebApp.Security;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Serilog;
 using Serilog.Events;
 
@@ -23,8 +26,44 @@ try
 
     builder.Host.UseSerilog();
 
+    builder.Services.AddHttpContextAccessor();
     builder.Services.AddControllersWithViews();
     builder.Services.AddApiConnect(builder.Configuration);
+    builder.Services.AddScoped<IWebAuthSession, WebAuthSession>();
+
+    builder.Services
+        .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+        .AddCookie(options =>
+        {
+            options.LoginPath = "/Account/Login";
+            options.LogoutPath = "/Account/Logout";
+            options.AccessDeniedPath = "/Account/Login";
+            options.SlidingExpiration = true;
+            options.Cookie.Name = "ITAM.WebApp.Auth";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+
+            // APIs locales del WebApp (ej. ping) → 401 JSON; páginas → redirect login.
+            options.Events.OnRedirectToLogin = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                }
+
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            };
+        });
+
+    builder.Services.AddAuthorization(options =>
+    {
+        options.FallbackPolicy = new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build();
+    });
 
     var app = builder.Build();
 
@@ -38,8 +77,11 @@ try
 
     app.UseHttpsRedirection();
     app.UseRouting();
+    app.UseAuthentication();
     app.UseAuthorization();
-    app.MapStaticAssets();
+
+    // Sin AllowAnonymous los estáticos quedan atrapados por FallbackPolicy (CSS/JS del login).
+    app.MapStaticAssets().AllowAnonymous();
     app.MapControllers();
     app.MapControllerRoute(
             name: "default",

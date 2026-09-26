@@ -1,10 +1,12 @@
 using System.Text.Json;
 using ITAM.WebApp.ApiConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ITAM.WebApp.Controllers;
 
 /// <summary>Proxy local del health de la API (evita CORS; el navegador llama a la WebApp).</summary>
+[AllowAnonymous]
 [Route("api/connection")]
 [ApiController]
 public sealed class ApiConnectionController : ControllerBase
