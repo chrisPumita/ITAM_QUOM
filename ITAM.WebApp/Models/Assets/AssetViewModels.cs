@@ -14,6 +14,7 @@ public class AssetIndexViewModel
     public AssetKind? Kind { get; set; }
     public int? BrandId { get; set; }
     public int? ModelId { get; set; }
+    public int? CategoryId { get; set; }
     public bool ShowRetired { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 100;
@@ -21,6 +22,7 @@ public class AssetIndexViewModel
     public List<AssetListDto> Items { get; set; } = [];
     public List<BrandListDto> Brands { get; set; } = [];
     public List<ModelListDto> Models { get; set; } = [];
+    public List<CategoryListDto> Categories { get; set; } = [];
 }
 
 public class AssetCreateViewModel
@@ -43,6 +45,15 @@ public class AssetCreateViewModel
     public List<CategoryListDto> Categories { get; set; } = [];
     public List<LocationListDto> Locations { get; set; } = [];
     public List<SupplierListDto> Suppliers { get; set; } = [];
+}
+
+public class AssetEditViewModel : AssetCreateViewModel
+{
+    public Guid Id { get; set; }
+    public string AssetCode { get; set; } = string.Empty;
+    public AssetStatus Status { get; set; }
+    public AssetCondition Condition { get; set; }
+    public bool CanEditCode { get; set; }
 }
 
 public class AssetDetailViewModel

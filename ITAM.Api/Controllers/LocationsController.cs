@@ -8,9 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ITAM.Api.Controllers;
 
-/// <summary>
-/// Catálogo de ubicaciones / bodegas. Lectura: Admin/Operador. Alta/edición: Administrador.
-/// </summary>
+/// <summary>Ubicaciones.</summary>
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
@@ -20,7 +18,7 @@ public class LocationsController : ControllerBase
 
     public LocationsController(ILocationService service) => _service = service;
 
-    /// <summary>Lista ubicaciones. Filtros: onlyActive, onlyWarehouses. HTTP 200.</summary>
+    /// <summary>Lista ubicaciones.</summary>
     [HttpGet]
     [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
     [ProducesResponseType(typeof(ApiResponse<List<LocationListDto>>), StatusCodes.Status200OK)]
@@ -31,7 +29,7 @@ public class LocationsController : ControllerBase
             await _service.ListAsync(onlyActive, onlyWarehouses),
             HttpStatusCode.OK);
 
-    /// <summary>Obtiene por id. HTTP 200 / 404.</summary>
+    /// <summary>Obtiene por id.</summary>
     [HttpGet("{id:int}")]
     [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
     [ProducesResponseType(typeof(ApiResponse<LocationListDto>), StatusCodes.Status200OK)]
@@ -39,7 +37,7 @@ public class LocationsController : ControllerBase
     public async Task<ActionResult<ApiResponse<LocationListDto>>> Get(int id)
         => ApiResponseFactory.FromResult(await _service.GetAsync(id), HttpStatusCode.OK);
 
-    /// <summary>Alta. HTTP 201 / 400 / 409.</summary>
+    /// <summary>Alta.</summary>
     [HttpPost]
     [Authorize(Roles = AppRoles.Administrador)]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
@@ -52,7 +50,7 @@ public class LocationsController : ControllerBase
         return ApiResponseFactory.FromResult(await _service.CreateAsync(dto), HttpStatusCode.Created);
     }
 
-    /// <summary>Actualización. HTTP 200 / 400 / 404 / 409.</summary>
+    /// <summary>Actualización.</summary>
     [HttpPut("{id:int}")]
     [Authorize(Roles = AppRoles.Administrador)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]

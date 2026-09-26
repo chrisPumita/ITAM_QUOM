@@ -26,6 +26,7 @@ public class AssetsController : Controller
         AssetKind? kind,
         int? brandId,
         int? modelId,
+        int? categoryId,
         bool showRetired = false,
         int page = 1,
         CancellationToken ct = default)
@@ -49,8 +50,12 @@ public class AssetsController : Controller
             builder.WithQuery("condition", condition);
         if (kind.HasValue)
             builder.WithQuery("kind", ((int)kind.Value).ToString());
+        if (categoryId is > 0)
+            builder.WithQuery("categoryIds", categoryId.Value.ToString());
         if (brandId is > 0)
             builder.WithQuery("brandId", brandId.Value.ToString());
+        else
+            modelId = null;
         if (modelId is > 0)
             builder.WithQuery("modelId", modelId.Value.ToString());
 
@@ -72,6 +77,7 @@ public class AssetsController : Controller
             Kind = kind,
             BrandId = brandId,
             ModelId = modelId,
+            CategoryId = categoryId,
             ShowRetired = showRetired,
             Page = page,
             PageSize = 100,
@@ -95,6 +101,7 @@ public class AssetsController : Controller
         AssetKind? kind,
         int? brandId,
         int? modelId,
+        int? categoryId,
         bool showRetired = false,
         CancellationToken ct = default)
     {
@@ -106,9 +113,16 @@ public class AssetsController : Controller
             .WithEndpoint(ApiEndpoints.AssetsExport)
             .WithQuery("search", search)
             .WithQuery("condition", condition)
-            .WithQuery("kind", kind.HasValue ? ((int)kind.Value).ToString() : null)
-            .WithQuery("brandId", brandId is > 0 ? brandId.Value.ToString() : null)
-            .WithQuery("modelId", modelId is > 0 ? modelId.Value.ToString() : null);
+            .WithQuery("kind", kind.HasValue ? ((int)kind.Value).ToString() : null);
+
+        if (categoryId is > 0)
+            b.WithQuery("categoryIds", categoryId.Value.ToString());
+        if (brandId is > 0)
+            b.WithQuery("brandId", brandId.Value.ToString());
+        else
+            modelId = null;
+        if (modelId is > 0)
+            b.WithQuery("modelId", modelId.Value.ToString());
 
         if (!string.IsNullOrWhiteSpace(status))
             b.WithQuery("status", status);
@@ -156,7 +170,12 @@ public class AssetsController : Controller
     [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
     public async Task<IActionResult> Create(CancellationToken ct)
     {
-        var vm = new AssetCreateViewModel();
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var vm = new AssetCreateViewModel
+        {
+            PurchaseDate = today,
+            WarrantyEndDate = today.AddYears(1)
+        };
         await FillCreateOptionsAsync(vm, ct);
         return View(vm);
     }
@@ -210,6 +229,119 @@ public class AssetsController : Controller
             }
 
             TempData["Success"] = "Activo registrado.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        catch
+        {
+            ModelState.AddModelError(string.Empty, "Sin conexión con la API.");
+            await FillCreateOptionsAsync(vm, ct);
+            return View(vm);
+        }
+    }
+
+    [HttpGet]
+    [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
+    public async Task<IActionResult> Edit(Guid id, CancellationToken ct)
+    {
+        var get = await _api.Create()
+            .WithEndpoint(ApiEndpoints.AssetById)
+            .WithRoute("id", id)
+            .SendJsonAsync<ApiResponse<AssetListDto>>(ct);
+
+        if (get is not { IsSuccess: true, Data: not null })
+            return NotFound();
+
+        var a = get.Data;
+        if (a.Status == AssetStatus.Retired)
+        {
+            TempData["Error"] = "Un activo dado de baja no se edita. Reactívelo primero.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var vm = new AssetEditViewModel
+        {
+            Id = a.Id,
+            AssetCode = a.AssetCode,
+            Status = a.Status,
+            Condition = a.Condition,
+            Kind = a.Kind,
+            FilterBrandId = a.BrandId > 0 ? a.BrandId : null,
+            ModelId = a.ModelId,
+            SerialNumber = a.SerialNumber,
+            OwnershipType = a.OwnershipType,
+            SupplierId = a.SupplierId,
+            LocationId = a.LocationId,
+            PurchaseDate = a.PurchaseDate,
+            RentalEndDate = a.RentalEndDate,
+            WarrantyEndDate = a.WarrantyEndDate,
+            Imei = a.Imei,
+            ContractNumber = a.ContractNumber,
+            CanEditCode = User.IsInRole(AppRoles.Administrador)
+        };
+        await FillCreateOptionsAsync(vm, ct);
+        if (vm.FilterBrandId is null or 0)
+        {
+            var model = vm.Models.FirstOrDefault(m => m.Id == vm.ModelId);
+            if (model is not null)
+                vm.FilterBrandId = model.BrandId;
+        }
+        return View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
+    public async Task<IActionResult> Edit(Guid id, AssetEditViewModel vm, CancellationToken ct)
+    {
+        if (id != vm.Id)
+            return BadRequest();
+
+        if (vm.Kind == AssetKind.Equipment && string.IsNullOrWhiteSpace(vm.SerialNumber))
+            ModelState.AddModelError(nameof(vm.SerialNumber), "Serie obligatoria para equipos.");
+
+        if (vm.OwnershipType == OwnershipType.Rented && vm.SupplierId is null)
+            ModelState.AddModelError(nameof(vm.SupplierId), "Un activo rentado requiere proveedor.");
+
+        if (!ModelState.IsValid)
+        {
+            await FillCreateOptionsAsync(vm, ct);
+            return View(vm);
+        }
+
+        var dto = new AssetUpsertDto
+        {
+            AssetCode = string.IsNullOrWhiteSpace(vm.AssetCode) ? null : vm.AssetCode.Trim(),
+            Kind = vm.Kind,
+            ModelId = vm.ModelId,
+            SerialNumber = string.IsNullOrWhiteSpace(vm.SerialNumber) ? null : vm.SerialNumber.Trim(),
+            OwnershipType = vm.OwnershipType,
+            SupplierId = vm.SupplierId,
+            Status = vm.Status,
+            LocationId = vm.LocationId,
+            PurchaseDate = vm.PurchaseDate,
+            RentalEndDate = vm.RentalEndDate,
+            WarrantyEndDate = vm.WarrantyEndDate,
+            Imei = string.IsNullOrWhiteSpace(vm.Imei) ? null : vm.Imei.Trim(),
+            ContractNumber = string.IsNullOrWhiteSpace(vm.ContractNumber) ? null : vm.ContractNumber.Trim()
+        };
+
+        try
+        {
+            var result = await _api.Create()
+                .WithEndpoint(ApiEndpoints.AssetById)
+                .WithRoute("id", id)
+                .WithMethod(HttpMethod.Put)
+                .WithJsonBody(dto)
+                .SendJsonAsync<ApiResponse<bool>>(ct);
+
+            if (result is not { IsSuccess: true })
+            {
+                ModelState.AddModelError(string.Empty, result?.Message ?? "No se pudo actualizar.");
+                await FillCreateOptionsAsync(vm, ct);
+                return View(vm);
+            }
+
+            TempData["Success"] = result.Message ?? "Activo actualizado.";
             return RedirectToAction(nameof(Details), new { id });
         }
         catch
@@ -440,8 +572,12 @@ public class AssetsController : Controller
             var models = await _api.Create().WithEndpoint(ApiEndpoints.Models)
                 .WithQuery("onlyActive", "true")
                 .SendJsonAsync<ApiResponse<List<ModelListDto>>>(ct);
+            var categories = await _api.Create().WithEndpoint(ApiEndpoints.Categories)
+                .WithQuery("onlyActive", "true")
+                .SendJsonAsync<ApiResponse<List<CategoryListDto>>>(ct);
             vm.Brands = brands?.Data ?? [];
             vm.Models = models?.Data ?? [];
+            vm.Categories = categories?.Data ?? [];
         }
         catch
         {

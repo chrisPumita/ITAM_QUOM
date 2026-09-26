@@ -134,6 +134,12 @@ public class CustodyFormLineDto
     public AssetCondition ConditionOnDelivery { get; set; }
     public string? DeliveryNotes { get; set; }
     public string? ReturnNotes { get; set; }
+
+    /// <summary>Si el activo de esta línea ya fue devuelto: fecha UTC.</summary>
+    public DateTime? ReturnedAt { get; set; }
+
+    /// <summary>Usuario Identity que registró la devolución.</summary>
+    public string? ReturnedByUserName { get; set; }
 }
 
 /// <summary>Historial / auditoría de movimientos de activo (Dapper).</summary>

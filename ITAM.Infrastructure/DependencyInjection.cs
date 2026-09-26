@@ -21,6 +21,7 @@ using ITAM.Infrastructure.Services.Assets;
 using ITAM.Infrastructure.Services.Assignments;
 using ITAM.Infrastructure.Services.Catalog;
 using ITAM.Infrastructure.Services.Company;
+using ITAM.Infrastructure.Services.Mail;
 using ITAM.Shared.Enums;
 using ITAM.Shared.Services.Identity;
 using ITAM.Shared.Services.Mail;
@@ -79,6 +80,7 @@ public static class DependencyInjection
 
 
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ISmtpMailSender, SmtpMailSender>();
         services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
         services.AddScoped<IAssetAssignmentRepository, AssetAssignmentRepository>();
         services.AddScoped<IAssetAssignmentService, AssetAssignmentService>();

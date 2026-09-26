@@ -4,9 +4,7 @@ using Microsoft.Data.SqlClient;
 
 namespace ITAM.Api.Controllers;
 
-/// <summary>
-/// Health / smoke: metadatos del servicio + prueba de conexión SQL Server (ADO.NET).
-/// </summary>
+/// <summary>Estado del servicio y conexión a base de datos.</summary>
 [Route("api/[controller]")]
 [ApiController]
 public class StatusController : ControllerBase
@@ -20,7 +18,7 @@ public class StatusController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>Estado del API y acceso a <c>DefaultConnection</c>. Anónimo.</summary>
+    /// <summary>Estado del servicio. Anónimo.</summary>
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> GetAsync([FromServices] ApiMetaData metaData)

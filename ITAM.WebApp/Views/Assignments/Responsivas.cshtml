@@ -1,0 +1,84 @@
+@using ITAM.Shared.Enums
+@model ITAM.WebApp.Models.Assignments.ResponsivasViewModel
+@{
+    ViewData["Title"] = "Responsivas";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Responsivas</h1>
+    <p class="text-muted small mb-0">Documentos de resguardo emitidos al asignar.</p>
+</div>
+
+<form method="get" class="panel mb-3">
+    <div class="panel__body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Folio</label>
+                <input class="form-control form-control-sm font-mono" name="folio" value="@Model.Folio" placeholder="RES-…" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Colaborador</label>
+                <select class="form-select form-select-sm" name="employeeId">
+                    <option value="">Todos</option>
+                    @foreach (var e in Model.Employees)
+                    {
+                        <option value="@e.Id" selected="@(Model.EmployeeId == e.Id ? "selected" : null)">@e.FullName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Desde</label>
+                <input class="form-control form-control-sm" type="date" name="from" value="@(Model.From?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Hasta</label>
+                <input class="form-control form-control-sm" type="date" name="to" value="@(Model.To?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100">Filtrar</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="panel">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>Folio</th>
+                    <th>Colaborador</th>
+                    <th>Asignó</th>
+                    <th>Estado</th>
+                    <th>Emitida</th>
+                    <th>Activos</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">Sin responsivas.</td></tr>
+            }
+            else
+            {
+                foreach (var r in Model.Items)
+                {
+                    <tr>
+                        <td class="font-mono">@r.Folio</td>
+                        <td>@r.EmployeeName <span class="text-muted small">(@r.EmployeeNumber)</span></td>
+                        <td class="small">@(r.IssuedByUserName ?? "—")</td>
+                        <td>@r.Status.ToSpanish()</td>
+                        <td>@(r.IssuedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+                        <td>@r.LineCount</td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Responsiva" asp-route-id="@r.Id">Ver</a>
+                            <a class="btn btn-sm btn-primary" asp-action="CustodyPdf" asp-route-id="@r.Id">PDF</a>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

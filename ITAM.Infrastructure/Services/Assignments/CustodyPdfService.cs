@@ -153,6 +153,11 @@ public sealed class CustodyPdfService : ICustodyPdfService
                     t.Span("Emitida: ").Bold();
                     t.Span(issued);
                 });
+                c.Item().Text(t =>
+                {
+                    t.Span("Asignó (admin): ").Bold();
+                    t.Span(string.IsNullOrWhiteSpace(form.IssuedByUserName) ? "—" : form.IssuedByUserName);
+                });
                 if (!string.IsNullOrWhiteSpace(form.Notes))
                 {
                     c.Item().Text(t =>
@@ -169,11 +174,11 @@ public sealed class CustodyPdfService : ICustodyPdfService
             {
                 table.ColumnsDefinition(cols =>
                 {
-                    cols.RelativeColumn(1.3f); // Código
-                    cols.RelativeColumn(1.4f); // Serie
-                    cols.RelativeColumn(1.4f); // Categoría
-                    cols.RelativeColumn(2.6f); // Descripción
-                    cols.RelativeColumn(1.8f); // Notas
+                    cols.RelativeColumn(1.2f); // Código
+                    cols.RelativeColumn(1.2f); // Serie
+                    cols.RelativeColumn(1.2f); // Categoría
+                    cols.RelativeColumn(2.2f); // Descripción
+                    cols.RelativeColumn(1.6f); // Devolución
                 });
 
                 table.Header(h =>
@@ -182,7 +187,7 @@ public sealed class CustodyPdfService : ICustodyPdfService
                     HeaderCell(h.Cell(), "Serie");
                     HeaderCell(h.Cell(), "Categoría");
                     HeaderCell(h.Cell(), "Descripción");
-                    HeaderCell(h.Cell(), "Notas");
+                    HeaderCell(h.Cell(), "Devolución");
                 });
 
                 foreach (var line in form.Lines)
@@ -204,8 +209,8 @@ public sealed class CustodyPdfService : ICustodyPdfService
                         .Element(c => ComposeDescriptionCell(c, line));
 
                     table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten1)
-                        .PaddingVertical(5).PaddingHorizontal(3).AlignMiddle()
-                        .Text(line.DeliveryNotes ?? string.Empty).FontSize(8);
+                        .PaddingVertical(5).PaddingHorizontal(3)
+                        .Element(c => ComposeReturnCell(c, line));
                 }
             });
 
@@ -265,6 +270,26 @@ public sealed class CustodyPdfService : ICustodyPdfService
             c.Item().Text(string.IsNullOrWhiteSpace(title) ? "—" : title).Bold().FontSize(9);
             if (!string.IsNullOrWhiteSpace(line.Specs))
                 c.Item().Text(line.Specs).FontSize(8).FontColor(Colors.Grey.Darken2);
+        });
+    }
+
+    private static void ComposeReturnCell(IContainer container, CustodyFormLineDto line)
+    {
+        container.Column(c =>
+        {
+            c.Spacing(1);
+            if (line.ReturnedAt is null)
+            {
+                c.Item().Text("Pendiente").FontSize(8).FontColor(Colors.Orange.Darken2);
+                return;
+            }
+
+            c.Item().Text(line.ReturnedAt.Value.ToLocalTime().ToString("dd/MM/yyyy")).FontSize(8);
+            c.Item().Text(string.IsNullOrWhiteSpace(line.ReturnedByUserName)
+                    ? "—"
+                    : $"Recibió: {line.ReturnedByUserName}")
+                .FontSize(7.5f)
+                .FontColor(Colors.Grey.Darken1);
         });
     }
 

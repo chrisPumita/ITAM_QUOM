@@ -1,20 +1,52 @@
 @using ITAM.Shared.Enums
-@model ITAM.WebApp.Models.Assets.AssetCreateViewModel
+@model ITAM.WebApp.Models.Assets.AssetEditViewModel
 @{
-    ViewData["Title"] = "Alta de activo";
+    ViewData["Title"] = $"Editar {Model.AssetCode}";
 }
 
+<nav aria-label="breadcrumb" class="mb-2">
+    <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item"><a asp-action="Index">Inventario</a></li>
+        <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id" class="font-mono">@Model.AssetCode</a></li>
+        <li class="breadcrumb-item active">Editar</li>
+    </ol>
+</nav>
+
 <div class="mb-3">
-    <h1 class="h4 fw-bold mb-1">Alta de activo</h1>
+    <h1 class="h4 fw-bold mb-1">Editar activo</h1>
+    <p class="text-muted small mb-0">
+        Código <span class="font-mono">@Model.AssetCode</span>
+        · Estado <strong>@Model.Status.ToSpanish()</strong>
+        · Condición @Model.Condition.ToSpanish()
+    </p>
 </div>
 
-<form asp-action="Create" method="post" class="panel" style="max-width:720px" id="altaForm"
-      data-sync-warranty="true"
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="panel" style="max-width:720px" id="editForm"
       data-quick-brand-url="@Url.Action("QuickCreateBrand")"
       data-quick-model-url="@Url.Action("QuickCreateModel")">
     @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="Status" />
+    <input type="hidden" asp-for="Condition" />
+    <input type="hidden" asp-for="CanEditCode" />
+    @if (!Model.CanEditCode)
+    {
+        <input type="hidden" asp-for="AssetCode" />
+    }
     <div class="panel__body">
         <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+        <div class="mb-3">
+            <label class="form-label">Código de etiqueta</label>
+            @if (Model.CanEditCode)
+            {
+                <input asp-for="AssetCode" class="form-control font-mono" maxlength="50" />
+            }
+            else
+            {
+                <input class="form-control font-mono" value="@Model.AssetCode" disabled />
+            }
+        </div>
 
         <div class="mb-3">
             <label class="form-label">Tipo</label>
@@ -31,7 +63,7 @@
             </div>
             <select class="form-select" id="filterBrand" asp-for="FilterBrandId">
                 <option value="">Seleccione marca…</option>
-                @foreach (var b in Model.Brands.Where(x => x.IsActive))
+                @foreach (var b in Model.Brands.Where(x => x.IsActive || x.Id == Model.FilterBrandId))
                 {
                     <option value="@b.Id">@b.Name</option>
                 }
@@ -42,7 +74,6 @@
                         <input type="text" class="form-control text-uppercase" id="newBrandName" placeholder="Nombre (MAYÚSCULAS)" maxlength="100" />
                         <button type="button" class="btn btn-outline-primary" id="btnSaveBrand">Guardar marca</button>
                     </div>
-                    <div class="form-text">Se guarda en mayúsculas.</div>
                 </div>
             </div>
         </div>
@@ -52,9 +83,9 @@
                 <label class="form-label mb-0">Modelo</label>
                 <button type="button" class="btn btn-link btn-sm p-0" data-bs-toggle="collapse" data-bs-target="#quickModel">+ Nuevo modelo</button>
             </div>
-            <select asp-for="ModelId" class="form-select" id="modelSelect" required disabled
-                    data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Where(x => x.IsActive).Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName, m.CategoryName })))'
-                    data-selected="@(Model.ModelId > 0 ? Model.ModelId.ToString() : "")">
+            <select asp-for="ModelId" class="form-select" id="modelSelect" required
+                    data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Where(x => x.IsActive || x.Id == Model.ModelId).Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName, m.CategoryName })))'
+                    data-selected="@Model.ModelId">
                 <option value="">Seleccione…</option>
             </select>
             <div class="collapse mt-2" id="quickModel">
@@ -93,9 +124,9 @@
         <div class="mb-3">
             <label class="form-label">Número de serie (SN)</label>
             <input asp-for="SerialNumber" class="form-control font-mono" />
-            <div class="form-text">Obligatorio para equipos.</div>
             <span asp-validation-for="SerialNumber" class="text-danger small"></span>
         </div>
+
         <div class="mb-3">
             <label class="form-label">Propiedad</label>
             <select asp-for="OwnershipType" class="form-select" id="ownership">
@@ -103,6 +134,7 @@
                 <option value="@OwnershipType.Rented">Rentado</option>
             </select>
         </div>
+
         <div class="mb-3" id="supplierWrap">
             <label class="form-label">Proveedor</label>
             <select asp-for="SupplierId" class="form-select">
@@ -114,34 +146,45 @@
             </select>
             <span asp-validation-for="SupplierId" class="text-danger small"></span>
         </div>
+
         <div class="mb-3">
             <label class="form-label">Ubicación</label>
             <select asp-for="LocationId" class="form-select">
                 <option value="">—</option>
-                @foreach (var l in Model.Locations.Where(x => x.IsActive))
+                @foreach (var l in Model.Locations.Where(x => x.IsActive || x.Id == Model.LocationId))
                 {
                     <option value="@l.Id">@l.Name</option>
                 }
             </select>
         </div>
+
         <div class="row g-2 mb-3">
             <div class="col-md-6">
                 <label class="form-label">Compra</label>
-                <input asp-for="PurchaseDate" type="date" class="form-control" id="purchaseDate" />
+                <input asp-for="PurchaseDate" type="date" class="form-control" />
             </div>
             <div class="col-md-6">
                 <label class="form-label">Fin garantía</label>
-                <input asp-for="WarrantyEndDate" type="date" class="form-control" id="warrantyEndDate" />
-                <div class="form-text">Por defecto: compra + 1 año.</div>
+                <input asp-for="WarrantyEndDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Fin renta</label>
+                <input asp-for="RentalEndDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Contrato</label>
+                <input asp-for="ContractNumber" class="form-control font-mono" maxlength="80" />
             </div>
         </div>
+
         <div class="mb-3">
             <label class="form-label">IMEI</label>
             <input asp-for="Imei" class="form-control font-mono" />
         </div>
+
         <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Guardar</button>
-            <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Cancelar</a>
         </div>
     </div>
 </form>

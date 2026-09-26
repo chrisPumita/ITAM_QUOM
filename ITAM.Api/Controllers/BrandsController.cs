@@ -8,9 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ITAM.Api.Controllers;
 
-/// <summary>
-/// Catálogo de marcas. Lectura: Admin/Operador. Alta/edición: Administrador.
-/// </summary>
+/// <summary>Marcas.</summary>
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
@@ -20,14 +18,14 @@ public class BrandsController : ControllerBase
 
     public BrandsController(IBrandService service) => _service = service;
 
-    /// <summary>Lista marcas. HTTP 200.</summary>
+    /// <summary>Lista marcas.</summary>
     [HttpGet]
     [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
     [ProducesResponseType(typeof(ApiResponse<List<BrandListDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<BrandListDto>>>> List([FromQuery] bool? onlyActive = true)
         => ApiResponseFactory.FromResult(await _service.ListAsync(onlyActive), HttpStatusCode.OK);
 
-    /// <summary>Obtiene por id. HTTP 200 / 404.</summary>
+    /// <summary>Obtiene por id.</summary>
     [HttpGet("{id:int}")]
     [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
     [ProducesResponseType(typeof(ApiResponse<BrandListDto>), StatusCodes.Status200OK)]
@@ -35,7 +33,7 @@ public class BrandsController : ControllerBase
     public async Task<ActionResult<ApiResponse<BrandListDto>>> Get(int id)
         => ApiResponseFactory.FromResult(await _service.GetAsync(id), HttpStatusCode.OK);
 
-    /// <summary>Alta. HTTP 201 / 400 / 409.</summary>
+    /// <summary>Alta.</summary>
     [HttpPost]
     [Authorize(Roles = AppRoles.Administrador)]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
@@ -48,7 +46,7 @@ public class BrandsController : ControllerBase
         return ApiResponseFactory.FromResult(await _service.CreateAsync(dto), HttpStatusCode.Created);
     }
 
-    /// <summary>Actualización. HTTP 200 / 400 / 404 / 409.</summary>
+    /// <summary>Actualización.</summary>
     [HttpPut("{id:int}")]
     [Authorize(Roles = AppRoles.Administrador)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]

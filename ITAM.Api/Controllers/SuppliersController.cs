@@ -8,9 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ITAM.Api.Controllers;
 
-/// <summary>
-/// Proveedores. Lectura: Admin/Operador. Alta/edición: Administrador.
-/// </summary>
+/// <summary>Proveedores.</summary>
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]

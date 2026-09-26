@@ -100,6 +100,49 @@ public class AccountController : Controller
         return RedirectToAction(nameof(Login));
     }
 
+    [AllowAnonymous]
+    [HttpGet]
+    public IActionResult AccessDenied()
+    {
+        return View();
+    }
+
+    [Authorize]
+    [HttpGet]
+    public IActionResult ChangePassword() => View(new ChangePasswordDto());
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordDto model, CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        try
+        {
+            var result = await _api.Create()
+                .WithEndpoint(ApiEndpoints.AuthChangePassword)
+                .WithMethod(HttpMethod.Post)
+                .WithJsonBody(model)
+                .SendJsonAsync<ApiResponse<bool>>(ct);
+
+            if (result is not { IsSuccess: true })
+            {
+                ModelState.AddModelError(string.Empty, result?.Message ?? "No se pudo cambiar la contraseña.");
+                return View(model);
+            }
+
+            TempData["Success"] = "Contraseña actualizada.";
+            return RedirectToAction("Index", "Home");
+        }
+        catch
+        {
+            ModelState.AddModelError(string.Empty, "Sin conexión con la API.");
+            return View(model);
+        }
+    }
+
     /// <summary>Salida por enlace directo (sin formulario). Idempotente si ya no hay sesión.</summary>
     [AllowAnonymous]
     [HttpGet("/Account/Logout")]
@@ -112,7 +155,11 @@ public class AccountController : Controller
 
     private IActionResult RedirectToLocal(string? returnUrl)
     {
-        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+        if (!string.IsNullOrWhiteSpace(returnUrl)
+            && Url.IsLocalUrl(returnUrl)
+            && !returnUrl.Contains("/Home/Error", StringComparison.OrdinalIgnoreCase)
+            && !returnUrl.Contains("/Account/AccessDenied", StringComparison.OrdinalIgnoreCase)
+            && !returnUrl.Contains("/Account/Login", StringComparison.OrdinalIgnoreCase))
             return Redirect(returnUrl);
         return RedirectToAction("Index", "Home");
     }

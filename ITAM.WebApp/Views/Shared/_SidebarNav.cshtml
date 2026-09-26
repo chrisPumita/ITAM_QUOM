@@ -29,8 +29,15 @@
         <a class="@LinkClass("Assignments", "Assign")" asp-controller="Assignments" asp-action="Assign">
             <i class="bi bi-person-check"></i> Asignar
         </a>
+        <a class="@LinkClass("Assignments", "Asignados")" asp-controller="Assignments" asp-action="Asignados">
+            <i class="bi bi-people"></i> Asignados
+        </a>
         <a class="@LinkClass("Assignments", "Return")" asp-controller="Assignments" asp-action="Return">
             <i class="bi bi-arrow-return-left"></i> Devolver
+        </a>
+        <a class="@(controller == "Assignments" && (action == "Responsivas" || action == "Responsiva" || action == "CustodyPdf") ? "sidebar-nav__link active" : LinkClass("Assignments", "Responsivas"))"
+           asp-controller="Assignments" asp-action="Responsivas">
+            <i class="bi bi-file-earmark-text"></i> Responsivas
         </a>
     </div>
 
@@ -40,6 +47,9 @@
             <div class="sidebar-nav__heading">Administración</div>
             <a class="@LinkClass("Catalogos")" asp-controller="Catalogos" asp-action="Marcas">
                 <i class="bi bi-journal-bookmark"></i> Catálogos
+            </a>
+            <a class="@LinkClass("Usuarios")" asp-controller="Usuarios" asp-action="Index">
+                <i class="bi bi-people"></i> Usuarios
             </a>
         </div>
     }

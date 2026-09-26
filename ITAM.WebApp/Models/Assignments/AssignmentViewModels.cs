@@ -15,11 +15,14 @@ public class AssignViewModel
     public List<AssetListDto> AvailableAssets { get; set; } = [];
     public List<BrandListDto> Brands { get; set; } = [];
     public List<ModelListDto> Models { get; set; } = [];
+    public List<CategoryListDto> Categories { get; set; } = [];
     public string? Search { get; set; }
+    public string? PrefillAssetCode { get; set; }
     public AssetKind? Kind { get; set; }
     public AssetCondition? Condition { get; set; }
     public int? BrandId { get; set; }
     public int? ModelId { get; set; }
+    public List<AssignmentListDto> EmployeeActiveAssignments { get; set; } = [];
 }
 
 public class ReturnViewModel
@@ -32,4 +35,31 @@ public class ReturnViewModel
     public CustodyFormDetailDto? Custody { get; set; }
     public AssetListDto? LookupAsset { get; set; }
     public List<AssignmentListDto> ActiveLines { get; set; } = [];
+}
+
+public class ResponsivasViewModel
+{
+    public string? Folio { get; set; }
+    public Guid? EmployeeId { get; set; }
+    public DateTime? From { get; set; }
+    public DateTime? To { get; set; }
+    public List<EmployeeListDto> Employees { get; set; } = [];
+    public List<CustodyFormListDto> Items { get; set; } = [];
+}
+
+public class AsignadosViewModel
+{
+    public string? Search { get; set; }
+    public int EmployeeCount { get; set; }
+    public int AssetCount { get; set; }
+    public List<EmployeeAssignmentCardVm> Cards { get; set; } = [];
+}
+
+public class EmployeeAssignmentCardVm
+{
+    public Guid EmployeeId { get; set; }
+    public string EmployeeNumber { get; set; } = string.Empty;
+    public string EmployeeName { get; set; } = string.Empty;
+    public List<AssignmentListDto> Assets { get; set; } = [];
+    public List<CustodyFormListDto> Remissions { get; set; } = [];
 }

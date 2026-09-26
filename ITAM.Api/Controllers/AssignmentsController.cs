@@ -10,9 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ITAM.Api.Controllers;
 
-/// <summary>
-/// Asignación / devolución (ADO.NET + SP), consultas (Dapper) y PDF responsiva.
-/// </summary>
+/// <summary>Asignaciones, devoluciones y responsivas.</summary>
 [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
 [Route("api/[controller]")]
 [ApiController]
@@ -43,7 +41,7 @@ public class AssignmentsController : ControllerBase
             await _service.ListAssignmentsAsync(employeeId, assetId, onlyActive),
             HttpStatusCode.OK);
 
-    /// <summary>Historial de movimientos (auditoría). Filtro de fechas: from inclusive, to exclusive (UTC).</summary>
+    /// <summary>Historial de movimientos.</summary>
     [HttpGet("movements")]
     [ProducesResponseType(typeof(ApiResponse<List<AssetMovementListDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<AssetMovementListDto>>>> ListMovements(
@@ -55,7 +53,7 @@ public class AssignmentsController : ControllerBase
             await _service.ListMovementsAsync(assetId, employeeId, from, to),
             HttpStatusCode.OK);
 
-    /// <summary>Export Excel de movimientos (mismos filtros que el listado).</summary>
+    /// <summary>Exporta movimientos a Excel.</summary>
     [HttpGet("export/movements.xlsx")]
     [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -71,7 +69,7 @@ public class AssignmentsController : ControllerBase
         return ToExportFileResult(result);
     }
 
-    /// <summary>Listado de responsivas. Filtro IssuedAt: from inclusive, to exclusive (UTC).</summary>
+    /// <summary>Listado de responsivas.</summary>
     [HttpGet("custody")]
     [ProducesResponseType(typeof(ApiResponse<List<CustodyFormListDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<CustodyFormListDto>>>> ListCustody(
@@ -82,14 +80,14 @@ public class AssignmentsController : ControllerBase
             await _service.ListCustodyFormsAsync(employeeId, from, to),
             HttpStatusCode.OK);
 
-    /// <summary>Detalle de responsiva con renglones.</summary>
+    /// <summary>Detalle de responsiva.</summary>
     [HttpGet("custody/{id:guid}")]
     [ProducesResponseType(typeof(ApiResponse<CustodyFormDetailDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<CustodyFormDetailDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<CustodyFormDetailDto>>> GetCustody(Guid id)
         => ApiResponseFactory.FromResult(await _service.GetCustodyFormAsync(id), HttpStatusCode.OK);
 
-    /// <summary>PDF de responsiva (cabecero empresa desde appsettings Company).</summary>
+    /// <summary>PDF de responsiva.</summary>
     [HttpGet("custody/{id:guid}/pdf")]
     [Produces("application/pdf")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -120,7 +118,7 @@ public class AssignmentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<AssignmentListDto>>> Get(Guid id)
         => ApiResponseFactory.FromResult(await _service.GetAssignmentAsync(id), HttpStatusCode.OK);
 
-    /// <summary>Asigna uno o más activos a un empleado y emite folio RES-yyyy-####. HTTP 201.</summary>
+    /// <summary>Asigna activos y emite responsiva.</summary>
     [HttpPost("assign")]
     [ProducesResponseType(typeof(ApiResponse<AssignAssetsResultDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<AssignAssetsResultDto>), StatusCodes.Status400BadRequest)]
@@ -139,7 +137,7 @@ public class AssignmentsController : ControllerBase
             HttpStatusCode.Created);
     }
 
-    /// <summary>Devuelve un activo asignado. HTTP 200.</summary>
+    /// <summary>Devuelve un activo asignado.</summary>
     [HttpPost("return")]
     [ProducesResponseType(typeof(ApiResponse<ReturnAssetResultDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<ReturnAssetResultDto>), StatusCodes.Status400BadRequest)]

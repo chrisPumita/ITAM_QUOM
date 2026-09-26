@@ -20,23 +20,94 @@ public class AssignmentsController : Controller
 
     [HttpGet]
     public async Task<IActionResult> Assign(
-        string? search,
-        AssetKind? kind,
-        AssetCondition? condition,
-        int? brandId,
-        int? modelId,
+        string? assetCode,
+        Guid? employeeId,
         CancellationToken ct)
     {
         var vm = new AssignViewModel
         {
-            Search = search,
-            Kind = kind,
-            Condition = condition,
-            BrandId = brandId,
-            ModelId = modelId
+            PrefillAssetCode = !string.IsNullOrWhiteSpace(assetCode) ? assetCode.Trim() : null,
+            EmployeeId = employeeId is Guid e && e != Guid.Empty ? e : null
         };
         await FillAssignAsync(vm, ct);
+
+        if (!string.IsNullOrWhiteSpace(vm.PrefillAssetCode))
+        {
+            var match = vm.AvailableAssets.FirstOrDefault(a =>
+                string.Equals(a.AssetCode, vm.PrefillAssetCode, StringComparison.OrdinalIgnoreCase));
+            if (match is not null)
+                vm.SelectedAssetIds = [match.Id];
+        }
+
         return View(vm);
+    }
+
+    /// <summary>Activos disponibles con filtros (JSON).</summary>
+    [HttpGet]
+    public async Task<IActionResult> AvailableAssets(
+        string? search,
+        [FromQuery] int[]? kinds,
+        [FromQuery] string[]? conditions,
+        [FromQuery] int[]? brandIds,
+        [FromQuery] int[]? categoryIds,
+        [FromQuery] int[]? modelIds,
+        CancellationToken ct)
+    {
+        try
+        {
+            var items = await LoadAvailableFilteredAsync(
+                search, kinds, conditions, brandIds, categoryIds, modelIds, ct);
+
+            return Json(items.Select(a => new
+            {
+                id = a.Id,
+                assetCode = a.AssetCode,
+                serialNumber = a.SerialNumber,
+                description = a.Description,
+                condition = a.Condition.ToString(),
+                conditionLabel = a.Condition.ToSpanish(),
+                kind = (int)a.Kind,
+                kindLabel = a.Kind.ToSpanish(),
+                brandId = a.BrandId,
+                brandName = a.BrandName,
+                modelId = a.ModelId,
+                categoryName = a.CategoryName
+            }));
+        }
+        catch
+        {
+            return Json(Array.Empty<object>());
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EmployeeAssignments(Guid employeeId, CancellationToken ct)
+    {
+        if (employeeId == Guid.Empty)
+            return Json(Array.Empty<object>());
+
+        try
+        {
+            var list = await _api.Create()
+                .WithEndpoint(ApiEndpoints.Assignments)
+                .WithQuery("employeeId", employeeId.ToString())
+                .WithQuery("onlyActive", "true")
+                .SendJsonAsync<ApiResponse<List<AssignmentListDto>>>(ct);
+
+            var items = (list?.Data ?? []).Select(a => new
+            {
+                a.AssetCode,
+                a.SerialNumber,
+                a.Description,
+                kind = a.AssetKind.ToSpanish(),
+                assignedAt = a.AssignedAt.ToLocalTime().ToString("yyyy-MM-dd")
+            });
+            return Json(items);
+        }
+        catch
+        {
+            return Json(Array.Empty<object>());
+        }
     }
 
     [HttpPost]
@@ -54,7 +125,8 @@ public class AssignmentsController : Controller
             return View(vm);
         }
 
-        var available = await LoadAvailableAsync(vm, ct);
+        var available = await LoadAvailableFilteredAsync(
+            null, null, null, null, null, null, ct);
         var selected = vm.SelectedAssetIds ?? [];
         var lines = selected.Select(id =>
         {
@@ -85,7 +157,7 @@ public class AssignmentsController : Controller
             if (result is { IsSuccess: true, Data: not null })
             {
                 TempData["Success"] = $"Asignación OK. Folio {result.Data.Folio}.";
-                return RedirectToAction(nameof(Assign));
+                return RedirectToAction(nameof(Responsiva), new { id = result.Data.CustodyFormId });
             }
 
             ModelState.AddModelError(string.Empty, result?.Message ?? "No se pudo asignar.");
@@ -217,6 +289,181 @@ public class AssignmentsController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Asignados(string? search, CancellationToken ct)
+    {
+        var vm = new AsignadosViewModel { Search = search };
+
+        try
+        {
+            var assignmentsTask = _api.Create()
+                .WithEndpoint(ApiEndpoints.Assignments)
+                .WithQuery("onlyActive", "true")
+                .SendJsonAsync<ApiResponse<List<AssignmentListDto>>>(ct);
+
+            var custodyTask = _api.Create()
+                .WithEndpoint(ApiEndpoints.AssignmentsCustody)
+                .SendJsonAsync<ApiResponse<List<CustodyFormListDto>>>(ct);
+
+            await Task.WhenAll(assignmentsTask, custodyTask);
+
+            var assignments = assignmentsTask.Result?.Data ?? [];
+            var remissions = custodyTask.Result?.Data ?? [];
+
+            var q = search?.Trim();
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                assignments = assignments.Where(a =>
+                    a.EmployeeName.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || a.EmployeeNumber.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || a.AssetCode.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || (a.SerialNumber?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
+                    || a.Description.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            var remByEmp = remissions
+                .GroupBy(r => r.EmployeeId)
+                .ToDictionary(g => g.Key, g => g
+                    .OrderByDescending(r => r.IssuedAt ?? DateTime.MinValue)
+                    .ToList());
+
+            vm.Cards = assignments
+                .GroupBy(a => a.EmployeeId)
+                .Select(g =>
+                {
+                    var first = g.First();
+                    remByEmp.TryGetValue(g.Key, out var rem);
+                    return new EmployeeAssignmentCardVm
+                    {
+                        EmployeeId = g.Key,
+                        EmployeeNumber = first.EmployeeNumber,
+                        EmployeeName = first.EmployeeName,
+                        Assets = g.OrderBy(a => a.AssetCode).ToList(),
+                        Remissions = rem ?? []
+                    };
+                })
+                .OrderBy(c => c.EmployeeName)
+                .ToList();
+
+            // Si el filtro solo matcheó remisión/folio, incluir esos empleados aunque no haya activos filtrados
+            if (!string.IsNullOrWhiteSpace(q) && vm.Cards.Count == 0)
+            {
+                var remMatch = remissions.Where(r =>
+                    r.Folio.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || r.EmployeeName.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || r.EmployeeNumber.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                var empIds = remMatch.Select(r => r.EmployeeId).Distinct().ToHashSet();
+                var allActive = assignmentsTask.Result?.Data ?? [];
+                vm.Cards = allActive
+                    .Where(a => empIds.Contains(a.EmployeeId))
+                    .GroupBy(a => a.EmployeeId)
+                    .Select(g =>
+                    {
+                        var first = g.First();
+                        remByEmp.TryGetValue(g.Key, out var rem);
+                        return new EmployeeAssignmentCardVm
+                        {
+                            EmployeeId = g.Key,
+                            EmployeeNumber = first.EmployeeNumber,
+                            EmployeeName = first.EmployeeName,
+                            Assets = g.OrderBy(a => a.AssetCode).ToList(),
+                            Remissions = (rem ?? []).Where(r =>
+                                r.Folio.Contains(q!, StringComparison.OrdinalIgnoreCase)
+                                || r.EmployeeName.Contains(q!, StringComparison.OrdinalIgnoreCase)).ToList()
+                        };
+                    })
+                    .OrderBy(c => c.EmployeeName)
+                    .ToList();
+            }
+
+            vm.EmployeeCount = vm.Cards.Count;
+            vm.AssetCount = vm.Cards.Sum(c => c.Assets.Count);
+        }
+        catch
+        {
+            TempData["Error"] = "Sin conexión con la API.";
+        }
+
+        return View(vm);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Responsivas(
+        string? folio,
+        Guid? employeeId,
+        DateTime? from,
+        DateTime? to,
+        CancellationToken ct)
+    {
+        var vm = new ResponsivasViewModel
+        {
+            Folio = folio,
+            EmployeeId = employeeId,
+            From = from,
+            To = to
+        };
+
+        try
+        {
+            var emp = await _api.Create()
+                .WithEndpoint(ApiEndpoints.Employees)
+                .WithQuery("onlyActive", "true")
+                .SendJsonAsync<ApiResponse<List<EmployeeListDto>>>(ct);
+            vm.Employees = emp?.Data ?? [];
+
+            var b = _api.Create().WithEndpoint(ApiEndpoints.AssignmentsCustody);
+            if (employeeId is Guid g && g != Guid.Empty)
+                b.WithQuery("employeeId", g.ToString());
+            if (from.HasValue)
+                b.WithQuery("from", from.Value.ToUniversalTime().ToString("o"));
+            if (to.HasValue)
+                b.WithQuery("to", to.Value.Date.AddDays(1).ToUniversalTime().ToString("o"));
+
+            var list = await b.SendJsonAsync<ApiResponse<List<CustodyFormListDto>>>(ct);
+            var items = list?.Data ?? [];
+            if (!string.IsNullOrWhiteSpace(folio))
+            {
+                var term = folio.Trim();
+                items = items.Where(x =>
+                    x.Folio.Contains(term, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            vm.Items = items;
+        }
+        catch
+        {
+            TempData["Error"] = "Sin conexión con la API.";
+        }
+
+        return View(vm);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Responsiva(Guid id, CancellationToken ct)
+    {
+        try
+        {
+            var detail = await _api.Create()
+                .WithEndpoint(ApiEndpoints.AssignmentsCustodyById)
+                .WithRoute("id", id)
+                .SendJsonAsync<ApiResponse<CustodyFormDetailDto>>(ct);
+
+            if (detail is not { IsSuccess: true, Data: not null })
+            {
+                TempData["Error"] = detail?.Message ?? "Responsiva no encontrada.";
+                return RedirectToAction(nameof(Responsivas));
+            }
+
+            return View(detail.Data);
+        }
+        catch
+        {
+            TempData["Error"] = "Sin conexión con la API.";
+            return RedirectToAction(nameof(Responsivas));
+        }
+    }
+
+    [HttpGet]
     public async Task<IActionResult> CustodyPdf(Guid id, CancellationToken ct)
     {
         var file = await _api.Create()
@@ -226,7 +473,7 @@ public class AssignmentsController : Controller
         if (file is null)
         {
             TempData["Error"] = "No se pudo descargar el PDF.";
-            return RedirectToAction(nameof(Assign));
+            return RedirectToAction(nameof(Responsiva), new { id });
         }
 
         return File(file.Content, file.ContentType, file.FileName);
@@ -248,11 +495,17 @@ public class AssignmentsController : Controller
                 .WithEndpoint(ApiEndpoints.Models)
                 .WithQuery("onlyActive", "true")
                 .SendJsonAsync<ApiResponse<List<ModelListDto>>>(ct);
+            var categories = await _api.Create()
+                .WithEndpoint(ApiEndpoints.Categories)
+                .WithQuery("onlyActive", "true")
+                .SendJsonAsync<ApiResponse<List<CategoryListDto>>>(ct);
 
             vm.Employees = emp?.Data ?? [];
             vm.Brands = brands?.Data ?? [];
             vm.Models = models?.Data ?? [];
-            vm.AvailableAssets = await LoadAvailableAsync(vm, ct);
+            vm.Categories = categories?.Data ?? [];
+            vm.AvailableAssets = await LoadAvailableFilteredAsync(
+                vm.Search, null, null, null, null, null, ct);
         }
         catch
         {
@@ -260,21 +513,31 @@ public class AssignmentsController : Controller
         }
     }
 
-    private async Task<List<AssetListDto>> LoadAvailableAsync(AssignViewModel vm, CancellationToken ct)
+    private async Task<List<AssetListDto>> LoadAvailableFilteredAsync(
+        string? search,
+        int[]? kinds,
+        string[]? conditions,
+        int[]? brandIds,
+        int[]? categoryIds,
+        int[]? modelIds,
+        CancellationToken ct)
     {
         var b = _api.Create()
             .WithEndpoint(ApiEndpoints.Assets)
             .WithQuery("status", "Available")
             .WithQuery("pageSize", "100")
-            .WithQuery("search", vm.Search);
-        if (vm.Kind.HasValue)
-            b.WithQuery("kind", ((int)vm.Kind.Value).ToString());
-        if (vm.Condition.HasValue)
-            b.WithQuery("condition", vm.Condition.Value.ToString());
-        if (vm.BrandId is > 0)
-            b.WithQuery("brandId", vm.BrandId.Value.ToString());
-        if (vm.ModelId is > 0)
-            b.WithQuery("modelId", vm.ModelId.Value.ToString());
+            .WithQuery("search", search);
+
+        if (kinds is { Length: > 0 })
+            b.WithQuery("kinds", kinds.Select(k => k.ToString()));
+        if (conditions is { Length: > 0 })
+            b.WithQuery("conditions", conditions);
+        if (brandIds is { Length: > 0 })
+            b.WithQuery("brandIds", brandIds.Select(id => id.ToString()));
+        if (categoryIds is { Length: > 0 })
+            b.WithQuery("categoryIds", categoryIds.Select(id => id.ToString()));
+        if (modelIds is { Length: > 0 })
+            b.WithQuery("modelIds", modelIds.Select(id => id.ToString()));
 
         var resp = await b.SendJsonAsync<ApiResponse<PagedResult<AssetListDto>>>(ct);
         return resp?.Data?.Items?.ToList() ?? [];

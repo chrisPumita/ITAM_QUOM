@@ -8,9 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ITAM.Api.Controllers;
 
-/// <summary>
-/// Catálogo de modelos (categoría + marca). Lectura: Admin/Operador. Alta/edición: Administrador.
-/// </summary>
+/// <summary>Modelos.</summary>
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
@@ -20,7 +18,7 @@ public class ModelsController : ControllerBase
 
     public ModelsController(IModelService service) => _service = service;
 
-    /// <summary>Lista modelos. Filtros: onlyActive, categoryId, brandId. HTTP 200.</summary>
+    /// <summary>Lista modelos.</summary>
     [HttpGet]
     [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
     [ProducesResponseType(typeof(ApiResponse<List<ModelListDto>>), StatusCodes.Status200OK)]
@@ -32,7 +30,7 @@ public class ModelsController : ControllerBase
             await _service.ListAsync(onlyActive, categoryId, brandId),
             HttpStatusCode.OK);
 
-    /// <summary>Obtiene por id. HTTP 200 / 404.</summary>
+    /// <summary>Obtiene por id.</summary>
     [HttpGet("{id:int}")]
     [Authorize(Roles = $"{AppRoles.Administrador},{AppRoles.Operador}")]
     [ProducesResponseType(typeof(ApiResponse<ModelListDto>), StatusCodes.Status200OK)]
@@ -40,7 +38,7 @@ public class ModelsController : ControllerBase
     public async Task<ActionResult<ApiResponse<ModelListDto>>> Get(int id)
         => ApiResponseFactory.FromResult(await _service.GetAsync(id), HttpStatusCode.OK);
 
-    /// <summary>Alta. HTTP 201 / 400 / 409.</summary>
+    /// <summary>Alta.</summary>
     [HttpPost]
     [Authorize(Roles = AppRoles.Administrador)]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
@@ -53,7 +51,7 @@ public class ModelsController : ControllerBase
         return ApiResponseFactory.FromResult(await _service.CreateAsync(dto), HttpStatusCode.Created);
     }
 
-    /// <summary>Actualización. HTTP 200 / 400 / 404 / 409.</summary>
+    /// <summary>Actualización.</summary>
     [HttpPut("{id:int}")]
     [Authorize(Roles = AppRoles.Administrador)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]

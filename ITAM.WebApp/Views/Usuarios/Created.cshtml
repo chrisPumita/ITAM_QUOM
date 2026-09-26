@@ -1,0 +1,39 @@
+@model ITAM.Shared.Dtos.Auth.CreateAdminUserResultDto
+@{
+    ViewData["Title"] = "Usuario creado";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Usuario creado</h1>
+    <p class="text-muted small mb-0">Guarde la contraseña temporal; no se vuelve a mostrar.</p>
+</div>
+
+<div class="panel" style="max-width:560px">
+    <div class="panel__body">
+        <div class="row g-3 small mb-3">
+            <div class="col-6"><div class="text-muted">Nombre</div><div class="fw-semibold">@Model.DisplayName</div></div>
+            <div class="col-6"><div class="text-muted">Rol</div><div>@Model.Role</div></div>
+            <div class="col-12"><div class="text-muted">Email</div><div class="font-mono">@Model.Email</div></div>
+            <div class="col-12">
+                <div class="text-muted">Contraseña temporal</div>
+                <code class="fs-6 user-select-all">@Model.TemporaryPassword</code>
+            </div>
+            <div class="col-12">
+                <div class="text-muted">Enlace de acceso</div>
+                <a class="font-mono small" href="@Model.LoginUrl" target="_blank" rel="noopener">@Model.LoginUrl</a>
+            </div>
+            <div class="col-12">
+                @if (Model.EmailSent)
+                {
+                    <span class="text-success small"><i class="bi bi-check-circle"></i> Correo enviado.</span>
+                }
+                else
+                {
+                    <span class="text-warning small"><i class="bi bi-exclamation-triangle"></i> Correo no enviado@(string.IsNullOrEmpty(Model.EmailError) ? "" : $": {Model.EmailError}"). Copie y envíe manualmente.</span>
+                }
+            </div>
+        </div>
+        <a class="btn btn-primary btn-sm" asp-action="Index">Volver al listado</a>
+        <a class="btn btn-outline-secondary btn-sm" asp-action="Create">Crear otro</a>
+    </div>
+</div>

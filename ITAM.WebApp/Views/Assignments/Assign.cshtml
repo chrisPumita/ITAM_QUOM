@@ -1,137 +1,195 @@
 @using ITAM.Shared.Enums
+@using System.Text.Json
 @model ITAM.WebApp.Models.Assignments.AssignViewModel
 @{
     ViewData["Title"] = "Asignar";
+    var preselected = Model.SelectedAssetIds ?? [];
+    var initialAssetsJson = JsonSerializer.Serialize(Model.AvailableAssets.Select(a => new
+    {
+        id = a.Id,
+        assetCode = a.AssetCode,
+        serialNumber = a.SerialNumber,
+        description = a.Description,
+        condition = a.Condition.ToString(),
+        conditionLabel = a.Condition.ToSpanish(),
+        kind = (int)a.Kind,
+        kindLabel = a.Kind.ToSpanish(),
+        brandId = a.BrandId,
+        brandName = a.BrandName,
+        modelId = a.ModelId,
+        categoryName = a.CategoryName
+    }));
+    var modelsJson = JsonSerializer.Serialize(
+        Model.Models.Where(m => m.IsActive).Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName }));
 }
 
 <div class="mb-3">
     <h1 class="h4 fw-bold mb-1">Asignar activos</h1>
-    <p class="text-muted small mb-0">Solo disponibles. Se genera folio RES automáticamente.</p>
 </div>
 
-<form method="get" class="row g-2 mb-3 align-items-end">
-    <div class="col-md-3">
-        <input class="form-control form-control-sm" name="search" value="@Model.Search" placeholder="Filtrar activos…" />
-    </div>
-    <div class="col-md-2">
-        <select class="form-select form-select-sm" name="kind">
-            <option value="">Equipo y accesorio</option>
-            <option value="1" selected="@(Model.Kind == AssetKind.Equipment ? "selected" : null)">Equipo</option>
-            <option value="2" selected="@(Model.Kind == AssetKind.Accessory ? "selected" : null)">Accesorio</option>
-        </select>
-    </div>
-    <div class="col-md-2">
-        <select class="form-select form-select-sm" name="condition">
-            <option value="">Nuevo / Usado</option>
-            <option value="New" selected="@(Model.Condition == AssetCondition.New ? "selected" : null)">Nuevo</option>
-            <option value="Used" selected="@(Model.Condition == AssetCondition.Used ? "selected" : null)">Usado</option>
-        </select>
-    </div>
-    <div class="col-md-2">
-        <select class="form-select form-select-sm" name="brandId" id="assignBrand">
-            <option value="">Marca</option>
-            @foreach (var b in Model.Brands)
-            {
-                <option value="@b.Id" selected="@(Model.BrandId == b.Id ? "selected" : null)">@b.Name</option>
-            }
-        </select>
-    </div>
-    <div class="col-md-2">
-        <select class="form-select form-select-sm" name="modelId" id="assignModel"
-                data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName })))'>
-            <option value="">Modelo</option>
-        </select>
-    </div>
-    <div class="col-md-1">
-        <button class="btn btn-sm btn-outline-secondary w-100" type="submit">Buscar</button>
-    </div>
-</form>
-
-<form asp-action="Assign" method="post" class="panel">
+<form asp-action="Assign" method="post" class="assign-workbench" id="assignForm"
+      data-available-url="@Url.Action("AvailableAssets", "Assignments")"
+      data-emp-url="@Url.Action("EmployeeAssignments", "Assignments")"
+      data-preselected='@Html.Raw(JsonSerializer.Serialize(preselected))'
+      data-initial-assets='@Html.Raw(initialAssetsJson)'>
     @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="Search" />
-    <input type="hidden" asp-for="Kind" />
-    <input type="hidden" asp-for="Condition" />
-    <input type="hidden" asp-for="BrandId" />
-    <input type="hidden" asp-for="ModelId" />
-    <div class="panel__body">
-        <div asp-validation-summary="All" class="text-danger small mb-3"></div>
-        <div class="mb-3" style="max-width:420px">
-            <label class="form-label">Colaborador</label>
-            <select asp-for="EmployeeId" class="form-select" required>
-                <option value="">Seleccione…</option>
-                @foreach (var e in Model.Employees)
-                {
-                    <option value="@e.Id">@e.FullName (@e.EmployeeNumber)</option>
-                }
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Notas (opcional)</label>
-            <input asp-for="Notes" class="form-control" maxlength="1000" />
-        </div>
+    <div id="selectedIdsHost"></div>
 
-        <div class="table-responsive mb-3">
-            <table class="table table-sm table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th style="width:2rem"></th>
-                        <th>SKU</th>
-                        <th>SN</th>
-                        <th>Descripción</th>
-                        <th>Condición</th>
-                        <th>Tipo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @if (Model.AvailableAssets.Count == 0)
-                {
-                    <tr><td colspan="6" class="text-muted text-center py-3">No hay activos disponibles.</td></tr>
-                }
-                else
-                {
-                    foreach (var a in Model.AvailableAssets)
-                    {
-                        <tr>
-                            <td>
-                                <input type="checkbox" name="SelectedAssetIds" value="@a.Id" class="form-check-input" />
-                            </td>
-                            <td class="font-mono">@a.AssetCode</td>
-                            <td class="font-mono small">@(a.SerialNumber ?? "—")</td>
-                            <td>@a.Description</td>
-                            <td>@a.Condition.ToSpanish()</td>
-                            <td>@a.Kind.ToSpanish()</td>
-                        </tr>
-                    }
-                }
-                </tbody>
-            </table>
+    <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+
+    <div class="row g-3 align-items-start">
+        <aside class="col-lg-3">
+            <div class="panel assign-filters panel--sticky mb-0" id="assignFilters">
+                <div class="panel__header">
+                    <h2 class="panel__title">Filtros</h2>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnClearFilters">Limpiar</button>
+                </div>
+                <div class="panel__body">
+                    <div class="mb-3">
+                        <label class="form-label small mb-1" for="assetSearch">Buscar</label>
+                        <input type="search" id="assetSearch" class="form-control form-control-sm"
+                               placeholder="Código, serie o descripción…" autocomplete="off" />
+                    </div>
+
+                    <div class="filter-bar filter-bar--sidebar">
+                        <div class="filter-bar__group">
+                            <span class="filter-bar__label">Tipo</span>
+                            <div class="filter-chips" data-filter="kinds">
+                                <label class="filter-chip">
+                                    <input type="checkbox" value="1" />
+                                    <span>Equipo</span>
+                                </label>
+                                <label class="filter-chip">
+                                    <input type="checkbox" value="2" />
+                                    <span>Accesorio</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="filter-bar__group">
+                            <span class="filter-bar__label">Condición</span>
+                            <div class="filter-chips" data-filter="conditions">
+                                <label class="filter-chip">
+                                    <input type="checkbox" value="New" />
+                                    <span>Nuevo</span>
+                                </label>
+                                <label class="filter-chip">
+                                    <input type="checkbox" value="Used" />
+                                    <span>Usado</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="filter-bar__group">
+                            <span class="filter-bar__label">Categoría</span>
+                            <div class="filter-chips filter-chips--wrap" data-filter="categoryIds">
+                                @foreach (var c in Model.Categories.Where(x => x.IsActive))
+                                {
+                                    <label class="filter-chip">
+                                        <input type="checkbox" value="@c.Id" />
+                                        <span>@c.Name</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                        <div class="filter-bar__group">
+                            <span class="filter-bar__label">Marca</span>
+                            <div class="filter-chips filter-chips--wrap" data-filter="brandIds">
+                                @foreach (var b in Model.Brands.Where(x => x.IsActive))
+                                {
+                                    <label class="filter-chip">
+                                        <input type="checkbox" value="@b.Id" data-brand="@b.Id" />
+                                        <span>@b.Name</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                        <div class="filter-bar__group" id="modelFilterGroup">
+                            <span class="filter-bar__label">Modelo</span>
+                            <div class="filter-chips filter-chips--wrap" data-filter="modelIds" id="modelChips"
+                                 data-models='@Html.Raw(modelsJson)'>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="col-lg-9">
+            <div class="row g-3 mb-3 align-items-start">
+                <div class="col-lg-7">
+                    <div class="panel mb-0">
+                        <div class="panel__body">
+                            <div class="mb-3">
+                                <label class="form-label" for="employeeSelect">Colaborador</label>
+                                <select asp-for="EmployeeId" class="form-select" id="employeeSelect" required>
+                                    <option value="">Seleccione…</option>
+                                    @foreach (var e in Model.Employees)
+                                    {
+                                        <option value="@e.Id">@e.FullName (@e.EmployeeNumber)</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div id="empAssignmentsWrap" class="mb-3 d-none">
+                                <div class="assign-existing">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong class="small">Ya tiene asignados</strong>
+                                        <span class="badge text-bg-secondary" id="empAssignCount">0</span>
+                                    </div>
+                                    <ul class="small mb-0 ps-3" id="empAssignList"></ul>
+                                </div>
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label" for="Notes">Notas (opcional)</label>
+                                <input asp-for="Notes" class="form-control" maxlength="1000" id="Notes" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="panel assign-summary panel--sticky mb-0">
+                        <div class="panel__header">
+                            <h2 class="panel__title">Resumen</h2>
+                            <span class="badge text-bg-primary" id="summaryCount">0</span>
+                        </div>
+                        <div class="panel__body">
+                            <p class="small text-muted mb-2" id="summaryEmployeeHint">Seleccione colaborador y activos.</p>
+                            <ul class="assign-summary__list" id="summaryList"></ul>
+                            <p class="small text-muted mb-3 d-none" id="summaryEmpty">Ningún activo seleccionado.</p>
+                            <button type="submit" class="btn btn-primary w-100" id="btnAssign" disabled>
+                                Asignar y emitir responsiva
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel mb-0">
+                <div class="panel__header">
+                    <h2 class="panel__title">Disponibles</h2>
+                    <span class="small text-muted" id="tableCount">0</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0" id="assetsTable">
+                        <thead>
+                            <tr>
+                                <th style="width:2rem"></th>
+                                <th>SKU</th>
+                                <th>SN</th>
+                                <th>Descripción</th>
+                                <th>Condición</th>
+                                <th>Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assetsTbody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Asignar y emitir responsiva</button>
     </div>
 </form>
 
 @section Scripts {
-<script>
-(function () {
-  const brand = document.getElementById('assignBrand');
-  const model = document.getElementById('assignModel');
-  const selected = '@(Model.ModelId?.ToString() ?? "")';
-  let models = [];
-  try { models = JSON.parse(model.getAttribute('data-models') || '[]'); } catch { models = []; }
-  function fill() {
-    const bid = brand.value ? parseInt(brand.value, 10) : null;
-    model.innerHTML = '<option value="">Modelo</option>';
-    models.filter(m => !bid || m.BrandId === bid).forEach(m => {
-      const o = document.createElement('option');
-      o.value = m.Id;
-      o.textContent = m.BrandName + ' ' + m.Name;
-      if (String(m.Id) === selected) o.selected = true;
-      model.appendChild(o);
-    });
-  }
-  brand.addEventListener('change', fill);
-  fill();
-})();
-</script>
+    <script src="~/js/assign.js" asp-append-version="true"></script>
 }

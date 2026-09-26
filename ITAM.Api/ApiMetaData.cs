@@ -9,7 +9,7 @@ public class ApiMetaData
     public string Service => "ITAM QUOM API";
 
     /// <summary>SemVer del API. Subir al publicar reglas/endpoints nuevos.</summary>
-    public string Version => "1.2.0";
+    public string Version => "1.3.0";
 
     public int Status => 200;
 
@@ -17,10 +17,10 @@ public class ApiMetaData
     /// Fecha/hora local (America/Mexico_City) de la última actualización publicada.
     /// Formato: yyyy-MM-dd HH:mm
     /// </summary>
-    public string LastUpdate => "2026-09-26 12:05";
+    public string LastUpdate => "2026-09-26 12:45";
 
     /// <summary>Misma marca en UTC para clientes/monitoreo.</summary>
-    public string LastUpdateUtc => "2026-09-26T18:05:00Z";
+    public string LastUpdateUtc => "2026-09-26T18:45:00Z";
 
     public string PoweredBy => "ITAM QUOM";
     public string ContactUrl => "https://localhost";

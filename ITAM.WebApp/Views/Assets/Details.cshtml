@@ -31,9 +31,15 @@
         }
     </div>
     <div class="d-flex flex-wrap gap-2">
+        @if (a.Status != AssetStatus.Retired)
+        {
+            <a class="btn btn-outline-secondary btn-sm" asp-action="Edit" asp-route-id="@a.Id">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+        }
         @if (a.Status == AssetStatus.Available)
         {
-            <a class="btn btn-primary btn-sm" asp-controller="Assignments" asp-action="Assign">Asignar</a>
+            <a class="btn btn-primary btn-sm" asp-controller="Assignments" asp-action="Assign" asp-route-assetCode="@a.AssetCode">Asignar</a>
             <form asp-action="SetMaintenance" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@a.Id" />
@@ -41,7 +47,7 @@
             </form>
             @if (Model.IsAdmin)
             {
-                <form asp-action="SetStatus" method="post" class="d-inline" onsubmit="return confirm('¿Dar de baja este activo?');">
+                <form asp-action="SetStatus" method="post" class="d-inline js-confirm-baja" data-code="@a.AssetCode">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@a.Id" />
                     <input type="hidden" name="status" value="@AssetStatus.Retired" />
@@ -63,7 +69,7 @@
             </form>
             @if (Model.IsAdmin)
             {
-                <form asp-action="SetStatus" method="post" class="d-inline" onsubmit="return confirm('¿Dar de baja?');">
+                <form asp-action="SetStatus" method="post" class="d-inline js-confirm-baja" data-code="@a.AssetCode">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@a.Id" />
                     <input type="hidden" name="status" value="@AssetStatus.Retired" />
@@ -83,55 +89,61 @@
     </div>
 </div>
 
-<div class="panel mb-4">
-    <div class="panel__header"><h2 class="panel__title">Ficha</h2></div>
-    <div class="panel__body">
-        <div class="row g-3 small">
-            <div class="col-sm-6 col-lg-3"><div class="text-muted">Tipo</div><div>@a.Kind.ToSpanish()</div></div>
-            <div class="col-sm-6 col-lg-3"><div class="text-muted">Serie</div><div class="font-mono">@(a.SerialNumber ?? "—")</div></div>
-            <div class="col-sm-6 col-lg-3"><div class="text-muted">Condición</div><div>@a.Condition.ToSpanish()</div></div>
-            <div class="col-sm-6 col-lg-3"><div class="text-muted">Propiedad</div><div>@a.OwnershipType.ToSpanish()</div></div>
-            <div class="col-sm-6 col-lg-3"><div class="text-muted">Categoría</div><div>@a.CategoryName</div></div>
-            <div class="col-sm-6 col-lg-3"><div class="text-muted">Ubicación</div><div>@(a.LocationName ?? "—")</div></div>
-            <div class="col-sm-6 col-lg-3"><div class="text-muted">Proveedor</div><div>@(a.SupplierName ?? "—")</div></div>
-            <div class="col-sm-6 col-lg-3"><div class="text-muted">Garantía hasta</div><div>@(a.WarrantyEndDate?.ToString("yyyy-MM-dd") ?? "—")</div></div>
+<div class="row g-3 align-items-start asset-detail-grid">
+    <div class="col-lg-5">
+        <div class="panel panel--sticky mb-0">
+            <div class="panel__header"><h2 class="panel__title">Ficha</h2></div>
+            <div class="panel__body">
+                <div class="row g-3 small">
+                    <div class="col-6"><div class="text-muted">Tipo</div><div>@a.Kind.ToSpanish()</div></div>
+                    <div class="col-6"><div class="text-muted">Serie</div><div class="font-mono">@(a.SerialNumber ?? "—")</div></div>
+                    <div class="col-6"><div class="text-muted">Condición</div><div>@a.Condition.ToSpanish()</div></div>
+                    <div class="col-6"><div class="text-muted">Propiedad</div><div>@a.OwnershipType.ToSpanish()</div></div>
+                    <div class="col-6"><div class="text-muted">Categoría</div><div>@a.CategoryName</div></div>
+                    <div class="col-6"><div class="text-muted">Ubicación</div><div>@(a.LocationName ?? "—")</div></div>
+                    <div class="col-6"><div class="text-muted">Proveedor</div><div>@(a.SupplierName ?? "—")</div></div>
+                    <div class="col-6"><div class="text-muted">Garantía hasta</div><div>@(a.WarrantyEndDate?.ToString("yyyy-MM-dd") ?? "—")</div></div>
+                    <div class="col-6"><div class="text-muted">Compra</div><div>@(a.PurchaseDate?.ToString("yyyy-MM-dd") ?? "—")</div></div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
-<div class="panel">
-    <div class="panel__header"><h2 class="panel__title">Historial</h2></div>
-    <div class="panel__body">
-        @if (Model.Movements.Count == 0)
-        {
-            <p class="text-muted mb-0">Sin movimientos.</p>
-        }
-        else
-        {
-            <ul class="asset-tl">
-                @foreach (var m in Model.Movements)
+    <div class="col-lg-7">
+        <div class="panel mb-0">
+            <div class="panel__header"><h2 class="panel__title">Historial</h2></div>
+            <div class="panel__body">
+                @if (Model.Movements.Count == 0)
                 {
-                    var tl = m.MovementType switch
-                    {
-                        MovementType.Created => "asset-tl__item--created",
-                        MovementType.Assigned => "asset-tl__item--assigned",
-                        MovementType.Returned => "asset-tl__item--returned",
-                        MovementType.StatusChanged => "asset-tl__item--status",
-                        MovementType.LocationChanged => "asset-tl__item--location",
-                        _ => ""
-                    };
-                    <li class="asset-tl__item @tl">
-                        <span class="asset-tl__dot"></span>
-                        <div class="asset-tl__meta">@m.OccurredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @(m.PerformedByUserName ?? "sistema")</div>
-                        <div class="asset-tl__title">@m.MovementType.ToSpanish()</div>
-                        <div class="small text-muted">
-                            @if (!string.IsNullOrEmpty(m.Notes)) { @m.Notes }
-                            @if (!string.IsNullOrEmpty(m.EmployeeName)) { <span>· @m.EmployeeName</span> }
-                            @if (!string.IsNullOrEmpty(m.CustodyFolio)) { <span class="font-mono">· @m.CustodyFolio</span> }
-                        </div>
-                    </li>
+                    <p class="text-muted mb-0">Sin movimientos.</p>
                 }
-            </ul>
-        }
+                else
+                {
+                    <ul class="asset-tl">
+                        @foreach (var m in Model.Movements)
+                        {
+                            var tl = m.MovementType switch
+                            {
+                                MovementType.Created => "asset-tl__item--created",
+                                MovementType.Assigned => "asset-tl__item--assigned",
+                                MovementType.Returned => "asset-tl__item--returned",
+                                MovementType.StatusChanged => "asset-tl__item--status",
+                                MovementType.LocationChanged => "asset-tl__item--location",
+                                _ => ""
+                            };
+                            <li class="asset-tl__item @tl">
+                                <span class="asset-tl__dot"></span>
+                                <div class="asset-tl__meta">@m.OccurredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @(m.PerformedByUserName ?? "sistema")</div>
+                                <div class="asset-tl__title">@m.MovementType.ToSpanish()</div>
+                                <div class="small text-muted">
+                                    @if (!string.IsNullOrEmpty(m.Notes)) { @m.Notes }
+                                    @if (!string.IsNullOrEmpty(m.EmployeeName)) { <span>· @m.EmployeeName</span> }
+                                    @if (!string.IsNullOrEmpty(m.CustodyFolio)) { <span class="font-mono">· @m.CustodyFolio</span> }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
     </div>
 </div>

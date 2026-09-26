@@ -1,0 +1,159 @@
+@using ITAM.Shared.Enums
+@model ITAM.WebApp.Models.Assignments.AsignadosViewModel
+@{
+    ViewData["Title"] = "Asignados";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+        <h1 class="h4 fw-bold mb-1">Asignados</h1>
+        <p class="text-muted small mb-0">
+            Colaboradores con activos en resguardo y sus responsivas de referencia.
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 small">
+        <span class="asignados-stat">
+            <strong>@Model.EmployeeCount</strong> colaborador@(Model.EmployeeCount == 1 ? "" : "es")
+        </span>
+        <span class="asignados-stat">
+            <strong>@Model.AssetCount</strong> activo@(Model.AssetCount == 1 ? "" : "s")
+        </span>
+    </div>
+</div>
+
+<form method="get" class="panel mb-3">
+    <div class="panel__body py-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label small mb-1">Buscar</label>
+                <input class="form-control form-control-sm" name="search" value="@Model.Search"
+                       placeholder="Nombre, nómina, SKU, serie o folio RES-…" />
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary flex-grow-1">Filtrar</button>
+                @if (!string.IsNullOrWhiteSpace(Model.Search))
+                {
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Asignados">Limpiar</a>
+                }
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Model.Cards.Count == 0)
+{
+    <div class="panel">
+        <div class="panel__body text-center text-muted py-5">
+            @(string.IsNullOrWhiteSpace(Model.Search)
+                ? "No hay colaboradores con activos asignados."
+                : "Sin resultados para esa búsqueda.")
+        </div>
+    </div>
+}
+else
+{
+    <div class="asignados-grid">
+        @foreach (var card in Model.Cards)
+        {
+            <article class="assign-card">
+                <header class="assign-card__head">
+                    <div class="assign-card__who">
+                        <span class="assign-card__avatar" aria-hidden="true">
+                            <i class="bi bi-person"></i>
+                        </span>
+                        <div>
+                            <h2 class="assign-card__name">@card.EmployeeName</h2>
+                            <div class="assign-card__meta font-mono">@card.EmployeeNumber</div>
+                        </div>
+                    </div>
+                    <div class="assign-card__counts">
+                        <span class="assign-card__pill" title="Activos en resguardo">
+                            <i class="bi bi-laptop"></i> @card.Assets.Count
+                        </span>
+                        <span class="assign-card__pill assign-card__pill--doc" title="Responsivas">
+                            <i class="bi bi-file-earmark-text"></i> @card.Remissions.Count
+                        </span>
+                    </div>
+                </header>
+
+                <div class="assign-card__body">
+                    <section class="assign-card__col">
+                        <h3 class="assign-card__section">Activos en resguardo</h3>
+                        <ul class="assign-card__assets">
+                            @foreach (var a in card.Assets)
+                            {
+                                <li>
+                                    <a class="assign-card__asset-code font-mono"
+                                       asp-controller="Assets" asp-action="Details" asp-route-id="@a.AssetId">@a.AssetCode</a>
+                                    <div class="assign-card__asset-desc">@a.Description</div>
+                                    <div class="assign-card__asset-sub text-muted">
+                                        @a.AssetKind.ToSpanish()
+                                        @if (!string.IsNullOrWhiteSpace(a.SerialNumber))
+                                        {
+                                            <span>· SN <span class="font-mono">@a.SerialNumber</span></span>
+                                        }
+                                        <span>· desde @a.AssignedAt.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </section>
+
+                    <section class="assign-card__col assign-card__col--rem">
+                        <h3 class="assign-card__section">Responsivas</h3>
+                        @if (card.Remissions.Count == 0)
+                        {
+                            <p class="text-muted small mb-0">Sin remisiones registradas.</p>
+                        }
+                        else
+                        {
+                            <ul class="assign-card__rems">
+                                @foreach (var r in card.Remissions)
+                                {
+                                    var statusClass = r.Status switch
+                                    {
+                                        CustodyFormStatus.Issued => "rem-status--issued",
+                                        CustodyFormStatus.Closed => "rem-status--closed",
+                                        _ => "rem-status--draft"
+                                    };
+                                    <li>
+                                        <div class="assign-card__rem-row">
+                                            <a class="font-mono fw-semibold"
+                                               asp-action="Responsiva" asp-route-id="@r.Id">@r.Folio</a>
+                                            <span class="rem-status @statusClass">@r.Status.ToSpanish()</span>
+                                        </div>
+                                        <div class="assign-card__rem-meta text-muted">
+                                            @(r.IssuedAt?.ToLocalTime().ToString("yyyy-MM-dd") ?? "—")
+                                            · @r.LineCount línea@(r.LineCount == 1 ? "" : "s")
+                                            @if (!string.IsNullOrWhiteSpace(r.IssuedByUserName))
+                                            {
+                                                <span>· @r.IssuedByUserName</span>
+                                            }
+                                        </div>
+                                        <div class="assign-card__rem-actions">
+                                            <a class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                               asp-action="Responsiva" asp-route-id="@r.Id">Ver</a>
+                                            <a class="btn btn-sm btn-primary py-0 px-2"
+                                               asp-action="CustodyPdf" asp-route-id="@r.Id">PDF</a>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </section>
+                </div>
+
+                <footer class="assign-card__foot">
+                    <a class="btn btn-sm btn-outline-primary"
+                       asp-action="Assign" asp-route-employeeId="@card.EmployeeId">
+                        <i class="bi bi-plus-lg"></i> Asignar más
+                    </a>
+                    <a class="btn btn-sm btn-outline-secondary"
+                       asp-action="Return" asp-route-mode="folio">
+                        Devolver
+                    </a>
+                </footer>
+            </article>
+        }
+    </div>
+}

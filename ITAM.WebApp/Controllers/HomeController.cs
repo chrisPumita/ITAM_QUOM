@@ -49,15 +49,17 @@ public class HomeController : Controller
             }
         }
 
-        return View(vm);
+        return View("Index", vm);
     }
 
     public IActionResult Privacy() => View();
 
+    /// <summary>Página de error anónima (no debe exigir login ni provocar bucles).</summary>
     [AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        return View("~/Views/Shared/Error.cshtml",
+            new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }
