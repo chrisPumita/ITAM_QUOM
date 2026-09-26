@@ -63,4 +63,28 @@ public class AssignmentExportServiceTests
         Assert.True(result.Data!.Content.Length > 100);
         Assert.EndsWith(".xlsx", result.Data.FileName);
     }
+
+    [Fact]
+    public async Task ExportAssignmentsAsync_WhenEmpty_ReturnsNotFound()
+    {
+        _repo.Setup(r => r.ListAssignmentsAsync(null, null, true, default))
+            .ReturnsAsync([]);
+
+        var result = await Sut.ExportAssignmentsAsync(null, null, onlyActive: true);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("NotFound", result.Error);
+        Assert.Null(result.Data);
+    }
+
+    [Fact]
+    public async Task ExportMovementsAsync_WhenEmpty_ReturnsNotFound()
+    {
+        _repo.Setup(r => r.ListMovementsAsync(null, null, default)).ReturnsAsync([]);
+
+        var result = await Sut.ExportMovementsAsync(null, null);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("NotFound", result.Error);
+    }
 }

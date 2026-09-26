@@ -64,6 +64,22 @@ public class AssignmentListDto
     public string AssetCode { get; set; } = string.Empty;
     public string? SerialNumber { get; set; }
     public AssetKind AssetKind { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
+    public string ModelName { get; set; } = string.Empty;
+    public string? Specs { get; set; }
+
+    /// <summary>Marca + modelo · specs, listo para reportes.</summary>
+    public string Description
+    {
+        get
+        {
+            var title = string.Join(" ", new[] { BrandName, ModelName }
+                .Where(s => !string.IsNullOrWhiteSpace(s)));
+            return string.Join(" · ", new[] { title, Specs }
+                .Where(s => !string.IsNullOrWhiteSpace(s)));
+        }
+    }
 
     public Guid EmployeeId { get; set; }
     public string EmployeeNumber { get; set; } = string.Empty;

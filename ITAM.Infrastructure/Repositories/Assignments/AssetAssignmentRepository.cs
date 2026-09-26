@@ -127,6 +127,10 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
                 a.AssetCode,
                 a.SerialNumber,
                 a.Kind            AS AssetKind,
+                c.Name            AS CategoryName,
+                b.Name            AS BrandName,
+                m.Name            AS ModelName,
+                m.Specs,
                 aa.EmployeeId,
                 e.EmployeeNumber,
                 e.FullName        AS EmployeeName,
@@ -140,6 +144,9 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
                 rb.DisplayName    AS ReturnedByUserName
             FROM dbo.AssetAssignments aa
             INNER JOIN dbo.Assets a ON a.Id = aa.AssetId AND a.IsDeleted = 0
+            INNER JOIN dbo.Models m ON m.Id = a.ModelId
+            INNER JOIN dbo.Brands b ON b.Id = m.BrandId
+            INNER JOIN dbo.Categories c ON c.Id = m.CategoryId
             INNER JOIN dbo.Employees e ON e.Id = aa.EmployeeId AND e.IsDeleted = 0
             LEFT JOIN dbo.AspNetUsers ab ON ab.Id = aa.AssignedByUserId
             LEFT JOIN dbo.AspNetUsers rb ON rb.Id = aa.ReturnedByUserId
@@ -171,6 +178,10 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
                 a.AssetCode,
                 a.SerialNumber,
                 a.Kind            AS AssetKind,
+                c.Name            AS CategoryName,
+                b.Name            AS BrandName,
+                m.Name            AS ModelName,
+                m.Specs,
                 aa.EmployeeId,
                 e.EmployeeNumber,
                 e.FullName        AS EmployeeName,
@@ -184,6 +195,9 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
                 rb.DisplayName    AS ReturnedByUserName
             FROM dbo.AssetAssignments aa
             INNER JOIN dbo.Assets a ON a.Id = aa.AssetId AND a.IsDeleted = 0
+            INNER JOIN dbo.Models m ON m.Id = a.ModelId
+            INNER JOIN dbo.Brands b ON b.Id = m.BrandId
+            INNER JOIN dbo.Categories c ON c.Id = m.CategoryId
             INNER JOIN dbo.Employees e ON e.Id = aa.EmployeeId AND e.IsDeleted = 0
             LEFT JOIN dbo.AspNetUsers ab ON ab.Id = aa.AssignedByUserId
             LEFT JOIN dbo.AspNetUsers rb ON rb.Id = aa.ReturnedByUserId

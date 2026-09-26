@@ -46,6 +46,7 @@ public class AssignmentsController : ControllerBase
     [HttpGet("export/assignments.xlsx")]
     [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ExportAssignments(
         [FromQuery] Guid? employeeId = null,
         [FromQuery] Guid? assetId = null,
@@ -53,7 +54,7 @@ public class AssignmentsController : ControllerBase
         CancellationToken ct = default)
     {
         var result = await _export.ExportAssignmentsAsync(employeeId, assetId, onlyActive, ct);
-        return File(result.Data!.Content, result.Data.ContentType, result.Data.FileName);
+        return ToExportFileResult(result);
     }
 
     /// <summary>Historial de movimientos (auditoría).</summary>
@@ -70,13 +71,14 @@ public class AssignmentsController : ControllerBase
     [HttpGet("export/movements.xlsx")]
     [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ExportMovements(
         [FromQuery] Guid? assetId = null,
         [FromQuery] Guid? employeeId = null,
         CancellationToken ct = default)
     {
         var result = await _export.ExportMovementsAsync(assetId, employeeId, ct);
-        return File(result.Data!.Content, result.Data.ContentType, result.Data.FileName);
+        return ToExportFileResult(result);
     }
 
     /// <summary>Listado de responsivas (CustodyForm).</summary>
@@ -162,6 +164,27 @@ public class AssignmentsController : ControllerBase
         return ApiResponseFactory.FromResult(
             await _service.ReturnAsync(dto, userId.Value),
             HttpStatusCode.OK);
+    }
+
+    private static IActionResult ToExportFileResult(Result<ExportFile> result)
+    {
+        if (!result.IsSuccess || result.Data is null)
+        {
+            return new ObjectResult(new ApiResponse<object>
+            {
+                Code = HttpStatusCode.NotFound,
+                Message = result.Message,
+                Error = result.Error
+            })
+            {
+                StatusCode = StatusCodes.Status404NotFound
+            };
+        }
+
+        return new FileContentResult(result.Data.Content, result.Data.ContentType)
+        {
+            FileDownloadName = result.Data.FileName
+        };
     }
 
     private Guid? GetUserId()

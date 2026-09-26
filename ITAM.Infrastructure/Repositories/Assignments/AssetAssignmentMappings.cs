@@ -16,6 +16,10 @@ internal static class AssetAssignmentMappings
         AssetCode = r.AssetCode,
         SerialNumber = r.SerialNumber,
         AssetKind = ParseEnum<AssetKind>(r.AssetKind),
+        CategoryName = r.CategoryName,
+        BrandName = r.BrandName,
+        ModelName = r.ModelName,
+        Specs = r.Specs,
         EmployeeId = r.EmployeeId,
         EmployeeNumber = r.EmployeeNumber,
         EmployeeName = r.EmployeeName,
@@ -114,6 +118,10 @@ internal sealed class AssignmentRow
     public string AssetCode { get; set; } = string.Empty;
     public string? SerialNumber { get; set; }
     public string AssetKind { get; set; } = string.Empty;
+    public string CategoryName { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
+    public string ModelName { get; set; } = string.Empty;
+    public string? Specs { get; set; }
     public Guid EmployeeId { get; set; }
     public string EmployeeNumber { get; set; } = string.Empty;
     public string EmployeeName { get; set; } = string.Empty;

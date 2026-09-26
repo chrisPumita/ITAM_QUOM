@@ -21,12 +21,13 @@ public sealed class AssignmentExportService : IAssignmentExportService
         CancellationToken ct = default)
     {
         var items = await _repo.ListAssignmentsAsync(employeeId, assetId, onlyActive, ct);
-        var stamp = DateTime.Now.ToString("yyyyMMdd_HHmm");
-        var bytes = BuildAssignmentsWorkbook(items);
+        if (items.Count == 0)
+            return Empty("No hay asignaciones para exportar.");
 
+        var stamp = DateTime.Now.ToString("yyyyMMdd_HHmm");
         return Ok(new ExportFile
         {
-            Content = bytes,
+            Content = BuildAssignmentsWorkbook(items),
             FileName = $"Asignaciones_{stamp}.xlsx"
         });
     }
@@ -37,12 +38,13 @@ public sealed class AssignmentExportService : IAssignmentExportService
         CancellationToken ct = default)
     {
         var items = await _repo.ListMovementsAsync(assetId, employeeId, ct);
-        var stamp = DateTime.Now.ToString("yyyyMMdd_HHmm");
-        var bytes = BuildMovementsWorkbook(items);
+        if (items.Count == 0)
+            return Empty("No hay movimientos para exportar.");
 
+        var stamp = DateTime.Now.ToString("yyyyMMdd_HHmm");
         return Ok(new ExportFile
         {
-            Content = bytes,
+            Content = BuildMovementsWorkbook(items),
             FileName = $"Movimientos_{stamp}.xlsx"
         });
     }
@@ -54,7 +56,8 @@ public sealed class AssignmentExportService : IAssignmentExportService
 
         var headers = new[]
         {
-            "Código activo", "Serie", "Tipo", "No. empleado", "Colaborador",
+            "Código activo", "Serie", "Tipo", "Categoría", "Descripción",
+            "No. empleado", "Colaborador",
             "Asignado el", "Devuelto el", "Condición devolución", "Activa",
             "Notas", "Asignó", "Devolvió"
         };
@@ -66,20 +69,22 @@ public sealed class AssignmentExportService : IAssignmentExportService
             ws.Cell(row, 1).Value = a.AssetCode;
             ws.Cell(row, 2).Value = a.SerialNumber ?? string.Empty;
             ws.Cell(row, 3).Value = a.AssetKind.ToSpanish();
-            ws.Cell(row, 4).Value = a.EmployeeNumber;
-            ws.Cell(row, 5).Value = a.EmployeeName;
-            ws.Cell(row, 6).Value = a.AssignedAt;
-            ws.Cell(row, 6).Style.DateFormat.Format = "yyyy-mm-dd hh:mm";
+            ws.Cell(row, 4).Value = a.CategoryName;
+            ws.Cell(row, 5).Value = a.Description;
+            ws.Cell(row, 6).Value = a.EmployeeNumber;
+            ws.Cell(row, 7).Value = a.EmployeeName;
+            ws.Cell(row, 8).Value = a.AssignedAt;
+            ws.Cell(row, 8).Style.DateFormat.Format = "yyyy-mm-dd hh:mm";
             if (a.ReturnedAt is not null)
             {
-                ws.Cell(row, 7).Value = a.ReturnedAt.Value;
-                ws.Cell(row, 7).Style.DateFormat.Format = "yyyy-mm-dd hh:mm";
+                ws.Cell(row, 9).Value = a.ReturnedAt.Value;
+                ws.Cell(row, 9).Style.DateFormat.Format = "yyyy-mm-dd hh:mm";
             }
-            ws.Cell(row, 8).Value = a.ReturnCondition?.ToSpanish() ?? string.Empty;
-            ws.Cell(row, 9).Value = a.IsActive ? "Sí" : "No";
-            ws.Cell(row, 10).Value = a.Notes ?? string.Empty;
-            ws.Cell(row, 11).Value = a.AssignedByUserName ?? string.Empty;
-            ws.Cell(row, 12).Value = a.ReturnedByUserName ?? string.Empty;
+            ws.Cell(row, 10).Value = a.ReturnCondition?.ToSpanish() ?? string.Empty;
+            ws.Cell(row, 11).Value = a.IsActive ? "Sí" : "No";
+            ws.Cell(row, 12).Value = a.Notes ?? string.Empty;
+            ws.Cell(row, 13).Value = a.AssignedByUserName ?? string.Empty;
+            ws.Cell(row, 14).Value = a.ReturnedByUserName ?? string.Empty;
             row++;
         }
 
@@ -150,5 +155,12 @@ public sealed class AssignmentExportService : IAssignmentExportService
         IsSuccess = true,
         Message = "OK",
         Data = file
+    };
+
+    private static Result<ExportFile> Empty(string message) => new()
+    {
+        IsSuccess = false,
+        Message = message,
+        Error = "NotFound"
     };
 }
