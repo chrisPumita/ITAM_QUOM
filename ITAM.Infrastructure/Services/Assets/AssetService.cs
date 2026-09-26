@@ -1,5 +1,9 @@
 using ITAM.Domain.Entities.Assets;
+using ITAM.Domain.Entities.Catalog;
 using ITAM.Domain.Interfaces.Repositories.Assets;
+using ITAM.Domain.Interfaces.Repositories.Catalog;
+using ITAM.Domain.Interfaces.Repositories.Company;
+using ITAM.Domain.Interfaces.Services;
 using ITAM.Domain.Interfaces.Services.Assets;
 using ITAM.Shared.Dtos.Apis;
 using ITAM.Shared.Dtos.Assets;
@@ -10,8 +14,30 @@ namespace ITAM.Infrastructure.Services.Assets;
 public class AssetService : IAssetService
 {
     private readonly IAssetRepository _repo;
+    private readonly IFolioCounterService _folios;
+    private readonly IBrandRepository _brands;
+    private readonly ICategoryRepository _categories;
+    private readonly IModelRepository _models;
+    private readonly ILocationRepository _locations;
+    private readonly ISupplierRepository _suppliers;
 
-    public AssetService(IAssetRepository repo) => _repo = repo;
+    public AssetService(
+        IAssetRepository repo,
+        IFolioCounterService folios,
+        IBrandRepository brands,
+        ICategoryRepository categories,
+        IModelRepository models,
+        ILocationRepository locations,
+        ISupplierRepository suppliers)
+    {
+        _repo = repo;
+        _folios = folios;
+        _brands = brands;
+        _categories = categories;
+        _models = models;
+        _locations = locations;
+        _suppliers = suppliers;
+    }
 
     public async Task<Result<PagedResult<AssetListDto>>> ListAsync(AssetListQuery query)
     {
@@ -32,9 +58,26 @@ public class AssetService : IAssetService
         }, "Activos obtenidos.");
     }
 
+    public async Task<Result<AssetSummaryDto>> GetSummaryAsync()
+    {
+        var data = await _repo.GetSummaryAsync();
+        return Ok(data, "OK");
+    }
+
     public async Task<Result<AssetListDto>> GetAsync(Guid id)
     {
         var entity = await _repo.GetByIdAsync(id);
+        if (entity is null)
+            return Fail<AssetListDto>("Activo no encontrado.", "NotFound");
+        return Ok(Map(entity), "OK");
+    }
+
+    public async Task<Result<AssetListDto>> GetByCodeAsync(string assetCode)
+    {
+        if (string.IsNullOrWhiteSpace(assetCode))
+            return Fail<AssetListDto>("Código de activo requerido.", "Validation");
+
+        var entity = await _repo.GetByCodeAsync(assetCode.Trim());
         if (entity is null)
             return Fail<AssetListDto>("Activo no encontrado.", "NotFound");
         return Ok(Map(entity), "OK");
@@ -45,11 +88,23 @@ public class AssetService : IAssetService
         if (performedByUserId == Guid.Empty)
             return Fail<Guid>("Usuario autenticado requerido.", "Validation");
 
-        var validation = await ValidateAsync(dto, excludeId: null);
+        // Alta: siempre Available + New; código auto si vacío.
+        dto.Status = AssetStatus.Available;
+
+        if (dto.Kind == AssetKind.Equipment && string.IsNullOrWhiteSpace(dto.SerialNumber))
+            return Fail<Guid>("El número de serie es obligatorio para equipos.", "Validation");
+
+        if (string.IsNullOrWhiteSpace(dto.AssetCode))
+            dto.AssetCode = await _folios.NextAsync(FolioPrefixes.ForKind(dto.Kind));
+
+        var validation = await ValidateAsync(dto, excludeId: null, isCreate: true);
         if (validation is not null)
             return validation;
 
         var entity = MapToEntity(dto, new Asset());
+        entity.Condition = AssetCondition.New;
+        entity.Status = AssetStatus.Available;
+
         var now = DateTime.UtcNow;
         var audit = new AssetMovement
         {
@@ -68,7 +123,7 @@ public class AssetService : IAssetService
         return Ok(entity.Id, "Activo creado.");
     }
 
-    public async Task<Result<bool>> UpdateAsync(Guid id, AssetUpsertDto dto, Guid performedByUserId)
+    public async Task<Result<bool>> UpdateAsync(Guid id, AssetUpsertDto dto, Guid performedByUserId, bool isAdmin)
     {
         if (performedByUserId == Guid.Empty)
             return Fail<bool>("Usuario autenticado requerido.", "Validation");
@@ -77,25 +132,190 @@ public class AssetService : IAssetService
         if (entity is null)
             return Fail<bool>("Activo no encontrado.", "NotFound");
 
+        if (entity.Status == AssetStatus.Retired && dto.Status == AssetStatus.Retired)
+            return Fail<bool>("Un activo dado de baja no se edita. Reactívelo primero.", "Validation");
+
         if (entity.Status == AssetStatus.Assigned && dto.Status != AssetStatus.Assigned)
             return Fail<bool>("Un activo asignado solo se libera con devolución.", "Validation");
 
         if (entity.Status != AssetStatus.Assigned && dto.Status == AssetStatus.Assigned)
-            return Fail<bool>("Use el flujo de asignación para marcar Assigned.", "Validation");
+            return Fail<bool>("Use el flujo de asignación para marcar Asignado.", "Validation");
 
-        var validation = await ValidateAsync(dto, excludeId: id);
+        var transitionError = ValidateStatusTransition(entity.Status, dto.Status, isAdmin);
+        if (transitionError is not null)
+            return Fail<bool>(transitionError, "Validation");
+
+        if (!isAdmin)
+        {
+            // Operador: solo Available ↔ Maintenance.
+            var opFromStatus = entity.Status;
+            entity.Status = dto.Status;
+            entity.UpdatedAt = DateTime.UtcNow;
+            var opAudits = BuildUpdateAudits(entity, opFromStatus, entity.LocationId, performedByUserId);
+            await _repo.UpdateAsync(entity, opAudits);
+            return Ok(true, "Estado actualizado.");
+        }
+
+        // Código: no regenerar; mantener el existente si el cliente manda vacío.
+        if (string.IsNullOrWhiteSpace(dto.AssetCode))
+            dto.AssetCode = entity.AssetCode;
+
+        if (entity.Kind == AssetKind.Equipment || dto.Kind == AssetKind.Equipment)
+        {
+            if (string.IsNullOrWhiteSpace(dto.SerialNumber))
+                return Fail<bool>("El número de serie es obligatorio para equipos.", "Validation");
+        }
+
+        var validation = await ValidateAsync(dto, excludeId: id, isCreate: false);
         if (validation is not null)
             return Fail<bool>(validation.Message, validation.Error);
 
         var fromStatus = entity.Status;
         var fromLocationId = entity.LocationId;
+        var previousCondition = entity.Condition;
 
         MapToEntity(dto, entity);
+        // Condition nunca vuelve a New por update.
+        entity.Condition = previousCondition;
+        if (dto.Status == AssetStatus.Available && fromStatus == AssetStatus.Retired)
+            entity.Condition = AssetCondition.Used;
+
         entity.UpdatedAt = DateTime.UtcNow;
 
         var audits = BuildUpdateAudits(entity, fromStatus, fromLocationId, performedByUserId);
         await _repo.UpdateAsync(entity, audits);
         return Ok(true, "Activo actualizado.");
+    }
+
+    public async Task<Result<AssetImportResultDto>> ImportAsync(
+        AssetImportRequestDto request,
+        Guid performedByUserId)
+    {
+        if (performedByUserId == Guid.Empty)
+            return Fail<AssetImportResultDto>("Usuario autenticado requerido.", "Validation");
+
+        if (request.Rows is null || request.Rows.Count == 0)
+            return Fail<AssetImportResultDto>("No hay filas para importar.", "Validation");
+
+        var result = new AssetImportResultDto();
+        foreach (var row in request.Rows)
+        {
+            try
+            {
+                var resolved = await ResolveImportRowAsync(row);
+                if (!resolved.IsSuccess)
+                {
+                    result.Failed++;
+                    result.Errors.Add($"Fila {row.RowNumber}: {resolved.Message}");
+                    continue;
+                }
+
+                var dto = new AssetUpsertDto
+                {
+                    Kind = row.Kind,
+                    ModelId = resolved.Data!.ModelId,
+                    SerialNumber = row.SerialNumber,
+                    OwnershipType = row.OwnershipType,
+                    SupplierId = resolved.Data.SupplierId,
+                    Status = AssetStatus.Available,
+                    LocationId = resolved.Data.LocationId,
+                    PurchaseDate = row.PurchaseDate,
+                    WarrantyEndDate = row.WarrantyEndDate,
+                    Imei = row.Imei,
+                    ContractNumber = row.ContractNumber
+                };
+
+                var created = await CreateAsync(dto, performedByUserId);
+                if (created.IsSuccess)
+                {
+                    result.Created++;
+                    var asset = await _repo.GetByIdAsync(created.Data);
+                    if (asset is not null)
+                        result.CreatedCodes.Add(asset.AssetCode);
+                }
+                else
+                {
+                    result.Failed++;
+                    result.Errors.Add($"Fila {row.RowNumber}: {created.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Failed++;
+                result.Errors.Add($"Fila {row.RowNumber}: {ex.Message}");
+            }
+        }
+
+        return Ok(result, result.Failed == 0
+            ? $"Se crearon {result.Created} activos."
+            : $"Creados {result.Created}, con errores {result.Failed}.");
+    }
+
+    private async Task<Result<AssetImportRowDto>> ResolveImportRowAsync(AssetImportRowDto row)
+    {
+        if (string.IsNullOrWhiteSpace(row.BrandName) || string.IsNullOrWhiteSpace(row.ModelName))
+            return Fail<AssetImportRowDto>("Marca y Modelo son obligatorios.", "Validation");
+
+        var brandName = row.BrandName.Trim().ToUpperInvariant();
+        var brand = await _brands.FindByNameAsync(brandName);
+        if (brand is null)
+        {
+            brand = await _brands.AddAsync(new Brand { Name = brandName, IsActive = true });
+        }
+
+        var categoryName = string.IsNullOrWhiteSpace(row.CategoryName) ? "General" : row.CategoryName.Trim();
+        var category = await _categories.FindByNameAsync(categoryName);
+        if (category is null)
+        {
+            category = await _categories.AddAsync(new Category
+            {
+                Name = categoryName,
+                SortOrder = 100,
+                IsActive = true
+            });
+        }
+
+        var modelName = row.ModelName.Trim();
+        var model = await _models.FindByBrandAndNameAsync(brand.Id, modelName);
+        if (model is null)
+        {
+            model = await _models.AddAsync(new Model
+            {
+                Name = modelName,
+                Specs = string.IsNullOrWhiteSpace(row.Specs) ? null : row.Specs.Trim(),
+                BrandId = brand.Id,
+                CategoryId = category.Id,
+                IsActive = true
+            });
+        }
+
+        row.ModelId = model.Id;
+
+        if (!string.IsNullOrWhiteSpace(row.LocationName))
+        {
+            var loc = await _locations.FindByNameAsync(row.LocationName);
+            if (loc is null)
+                return Fail<AssetImportRowDto>($"Ubicación '{row.LocationName}' no existe. Créela en Catálogos.", "Validation");
+            row.LocationId = loc.Id;
+        }
+
+        if (row.OwnershipType == OwnershipType.Rented)
+        {
+            if (string.IsNullOrWhiteSpace(row.SupplierName))
+                return Fail<AssetImportRowDto>("Propiedad Rentado requiere Proveedor.", "Validation");
+            var sup = await _suppliers.FindByNameAsync(row.SupplierName);
+            if (sup is null)
+                return Fail<AssetImportRowDto>($"Proveedor '{row.SupplierName}' no existe. Créelo en Catálogos.", "Validation");
+            row.SupplierId = sup.Id;
+        }
+        else if (!string.IsNullOrWhiteSpace(row.SupplierName))
+        {
+            var sup = await _suppliers.FindByNameAsync(row.SupplierName);
+            if (sup is not null)
+                row.SupplierId = sup.Id;
+        }
+
+        return Ok(row, "OK");
     }
 
     /// <summary>Parsea facetas de status; el resto ya viene tipado en el query.</summary>
@@ -131,12 +351,41 @@ public class AssetService : IAssetService
             {
                 Search = query.Search,
                 Statuses = statuses,
+                Conditions = query.Conditions,
                 CategoryNames = query.Categories,
                 Kinds = query.Kinds,
                 ModelIds = query.ModelIds,
                 LocationIds = query.LocationIds,
-                CategoryIds = query.CategoryIds
+                CategoryIds = query.CategoryIds,
+                BrandIds = query.BrandIds
             }
+        };
+    }
+
+    private static string? ValidateStatusTransition(AssetStatus from, AssetStatus to, bool isAdmin)
+    {
+        if (from == to)
+            return null;
+
+        if (!isAdmin)
+        {
+            if ((from == AssetStatus.Available && to == AssetStatus.Maintenance) ||
+                (from == AssetStatus.Maintenance && to == AssetStatus.Available))
+                return null;
+            return "Solo puede enviar a garantía o marcar disponible.";
+        }
+
+        return (from, to) switch
+        {
+            (AssetStatus.Available, AssetStatus.Maintenance) => null,
+            (AssetStatus.Maintenance, AssetStatus.Available) => null,
+            (AssetStatus.Available, AssetStatus.Retired) => null,
+            (AssetStatus.Maintenance, AssetStatus.Retired) => null,
+            (AssetStatus.Retired, AssetStatus.Available) => null,
+            (AssetStatus.Assigned, _) => "Un activo asignado solo se libera con devolución.",
+            (_, AssetStatus.Assigned) => "Use el flujo de asignación para marcar Asignado.",
+            (AssetStatus.Retired, _) => "Reactive el activo antes de cambiar su estado.",
+            _ => $"Transición de estado no permitida: {from.ToSpanish()} → {to.ToSpanish()}."
         };
     }
 
@@ -184,9 +433,9 @@ public class AssetService : IAssetService
         return audits;
     }
 
-    private async Task<Result<Guid>?> ValidateAsync(AssetUpsertDto dto, Guid? excludeId)
+    private async Task<Result<Guid>?> ValidateAsync(AssetUpsertDto dto, Guid? excludeId, bool isCreate)
     {
-        var code = dto.AssetCode.Trim();
+        var code = dto.AssetCode?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(code))
             return Fail<Guid>("El código de activo es obligatorio.", "Validation");
 
@@ -194,7 +443,10 @@ public class AssetService : IAssetService
             return Fail<Guid>("Kind, OwnershipType o Status no válidos.", "Validation");
 
         if (dto.Status == AssetStatus.Assigned)
-            return Fail<Guid>("Use el flujo de asignación para marcar Assigned.", "Validation");
+            return Fail<Guid>("Use el flujo de asignación para marcar Asignado.", "Validation");
+
+        if (isCreate && dto.Status is not AssetStatus.Available)
+            return Fail<Guid>("El alta siempre inicia como disponible (nuevo).", "Validation");
 
         if (dto.OwnershipType == OwnershipType.Rented && !dto.SupplierId.HasValue)
             return Fail<Guid>("Un activo rentado requiere proveedor.", "Validation");
@@ -222,7 +474,7 @@ public class AssetService : IAssetService
 
     private static Asset MapToEntity(AssetUpsertDto dto, Asset entity)
     {
-        entity.AssetCode = dto.AssetCode.Trim();
+        entity.AssetCode = dto.AssetCode!.Trim();
         entity.SerialNumber = string.IsNullOrWhiteSpace(dto.SerialNumber) ? null : dto.SerialNumber.Trim();
         entity.Kind = dto.Kind;
         entity.ModelId = dto.ModelId;
@@ -246,6 +498,7 @@ public class AssetService : IAssetService
         Kind = x.Kind,
         OwnershipType = x.OwnershipType,
         Status = x.Status,
+        Condition = x.Condition,
         ModelId = x.ModelId,
         ModelName = x.Model?.Name ?? string.Empty,
         BrandName = x.Model?.Brand?.Name ?? string.Empty,
