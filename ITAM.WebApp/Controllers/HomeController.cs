@@ -49,20 +49,15 @@ public class HomeController : Controller
             }
         }
 
-        return View(vm);
+        return View("Index", vm);
     }
 
     public IActionResult Privacy() => View();
-}
 
-/// <summary>Página de error anónima (fuera de Home [Authorize]) para no provocar bucles de login.</summary>
-[AllowAnonymous]
-public class ErrorController : Controller
-{
+    /// <summary>Página de error anónima (no debe exigir login ni provocar bucles).</summary>
+    [AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    [Route("Home/Error")]
-    [Route("Error")]
-    public IActionResult Index()
+    public IActionResult Error()
     {
         return View("~/Views/Shared/Error.cshtml",
             new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

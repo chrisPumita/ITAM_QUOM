@@ -20,26 +20,12 @@ public class AssignmentsController : Controller
 
     [HttpGet]
     public async Task<IActionResult> Assign(
-        string? search,
         string? assetCode,
-        AssetKind? kind,
-        AssetCondition? condition,
-        int? brandId,
-        int? modelId,
         Guid? employeeId,
         CancellationToken ct)
     {
-        if (brandId is null or <= 0)
-            modelId = null;
-
-        var code = !string.IsNullOrWhiteSpace(assetCode) ? assetCode.Trim() : search;
         var vm = new AssignViewModel
         {
-            Search = code,
-            Kind = kind,
-            Condition = condition,
-            BrandId = brandId,
-            ModelId = modelId,
             PrefillAssetCode = !string.IsNullOrWhiteSpace(assetCode) ? assetCode.Trim() : null,
             EmployeeId = employeeId is Guid e && e != Guid.Empty ? e : null
         };
@@ -54,6 +40,44 @@ public class AssignmentsController : Controller
         }
 
         return View(vm);
+    }
+
+    /// <summary>Lista de disponibles con filtros multi (JSON, sin recargar la página).</summary>
+    [HttpGet]
+    public async Task<IActionResult> AvailableAssets(
+        string? search,
+        [FromQuery] int[]? kinds,
+        [FromQuery] string[]? conditions,
+        [FromQuery] int[]? brandIds,
+        [FromQuery] int[]? categoryIds,
+        [FromQuery] int[]? modelIds,
+        CancellationToken ct)
+    {
+        try
+        {
+            var items = await LoadAvailableFilteredAsync(
+                search, kinds, conditions, brandIds, categoryIds, modelIds, ct);
+
+            return Json(items.Select(a => new
+            {
+                id = a.Id,
+                assetCode = a.AssetCode,
+                serialNumber = a.SerialNumber,
+                description = a.Description,
+                condition = a.Condition.ToString(),
+                conditionLabel = a.Condition.ToSpanish(),
+                kind = (int)a.Kind,
+                kindLabel = a.Kind.ToSpanish(),
+                brandId = a.BrandId,
+                brandName = a.BrandName,
+                modelId = a.ModelId,
+                categoryName = a.CategoryName
+            }));
+        }
+        catch
+        {
+            return Json(Array.Empty<object>());
+        }
     }
 
     [HttpGet]
@@ -101,7 +125,8 @@ public class AssignmentsController : Controller
             return View(vm);
         }
 
-        var available = await LoadAvailableAsync(vm, ct);
+        var available = await LoadAvailableFilteredAsync(
+            null, null, null, null, null, null, ct);
         var selected = vm.SelectedAssetIds ?? [];
         var lines = selected.Select(id =>
         {
@@ -470,11 +495,17 @@ public class AssignmentsController : Controller
                 .WithEndpoint(ApiEndpoints.Models)
                 .WithQuery("onlyActive", "true")
                 .SendJsonAsync<ApiResponse<List<ModelListDto>>>(ct);
+            var categories = await _api.Create()
+                .WithEndpoint(ApiEndpoints.Categories)
+                .WithQuery("onlyActive", "true")
+                .SendJsonAsync<ApiResponse<List<CategoryListDto>>>(ct);
 
             vm.Employees = emp?.Data ?? [];
             vm.Brands = brands?.Data ?? [];
             vm.Models = models?.Data ?? [];
-            vm.AvailableAssets = await LoadAvailableAsync(vm, ct);
+            vm.Categories = categories?.Data ?? [];
+            vm.AvailableAssets = await LoadAvailableFilteredAsync(
+                vm.Search, null, null, null, null, null, ct);
         }
         catch
         {
@@ -482,21 +513,31 @@ public class AssignmentsController : Controller
         }
     }
 
-    private async Task<List<AssetListDto>> LoadAvailableAsync(AssignViewModel vm, CancellationToken ct)
+    private async Task<List<AssetListDto>> LoadAvailableFilteredAsync(
+        string? search,
+        int[]? kinds,
+        string[]? conditions,
+        int[]? brandIds,
+        int[]? categoryIds,
+        int[]? modelIds,
+        CancellationToken ct)
     {
         var b = _api.Create()
             .WithEndpoint(ApiEndpoints.Assets)
             .WithQuery("status", "Available")
             .WithQuery("pageSize", "100")
-            .WithQuery("search", vm.Search);
-        if (vm.Kind.HasValue)
-            b.WithQuery("kind", ((int)vm.Kind.Value).ToString());
-        if (vm.Condition.HasValue)
-            b.WithQuery("condition", vm.Condition.Value.ToString());
-        if (vm.BrandId is > 0)
-            b.WithQuery("brandId", vm.BrandId.Value.ToString());
-        if (vm.ModelId is > 0)
-            b.WithQuery("modelId", vm.ModelId.Value.ToString());
+            .WithQuery("search", search);
+
+        if (kinds is { Length: > 0 })
+            b.WithQuery("kinds", kinds.Select(k => k.ToString()));
+        if (conditions is { Length: > 0 })
+            b.WithQuery("conditions", conditions);
+        if (brandIds is { Length: > 0 })
+            b.WithQuery("brandIds", brandIds.Select(id => id.ToString()));
+        if (categoryIds is { Length: > 0 })
+            b.WithQuery("categoryIds", categoryIds.Select(id => id.ToString()));
+        if (modelIds is { Length: > 0 })
+            b.WithQuery("modelIds", modelIds.Select(id => id.ToString()));
 
         var resp = await b.SendJsonAsync<ApiResponse<PagedResult<AssetListDto>>>(ct);
         return resp?.Data?.Items?.ToList() ?? [];

@@ -15,6 +15,7 @@ public class AssignViewModel
     public List<AssetListDto> AvailableAssets { get; set; } = [];
     public List<BrandListDto> Brands { get; set; } = [];
     public List<ModelListDto> Models { get; set; } = [];
+    public List<CategoryListDto> Categories { get; set; } = [];
     public string? Search { get; set; }
     public string? PrefillAssetCode { get; set; }
     public AssetKind? Kind { get; set; }
