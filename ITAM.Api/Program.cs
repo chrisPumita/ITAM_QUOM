@@ -3,8 +3,10 @@ using System.Threading.RateLimiting;
 using ITAM.Api;
 using ITAM.Api.Middleware;
 using ITAM.Infrastructure;
+using ITAM.Shared.Services.Cors;
 using ITAM.Shared.Services.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -57,13 +59,20 @@ try
 
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        // MonsterASP / reverse proxy: no conocemos IPs fijas del edge.
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
     builder.Services.AddSwaggerGen(options =>
     {
         options.SwaggerDoc("v1", new OpenApiInfo
         {
             Title = "ITAM QUOM API",
             Version = "v1",
-            Description = "API de gestión y resguardo de activos TI"
+            Description = "API de gestión y resguardo de activos TI. Autenticación: Authorize → Bearer {JWT}."
         });
 
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -111,6 +120,24 @@ try
 
     builder.Services.AddAuthorization();
 
+    var cors = builder.Configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>()
+               ?? new CorsSettings();
+    var corsOrigins = cors.AllowedOrigins
+        .Where(o => !string.IsNullOrWhiteSpace(o))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+    if (corsOrigins.Length > 0)
+    {
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("ItamCors", policy =>
+                policy.WithOrigins(corsOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod());
+        });
+    }
+
     builder.Services.AddRateLimiter(options =>
     {
         options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -148,18 +175,27 @@ try
 
     var app = builder.Build();
 
+    app.UseForwardedHeaders();
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 
     await app.Services.SeedIdentityAsync();
 
+    // Swagger habilitado también en Production (documentación para clientes / MonsterASP).
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "ITAM QUOM API v1");
+        // Ruta relativa: funciona detrás del reverse proxy de MonsterASP.
+        options.SwaggerEndpoint("v1/swagger.json", "ITAM QUOM API v1");
         options.RoutePrefix = "swagger";
+        options.DocumentTitle = "ITAM QUOM API — Swagger";
+        options.DisplayRequestDuration();
     });
 
+    app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
+
     app.UseHttpsRedirection();
+    if (corsOrigins.Length > 0)
+        app.UseCors("ItamCors");
     app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();

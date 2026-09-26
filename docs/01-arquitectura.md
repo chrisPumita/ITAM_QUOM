@@ -57,4 +57,7 @@
 
 ### Config relevante (`appsettings`)
 
-- `JwtSettings`, `LockoutSettings`, `SmtpSettings`, `Company` (incluye `CustodyLegend`, `LogoPath`).
+- API: `JwtSettings`, `LockoutSettings`, `SmtpSettings`, `Company` (incluye `CustodyLegend`, `LogoPath`), `CorsSettings:AllowedOrigins` (solo browser→API; vacío = sin CORS).
+- WebApp: `ApiConnect:BaseUrl` + `ApiConnect:Endpoints` (HttpRequestBuilder / `ApiConnectFactory`).
+
+**CORS / MonsterASP:** llamadas server-side WebApp→API (ApiConnect) no atraviesan CORS. CORS solo aplica si el navegador llama a la API (JS/fetch). Al publicar WebApp, agrega su URL HTTPS a `CorsSettings:AllowedOrigins` en la API.

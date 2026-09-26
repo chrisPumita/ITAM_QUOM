@@ -24,6 +24,7 @@ try
     builder.Host.UseSerilog();
 
     builder.Services.AddControllersWithViews();
+    builder.Services.AddApiConnect(builder.Configuration);
 
     var app = builder.Build();
 
