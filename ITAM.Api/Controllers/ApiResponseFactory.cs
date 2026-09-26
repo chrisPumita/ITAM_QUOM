@@ -22,6 +22,7 @@ internal static class ApiResponseFactory
             {
                 "NotFound" => HttpStatusCode.NotFound,
                 "Duplicate" => HttpStatusCode.Conflict,
+                "Conflict" => HttpStatusCode.Conflict,
                 _ => HttpStatusCode.BadRequest
             };
             return Status(result, errorCode);

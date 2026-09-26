@@ -1,14 +1,24 @@
 using System.Security.Claims;
+using ITAM.Domain.Interfaces.DataAccess;
+using ITAM.Domain.Interfaces.Repositories.Assignments;
+using ITAM.Domain.Interfaces.Repositories.Assets;
 using ITAM.Domain.Interfaces.Repositories.Catalog;
 using ITAM.Domain.Interfaces.Repositories.Company;
 using ITAM.Domain.Interfaces.Services;
+using ITAM.Domain.Interfaces.Services.Assets;
+using ITAM.Domain.Interfaces.Services.Assignments;
 using ITAM.Domain.Interfaces.Services.Catalog;
 using ITAM.Domain.Interfaces.Services.Company;
+using ITAM.Infrastructure.DataAccess;
 using ITAM.Infrastructure.Identity;
 using ITAM.Infrastructure.Persistence;
+using ITAM.Infrastructure.Repositories.Assignments;
+using ITAM.Infrastructure.Repositories.Assets;
 using ITAM.Infrastructure.Repositories.Catalog;
 using ITAM.Infrastructure.Repositories.Company;
 using ITAM.Infrastructure.Services;
+using ITAM.Infrastructure.Services.Assets;
+using ITAM.Infrastructure.Services.Assignments;
 using ITAM.Infrastructure.Services.Catalog;
 using ITAM.Infrastructure.Services.Company;
 using ITAM.Shared.Enums;
@@ -55,6 +65,9 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
 
         services.AddScoped<IAuthService, AuthService>();
+        services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
+        services.AddScoped<IAssetAssignmentRepository, AssetAssignmentRepository>();
+        services.AddScoped<IAssetAssignmentService, AssetAssignmentService>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IBrandRepository, BrandRepository>();
         services.AddScoped<IModelRepository, ModelRepository>();
