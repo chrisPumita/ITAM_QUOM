@@ -1,0 +1,92 @@
+@using ITAM.Shared.Dtos.Catalog
+@model List<CategoryListDto>
+@{
+    ViewData["Title"] = "Categorías";
+    var search = (string?)ViewBag.Search;
+    var onlyActive = (bool?)ViewBag.OnlyActive;
+}
+@await Html.PartialAsync("_CatalogTabs", "categorias")
+
+<div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+    <h1 class="h5 fw-bold mb-0">Categorías</h1>
+</div>
+
+<form method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-md-4"><input class="form-control form-control-sm" name="search" value="@search" placeholder="Buscar categoría…" /></div>
+    <div class="col-md-3">
+        <select class="form-select form-select-sm" name="onlyActive">
+            <option value="">Todos</option>
+            <option value="true" selected="@(onlyActive == true ? "selected" : null)">Solo activos</option>
+        </select>
+    </div>
+    <div class="col-auto"><button class="btn btn-sm btn-outline-secondary" type="submit">Filtrar</button></div>
+</form>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="panel">
+            <div class="table-responsive">
+                <table class="table table-sm table-catalog mb-0 align-middle">
+                    <thead><tr><th>Nombre</th><th>Orden</th><th>Activo</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td>@c.Name</td>
+                            <td>@c.SortOrder</td>
+                            <td>
+                                <form asp-action="ToggleCategory" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@c.Id" />
+                                    <input type="hidden" name="isActive" value="@(!c.IsActive)" />
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" @(c.IsActive ? "checked" : null)
+                                               onchange="this.form.submit()" />
+                                    </div>
+                                </form>
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        onclick="editCategory(@c.Id, '@c.Name.Replace("'", "\\'")', @c.SortOrder, @(c.IsActive ? "true" : "false"))">Editar</button>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <form asp-action="SaveCategory" method="post" class="panel" id="formCategory">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="categoryId" />
+            <div class="panel__header"><h2 class="panel__title" id="categoryFormTitle">Nueva categoría</h2></div>
+            <div class="panel__body">
+                <div class="mb-2"><label class="form-label">Nombre</label><input name="Name" id="categoryName" class="form-control" required /></div>
+                <div class="mb-2"><label class="form-label">Orden</label><input name="SortOrder" id="categorySortOrder" type="number" class="form-control" value="0" /></div>
+                <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="IsActive" value="true" id="categoryActive" checked /><label class="form-check-label" for="categoryActive">Activo</label></div>
+                <button class="btn btn-primary btn-sm" type="submit">Guardar</button>
+                <button type="button" class="btn btn-link btn-sm" onclick="resetCategory()">Limpiar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function editCategory(id, name, sortOrder, active) {
+  document.getElementById('categoryId').value = id;
+  document.getElementById('categoryName').value = name;
+  document.getElementById('categorySortOrder').value = sortOrder;
+  document.getElementById('categoryActive').checked = active;
+  document.getElementById('categoryFormTitle').textContent = 'Editar categoría';
+}
+function resetCategory() {
+  document.getElementById('categoryId').value = '';
+  document.getElementById('categoryName').value = '';
+  document.getElementById('categorySortOrder').value = 0;
+  document.getElementById('categoryActive').checked = true;
+  document.getElementById('categoryFormTitle').textContent = 'Nueva categoría';
+}
+</script>
+}

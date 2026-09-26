@@ -1,0 +1,15 @@
+@{
+    var active = (string)Model;
+}
+<ul class="nav nav-tabs mb-3 catalog-tabs">
+    @foreach (var t in new[] {
+        ("Marcas", "marcas"), ("Modelos", "modelos"), ("Categorias", "categorias"),
+        ("Ubicaciones", "ubicaciones"), ("Empleados", "empleados"), ("Proveedores", "proveedores")
+    })
+    {
+        <li class="nav-item">
+            <a class="nav-link @(active == t.Item2 ? "active" : "")" asp-action="@t.Item1">@t.Item1</a>
+        </li>
+    }
+</ul>
+<p class="text-muted small mb-3">Administración concentrada · solo Administrador. Baja = desactivar (IsActive), no se borra.</p>

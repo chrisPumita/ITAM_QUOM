@@ -1,0 +1,88 @@
+@using ITAM.Shared.Dtos.Catalog
+@{
+    ViewData["Title"] = "Marcas";
+    var items = (List<BrandListDto>)Model;
+    var search = (string?)ViewBag.Search;
+    var onlyActive = (bool?)ViewBag.OnlyActive;
+}
+@await Html.PartialAsync("_CatalogTabs", "marcas")
+
+<div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+    <h1 class="h5 fw-bold mb-0">Marcas</h1>
+</div>
+
+<form method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-md-4"><input class="form-control form-control-sm" name="search" value="@search" placeholder="Buscar marca…" /></div>
+    <div class="col-md-3">
+        <select class="form-select form-select-sm" name="onlyActive">
+            <option value="">Todos</option>
+            <option value="true" selected="@(onlyActive == true ? "selected" : null)">Solo activos</option>
+        </select>
+    </div>
+    <div class="col-auto"><button class="btn btn-sm btn-outline-secondary" type="submit">Filtrar</button></div>
+</form>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="panel">
+            <div class="table-responsive">
+                <table class="table table-sm table-catalog mb-0 align-middle">
+                    <thead><tr><th>Nombre</th><th>Activo</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var b in items)
+                    {
+                        <tr>
+                            <td class="font-mono">@b.Name</td>
+                            <td>
+                                <form asp-action="ToggleBrand" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@b.Id" />
+                                    <input type="hidden" name="isActive" value="@(!b.IsActive)" />
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" @(b.IsActive ? "checked" : null)
+                                               onchange="this.form.submit()" />
+                                    </div>
+                                </form>
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        onclick="editBrand(@b.Id, '@b.Name.Replace("'", "\\'")', @(b.IsActive ? "true" : "false"))">Editar</button>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <form asp-action="SaveBrand" method="post" class="panel" id="formBrand">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="brandId" />
+            <div class="panel__header"><h2 class="panel__title" id="brandFormTitle">Nueva marca</h2></div>
+            <div class="panel__body">
+                <div class="mb-2"><label class="form-label">Nombre</label><input name="Name" id="brandName" class="form-control text-uppercase" required /></div>
+                <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="IsActive" value="true" id="brandActive" checked /><label class="form-check-label" for="brandActive">Activo</label></div>
+                <button class="btn btn-primary btn-sm" type="submit">Guardar</button>
+                <button type="button" class="btn btn-link btn-sm" onclick="resetBrand()">Limpiar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function editBrand(id, name, active) {
+  document.getElementById('brandId').value = id;
+  document.getElementById('brandName').value = name;
+  document.getElementById('brandActive').checked = active;
+  document.getElementById('brandFormTitle').textContent = 'Editar marca';
+}
+function resetBrand() {
+  document.getElementById('brandId').value = '';
+  document.getElementById('brandName').value = '';
+  document.getElementById('brandActive').checked = true;
+  document.getElementById('brandFormTitle').textContent = 'Nueva marca';
+}
+</script>
+}

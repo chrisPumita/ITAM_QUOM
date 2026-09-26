@@ -1,0 +1,105 @@
+@using ITAM.Shared.Dtos.Catalog
+@model List<ModelListDto>
+@{
+    ViewData["Title"] = "Modelos";
+    var brands = (List<BrandListDto>)ViewBag.Brands;
+    var categories = (List<CategoryListDto>)ViewBag.Categories;
+    var search = (string?)ViewBag.Search;
+    var brandId = (int?)ViewBag.BrandId;
+    var categoryId = (int?)ViewBag.CategoryId;
+    var onlyActive = (bool?)ViewBag.OnlyActive;
+}
+@await Html.PartialAsync("_CatalogTabs", "modelos")
+
+<form method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-md-3"><input class="form-control form-control-sm" name="search" value="@search" placeholder="Buscar…" /></div>
+    <div class="col-md-2">
+        <select class="form-select form-select-sm" name="brandId">
+            <option value="">Marca</option>
+            @foreach (var b in brands) { <option value="@b.Id" selected="@(brandId == b.Id ? "selected" : null)">@b.Name</option> }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select form-select-sm" name="categoryId">
+            <option value="">Categoría</option>
+            @foreach (var c in categories) { <option value="@c.Id" selected="@(categoryId == c.Id ? "selected" : null)">@c.Name</option> }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select form-select-sm" name="onlyActive">
+            <option value="">Todos</option>
+            <option value="true" selected="@(onlyActive == true ? "selected" : null)">Solo activos</option>
+        </select>
+    </div>
+    <div class="col-auto"><button class="btn btn-sm btn-outline-secondary" type="submit">Filtrar</button></div>
+</form>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="panel"><div class="table-responsive">
+            <table class="table table-sm table-catalog mb-0 align-middle">
+                <thead><tr><th>Modelo</th><th>Marca</th><th>Categoría</th><th>Activo</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var m in Model)
+                {
+                    <tr>
+                        <td>@m.Name</td>
+                        <td class="font-mono">@m.BrandName</td>
+                        <td>@m.CategoryName</td>
+                        <td>
+                            <form asp-action="ToggleModel" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@m.Id" />
+                                <input type="hidden" name="isActive" value="@(!m.IsActive)" />
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" @(m.IsActive ? "checked" : null) onchange="this.form.submit()" />
+                                </div>
+                            </form>
+                        </td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    onclick="editModel(@m.Id, '@m.Name.Replace("'", "\\'")', @m.BrandId, @m.CategoryId, '@(m.Specs?.Replace("'", "\\'") ?? "")', @(m.IsActive ? "true" : "false"))">Editar</button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div></div>
+    </div>
+    <div class="col-lg-5">
+        <form asp-action="SaveModel" method="post" class="panel" id="formModel">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="modelId" />
+            <div class="panel__header"><h2 class="panel__title" id="modelFormTitle">Nuevo modelo</h2></div>
+            <div class="panel__body">
+                <div class="mb-2"><label class="form-label">Nombre</label><input name="Name" id="modelName" class="form-control" required /></div>
+                <div class="mb-2"><label class="form-label">Marca</label>
+                    <select name="BrandId" id="modelBrand" class="form-select" required>
+                        @foreach (var b in brands) { <option value="@b.Id">@b.Name</option> }
+                    </select>
+                </div>
+                <div class="mb-2"><label class="form-label">Categoría</label>
+                    <select name="CategoryId" id="modelCat" class="form-select" required>
+                        @foreach (var c in categories) { <option value="@c.Id">@c.Name</option> }
+                    </select>
+                </div>
+                <div class="mb-2"><label class="form-label">Specs</label><input name="Specs" id="modelSpecs" class="form-control" /></div>
+                <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="IsActive" value="true" id="modelActive" checked /><label class="form-check-label">Activo</label></div>
+                <button class="btn btn-primary btn-sm" type="submit">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+<script>
+function editModel(id, name, brandId, catId, specs, active) {
+  document.getElementById('modelId').value = id;
+  document.getElementById('modelName').value = name;
+  document.getElementById('modelBrand').value = brandId;
+  document.getElementById('modelCat').value = catId;
+  document.getElementById('modelSpecs').value = specs || '';
+  document.getElementById('modelActive').checked = active;
+  document.getElementById('modelFormTitle').textContent = 'Editar modelo';
+}
+</script>
+}
