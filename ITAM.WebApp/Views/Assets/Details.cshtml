@@ -1,0 +1,137 @@
+@using ITAM.Shared.Enums
+@model ITAM.WebApp.Models.Assets.AssetDetailViewModel
+@{
+    ViewData["Title"] = Model.Asset.AssetCode;
+    var a = Model.Asset;
+    var badgeClass = a.Status switch
+    {
+        AssetStatus.Available when a.Condition == AssetCondition.New => "status-new",
+        AssetStatus.Available => "status-available",
+        AssetStatus.Assigned => "status-assigned",
+        AssetStatus.Maintenance => "status-maintenance",
+        _ => "status-retired"
+    };
+}
+
+<nav aria-label="breadcrumb" class="mb-2">
+    <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item"><a asp-action="Index">Inventario</a></li>
+        <li class="breadcrumb-item active font-mono">@a.AssetCode</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+        <h1 class="h4 fw-bold mb-1 font-mono">@a.AssetCode</h1>
+        <div class="mb-1">@a.Description</div>
+        <span class="status-badge @badgeClass"><span class="status-badge__dot"></span> @a.StatusLabel</span>
+        @if (a.Status == AssetStatus.Assigned)
+        {
+            <span class="custodian-chip ms-1"><i class="bi bi-person"></i> Asignado a @(a.CurrentEmployeeName ?? "—")</span>
+        }
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        @if (a.Status == AssetStatus.Available)
+        {
+            <a class="btn btn-primary btn-sm" asp-controller="Assignments" asp-action="Assign">Asignar</a>
+            <form asp-action="SetMaintenance" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@a.Id" />
+                <button type="submit" class="btn btn-outline-warning btn-sm">Garantía</button>
+            </form>
+            @if (Model.IsAdmin)
+            {
+                <form asp-action="SetStatus" method="post" class="d-inline" onsubmit="return confirm('¿Dar de baja este activo?');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@a.Id" />
+                    <input type="hidden" name="status" value="@AssetStatus.Retired" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Baja</button>
+                </form>
+            }
+        }
+        else if (a.Status == AssetStatus.Assigned)
+        {
+            <a class="btn btn-primary btn-sm" asp-controller="Assignments" asp-action="Return" asp-route-mode="code" asp-route-assetCode="@a.AssetCode">Devolver</a>
+            <span class="small text-muted align-self-center">Para garantía: primero devolución</span>
+        }
+        else if (a.Status == AssetStatus.Maintenance)
+        {
+            <form asp-action="ExitMaintenance" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@a.Id" />
+                <button type="submit" class="btn btn-primary btn-sm">Marcar disponible</button>
+            </form>
+            @if (Model.IsAdmin)
+            {
+                <form asp-action="SetStatus" method="post" class="d-inline" onsubmit="return confirm('¿Dar de baja?');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@a.Id" />
+                    <input type="hidden" name="status" value="@AssetStatus.Retired" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Baja</button>
+                </form>
+            }
+        }
+        else if (a.Status == AssetStatus.Retired && Model.IsAdmin)
+        {
+            <form asp-action="SetStatus" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@a.Id" />
+                <input type="hidden" name="status" value="@AssetStatus.Available" />
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Reactivar</button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="panel mb-4">
+    <div class="panel__header"><h2 class="panel__title">Ficha</h2></div>
+    <div class="panel__body">
+        <div class="row g-3 small">
+            <div class="col-sm-6 col-lg-3"><div class="text-muted">Tipo</div><div>@a.Kind.ToSpanish()</div></div>
+            <div class="col-sm-6 col-lg-3"><div class="text-muted">Serie</div><div class="font-mono">@(a.SerialNumber ?? "—")</div></div>
+            <div class="col-sm-6 col-lg-3"><div class="text-muted">Condición</div><div>@a.Condition.ToSpanish()</div></div>
+            <div class="col-sm-6 col-lg-3"><div class="text-muted">Propiedad</div><div>@a.OwnershipType.ToSpanish()</div></div>
+            <div class="col-sm-6 col-lg-3"><div class="text-muted">Categoría</div><div>@a.CategoryName</div></div>
+            <div class="col-sm-6 col-lg-3"><div class="text-muted">Ubicación</div><div>@(a.LocationName ?? "—")</div></div>
+            <div class="col-sm-6 col-lg-3"><div class="text-muted">Proveedor</div><div>@(a.SupplierName ?? "—")</div></div>
+            <div class="col-sm-6 col-lg-3"><div class="text-muted">Garantía hasta</div><div>@(a.WarrantyEndDate?.ToString("yyyy-MM-dd") ?? "—")</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel__header"><h2 class="panel__title">Historial</h2></div>
+    <div class="panel__body">
+        @if (Model.Movements.Count == 0)
+        {
+            <p class="text-muted mb-0">Sin movimientos.</p>
+        }
+        else
+        {
+            <ul class="asset-tl">
+                @foreach (var m in Model.Movements)
+                {
+                    var tl = m.MovementType switch
+                    {
+                        MovementType.Created => "asset-tl__item--created",
+                        MovementType.Assigned => "asset-tl__item--assigned",
+                        MovementType.Returned => "asset-tl__item--returned",
+                        MovementType.StatusChanged => "asset-tl__item--status",
+                        MovementType.LocationChanged => "asset-tl__item--location",
+                        _ => ""
+                    };
+                    <li class="asset-tl__item @tl">
+                        <span class="asset-tl__dot"></span>
+                        <div class="asset-tl__meta">@m.OccurredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @(m.PerformedByUserName ?? "sistema")</div>
+                        <div class="asset-tl__title">@m.MovementType.ToSpanish()</div>
+                        <div class="small text-muted">
+                            @if (!string.IsNullOrEmpty(m.Notes)) { @m.Notes }
+                            @if (!string.IsNullOrEmpty(m.EmployeeName)) { <span>· @m.EmployeeName</span> }
+                            @if (!string.IsNullOrEmpty(m.CustodyFolio)) { <span class="font-mono">· @m.CustodyFolio</span> }
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

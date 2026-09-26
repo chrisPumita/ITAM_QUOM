@@ -1,0 +1,108 @@
+@using ITAM.Shared.Enums
+@model ITAM.WebApp.Models.Assignments.ReturnViewModel
+@{
+    ViewData["Title"] = "Devolver";
+    var isFolio = string.Equals(Model.Mode, "folio", StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Devolver</h1>
+    <p class="text-muted small mb-0">Por responsiva (varios ítems) o por etiqueta. Al devolver queda Disponible (usado).</p>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(isFolio ? "active" : "")" asp-action="Return" asp-route-mode="folio">Por responsiva</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(!isFolio ? "active" : "")" asp-action="Return" asp-route-mode="code">Por etiqueta</a>
+    </li>
+</ul>
+
+@if (isFolio)
+{
+    <form method="get" class="row g-2 mb-3" style="max-width:480px">
+        <input type="hidden" name="mode" value="folio" />
+        <div class="col">
+            <input class="form-control font-mono" name="folio" value="@Model.Folio" placeholder="RES-2026-0001" />
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+        </div>
+    </form>
+}
+else
+{
+    <form method="get" class="row g-2 mb-3" style="max-width:480px">
+        <input type="hidden" name="mode" value="code" />
+        <div class="col">
+            <input class="form-control font-mono" name="assetCode" value="@Model.AssetCode" placeholder="EQ-2026-0001" />
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+        </div>
+    </form>
+}
+
+<div asp-validation-summary="All" class="text-danger small mb-3"></div>
+
+@if (Model.LookupAsset is not null && Model.LookupAsset.Status != AssetStatus.Assigned)
+{
+    <div class="alert alert-info py-2">
+        @Model.LookupAsset.AssetCode — @Model.LookupAsset.StatusLabel
+        @if (Model.LookupAsset.Status == AssetStatus.Available)
+        {
+            <form asp-action="SendToWarranty" method="post" class="d-inline ms-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="assetCode" value="@Model.LookupAsset.AssetCode" />
+                <button type="submit" class="btn btn-sm btn-outline-warning">Ingresar a garantía</button>
+            </form>
+        }
+    </div>
+}
+
+@if (Model.ActiveLines.Count > 0)
+{
+    <form asp-action="Return" method="post" class="panel">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="Mode" value="@Model.Mode" />
+        <input type="hidden" name="Folio" value="@Model.Folio" />
+        <input type="hidden" name="AssetCode" value="@Model.AssetCode" />
+        <div class="panel__body">
+            @if (Model.Custody is not null)
+            {
+                <p class="mb-2">
+                    Folio <span class="font-mono fw-semibold">@Model.Custody.Folio</span>
+                    · @Model.Custody.EmployeeName
+                    <a class="ms-2 small" asp-action="CustodyPdf" asp-route-id="@Model.Custody.Id">PDF</a>
+                </p>
+            }
+            <div class="mb-3">
+                <label class="form-label">Notas</label>
+                <input name="Notes" class="form-control" value="@Model.Notes" />
+            </div>
+            <div class="mb-2">
+                <button type="button" class="btn btn-link btn-sm p-0" onclick="document.querySelectorAll('.ret-check').forEach(c=>c.checked=true)">Seleccionar todo</button>
+            </div>
+            <table class="table table-sm">
+                <thead><tr><th></th><th>Código</th><th>Descripción</th><th>Custodio</th></tr></thead>
+                <tbody>
+                @foreach (var line in Model.ActiveLines)
+                {
+                    <tr>
+                        <td><input class="form-check-input ret-check" type="checkbox" name="SelectedAssetIds" value="@line.AssetId" checked /></td>
+                        <td class="font-mono">@line.AssetCode</td>
+                        <td>@line.Description</td>
+                        <td>@line.EmployeeName</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-primary">Registrar devolución</button>
+        </div>
+    </form>
+}
+else if (!string.IsNullOrWhiteSpace(Model.Folio) || !string.IsNullOrWhiteSpace(Model.AssetCode))
+{
+    <p class="text-muted">No hay ítems asignados para devolver.</p>
+}

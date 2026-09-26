@@ -1,0 +1,137 @@
+@using ITAM.Shared.Enums
+@model ITAM.WebApp.Models.Assignments.AssignViewModel
+@{
+    ViewData["Title"] = "Asignar";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Asignar activos</h1>
+    <p class="text-muted small mb-0">Solo disponibles. Se genera folio RES automáticamente.</p>
+</div>
+
+<form method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-md-3">
+        <input class="form-control form-control-sm" name="search" value="@Model.Search" placeholder="Filtrar activos…" />
+    </div>
+    <div class="col-md-2">
+        <select class="form-select form-select-sm" name="kind">
+            <option value="">Equipo y accesorio</option>
+            <option value="1" selected="@(Model.Kind == AssetKind.Equipment ? "selected" : null)">Equipo</option>
+            <option value="2" selected="@(Model.Kind == AssetKind.Accessory ? "selected" : null)">Accesorio</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select form-select-sm" name="condition">
+            <option value="">Nuevo / Usado</option>
+            <option value="New" selected="@(Model.Condition == AssetCondition.New ? "selected" : null)">Nuevo</option>
+            <option value="Used" selected="@(Model.Condition == AssetCondition.Used ? "selected" : null)">Usado</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select form-select-sm" name="brandId" id="assignBrand">
+            <option value="">Marca</option>
+            @foreach (var b in Model.Brands)
+            {
+                <option value="@b.Id" selected="@(Model.BrandId == b.Id ? "selected" : null)">@b.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select form-select-sm" name="modelId" id="assignModel"
+                data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName })))'>
+            <option value="">Modelo</option>
+        </select>
+    </div>
+    <div class="col-md-1">
+        <button class="btn btn-sm btn-outline-secondary w-100" type="submit">Buscar</button>
+    </div>
+</form>
+
+<form asp-action="Assign" method="post" class="panel">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Search" />
+    <input type="hidden" asp-for="Kind" />
+    <input type="hidden" asp-for="Condition" />
+    <input type="hidden" asp-for="BrandId" />
+    <input type="hidden" asp-for="ModelId" />
+    <div class="panel__body">
+        <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+        <div class="mb-3" style="max-width:420px">
+            <label class="form-label">Colaborador</label>
+            <select asp-for="EmployeeId" class="form-select" required>
+                <option value="">Seleccione…</option>
+                @foreach (var e in Model.Employees)
+                {
+                    <option value="@e.Id">@e.FullName (@e.EmployeeNumber)</option>
+                }
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Notas (opcional)</label>
+            <input asp-for="Notes" class="form-control" maxlength="1000" />
+        </div>
+
+        <div class="table-responsive mb-3">
+            <table class="table table-sm table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width:2rem"></th>
+                        <th>SKU</th>
+                        <th>SN</th>
+                        <th>Descripción</th>
+                        <th>Condición</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.AvailableAssets.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-muted text-center py-3">No hay activos disponibles.</td></tr>
+                }
+                else
+                {
+                    foreach (var a in Model.AvailableAssets)
+                    {
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="SelectedAssetIds" value="@a.Id" class="form-check-input" />
+                            </td>
+                            <td class="font-mono">@a.AssetCode</td>
+                            <td class="font-mono small">@(a.SerialNumber ?? "—")</td>
+                            <td>@a.Description</td>
+                            <td>@a.Condition.ToSpanish()</td>
+                            <td>@a.Kind.ToSpanish()</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+        <button type="submit" class="btn btn-primary">Asignar y emitir responsiva</button>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+(function () {
+  const brand = document.getElementById('assignBrand');
+  const model = document.getElementById('assignModel');
+  const selected = '@(Model.ModelId?.ToString() ?? "")';
+  let models = [];
+  try { models = JSON.parse(model.getAttribute('data-models') || '[]'); } catch { models = []; }
+  function fill() {
+    const bid = brand.value ? parseInt(brand.value, 10) : null;
+    model.innerHTML = '<option value="">Modelo</option>';
+    models.filter(m => !bid || m.BrandId === bid).forEach(m => {
+      const o = document.createElement('option');
+      o.value = m.Id;
+      o.textContent = m.BrandName + ' ' + m.Name;
+      if (String(m.Id) === selected) o.selected = true;
+      model.appendChild(o);
+    });
+  }
+  brand.addEventListener('change', fill);
+  fill();
+})();
+</script>
+}
