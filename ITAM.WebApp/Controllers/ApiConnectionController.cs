@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ITAM.WebApp.Controllers;
 
-/// <summary>Proxy local del health de la API (evita CORS; el navegador llama a la WebApp).</summary>
+/// <summary>Proxy local del health de la API + metadatos de versión WebApp.</summary>
 [AllowAnonymous]
 [Route("api/connection")]
 [ApiController]
@@ -17,10 +17,26 @@ public sealed class ApiConnectionController : ControllerBase
     };
 
     private readonly ApiConnectFactory _api;
+    private readonly WebAppMetaData _web;
 
-    public ApiConnectionController(ApiConnectFactory api) => _api = api;
+    public ApiConnectionController(ApiConnectFactory api, WebAppMetaData web)
+    {
+        _api = api;
+        _web = web;
+    }
 
-    /// <summary>Comprueba <c>GET /api/Status</c> en la API remota.</summary>
+    /// <summary>Versión local del MVC (sin llamar a la API).</summary>
+    [HttpGet("version")]
+    [ResponseCache(NoStore = true, Duration = 0)]
+    public IActionResult Version() => Ok(new
+    {
+        service = _web.Service,
+        version = _web.Version,
+        lastUpdate = _web.LastUpdate,
+        lastUpdateUtc = _web.LastUpdateUtc
+    });
+
+    /// <summary>Comprueba <c>GET /api/Status</c> en la API remota e incluye versiones.</summary>
     [HttpGet("ping")]
     [ResponseCache(NoStore = true, Duration = 0)]
     public async Task<IActionResult> Ping(CancellationToken ct)
@@ -37,7 +53,9 @@ public sealed class ApiConnectionController : ControllerBase
                 return Ok(new
                 {
                     connected = false,
-                    message = $"API respondió {(int)response.StatusCode}"
+                    message = $"API respondió {(int)response.StatusCode}",
+                    webVersion = _web.Version,
+                    webLastUpdate = _web.LastUpdate
                 });
             }
 
@@ -52,7 +70,12 @@ public sealed class ApiConnectionController : ControllerBase
                     ? (payload?.AccessDb ?? "API y base de datos OK")
                     : (payload?.AccessDb ?? "API sin conexión a BD"),
                 service = payload?.Service,
-                version = payload?.Version
+                version = payload?.Version,
+                lastUpdate = payload?.LastUpdate,
+                lastUpdateUtc = payload?.LastUpdateUtc,
+                webVersion = _web.Version,
+                webLastUpdate = _web.LastUpdate,
+                webLastUpdateUtc = _web.LastUpdateUtc
             });
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -64,7 +87,9 @@ public sealed class ApiConnectionController : ControllerBase
             return Ok(new
             {
                 connected = false,
-                message = $"Sin conexión a la API: {ex.Message}"
+                message = $"Sin conexión a la API: {ex.Message}",
+                webVersion = _web.Version,
+                webLastUpdate = _web.LastUpdate
             });
         }
     }
@@ -75,5 +100,7 @@ public sealed class ApiConnectionController : ControllerBase
         public string? Version { get; set; }
         public string? ApiAccess { get; set; }
         public string? AccessDb { get; set; }
+        public string? LastUpdate { get; set; }
+        public string? LastUpdateUtc { get; set; }
     }
 }

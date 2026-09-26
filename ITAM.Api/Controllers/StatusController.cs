@@ -56,6 +56,7 @@ public class StatusController : ControllerBase
             ApiAccess = conectDb ? "OK" : "SIN CONEXIÓN",
             AccessDb = accessDb,
             metaData.LastUpdate,
+            metaData.LastUpdateUtc,
             metaData.PoweredBy
         });
     }
