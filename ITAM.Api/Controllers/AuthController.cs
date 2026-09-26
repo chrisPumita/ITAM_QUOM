@@ -1,15 +1,16 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Net;
-using System.Security.Claims;
-using System.Text;
-using ITAM.Domain.Interfaces.Services;
 using ITAM.Shared.Dtos.Apis;
 using ITAM.Shared.Dtos.Auth;
+using ITAM.Shared.Enums;
 using ITAM.Shared.Services.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Security.Claims;
+using System.Text;
+using ITAM.Domain.Interfaces.Services;
 
 namespace ITAM.Api.Controllers;
 
@@ -89,6 +90,26 @@ public class AuthController : ControllerBase
             Email = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue(JwtRegisteredClaimNames.Email),
             Name = User.FindFirstValue("displayName"),
             Roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToArray()
+        });
+    }
+
+    /// <summary>
+    /// Lista usuarios Identity para asociar a empleados (identityUserId).
+    /// Solo Administrador. Filtros: onlyActive, onlyUnlinked.
+    /// </summary>
+    [HttpGet("users")]
+    [Authorize(Roles = AppRoles.Administrador)]
+    [ProducesResponseType(typeof(ApiResponse<List<IdentityUserListDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<IdentityUserListDto>>>> ListUsers(
+        [FromQuery] bool? onlyActive = true,
+        [FromQuery] bool? onlyUnlinked = false)
+    {
+        var result = await _authService.ListUsersAsync(onlyActive, onlyUnlinked);
+        return Ok(new ApiResponse<List<IdentityUserListDto>>
+        {
+            Code = HttpStatusCode.OK,
+            Message = result.Message,
+            Data = result.Data
         });
     }
 

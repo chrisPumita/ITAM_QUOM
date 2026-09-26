@@ -16,3 +16,5 @@
 /ITAM.Shared/bin
 **/wwwroot/App_Data/logs/*.log
 **/wwwroot/App_Data/logs/*.txt
+/.idea
+global.json

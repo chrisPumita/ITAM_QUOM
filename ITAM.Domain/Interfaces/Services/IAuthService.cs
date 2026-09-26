@@ -28,4 +28,11 @@ public interface IAuthService
     /// false con <c>Error</c> "Email o contraseña incorrectos" o "Usuario inactivo".
     /// </returns>
     Task<Result<LoginResultDto>> LoginAsync(LoginDto dto);
+
+    /// <summary>
+    /// Lista usuarios Identity para vincular a empleados.
+    /// </summary>
+    /// <param name="onlyActive">Si true, solo cuentas activas.</param>
+    /// <param name="onlyUnlinked">Si true, excluye usuarios ya asociados a un Employee.</param>
+    Task<Result<List<IdentityUserListDto>>> ListUsersAsync(bool? onlyActive, bool? onlyUnlinked);
 }
