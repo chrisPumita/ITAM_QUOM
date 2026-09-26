@@ -4,7 +4,6 @@ namespace ITAM.Shared.Dtos.Auth;
 
 public class TestEmailDto
 {
-    /// <summary>Correo destinatario (opcional).</summary>
     [EmailAddress, MaxLength(256)]
     public string? ToEmail { get; set; }
 }
@@ -25,7 +24,6 @@ public class SmtpDiagnosticsDto
     public bool EnableSsl { get; set; }
     public string FromEmail { get; set; } = string.Empty;
     public string FromDisplayName { get; set; } = string.Empty;
-    /// <summary>UserName enmascarado (sin revelar secreto).</summary>
     public string UserNameHint { get; set; } = string.Empty;
     public bool HasPassword { get; set; }
     public bool UserNameLooksLikeEmail { get; set; }
@@ -46,7 +44,6 @@ public class ChangePasswordDto
 
 public class AdminResetPasswordDto
 {
-    /// <summary>Si vacío, se genera una temporal.</summary>
     [DataType(DataType.Password), MinLength(8), MaxLength(100)]
     public string? NewPassword { get; set; }
 

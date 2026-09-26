@@ -1,8 +1,5 @@
 namespace ITAM.Shared.Services.Company;
 
-/// <summary>
-/// Datos de la empresa para documentos (responsiva PDF, etc.). Sección <see cref="SectionName"/>.
-/// </summary>
 public class CompanySettings
 {
     public const string SectionName = "Company";
@@ -16,12 +13,8 @@ public class CompanySettings
     public string Email { get; set; } = string.Empty;
     public string Website { get; set; } = string.Empty;
 
-    /// <summary>Ruta relativa al ContentRoot (ej. wwwroot/branding/logo.png). Opcional.</summary>
     public string? LogoPath { get; set; }
 
-    /// <summary>
-    /// Leyenda legal de la responsiva (entre tabla y firmas). Editable por empresa.
-    /// </summary>
     public string CustodyLegend { get; set; } =
         "Por medio de la presente, el colaborador abajo firmante declara haber recibido a su entera satisfacción " +
         "el(los) equipo(s) y/o accesorio(s) descritos en este documento, comprometiéndose a: (1) utilizarlos " +

@@ -8,7 +8,6 @@ using ITAM.Shared.Enums;
 
 namespace ITAM.Infrastructure.Services.Assignments;
 
-/// <summary>Export Excel (ClosedXML) del historial de movimientos.</summary>
 public sealed class AssignmentExportService : IAssignmentExportService
 {
     private readonly IAssetAssignmentRepository _repo;

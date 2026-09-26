@@ -1,13 +1,11 @@
 namespace ITAM.Shared.Enums;
 
-/// <summary>Propiedad patrimonial del activo (sin comodato).</summary>
 public enum OwnershipType
 {
     Owned = 1,
     Rented = 2
 }
 
-/// <summary>Estado del ciclo de vida del activo.</summary>
 public enum AssetStatus
 {
     Available = 1,
@@ -16,14 +14,12 @@ public enum AssetStatus
     Retired = 4
 }
 
-/// <summary>Equipo serializado vs accesorio de inventario.</summary>
 public enum AssetKind
 {
     Equipment = 1,
     Accessory = 2
 }
 
-/// <summary>Tipos de movimiento para historial / trazabilidad.</summary>
 public enum MovementType
 {
     Created = 1,
@@ -35,7 +31,6 @@ public enum MovementType
     CustodyIssued = 7
 }
 
-/// <summary>Estado de la responsiva (CustodyForm).</summary>
 public enum CustodyFormStatus
 {
     Draft = 1,
@@ -44,7 +39,6 @@ public enum CustodyFormStatus
     Closed = 4
 }
 
-/// <summary>Condición física al entregar / devolver.</summary>
 public enum AssetCondition
 {
     New = 1,

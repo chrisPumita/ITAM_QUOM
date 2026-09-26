@@ -11,10 +11,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ITAM.Infrastructure.Persistence;
 
-/// <summary>
-/// DbContext único: Identity + catálogos + negocio ITAM.
-/// Configuraciones Fluent en Persistence/Configurations (ApplyConfigurationsFromAssembly).
-/// </summary>
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)

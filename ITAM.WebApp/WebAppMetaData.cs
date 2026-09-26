@@ -1,6 +1,5 @@
 namespace ITAM.WebApp;
 
-/// <summary>Versión publicada del MVC.</summary>
 public class WebAppMetaData
 {
     public string Service => "ITAM QUOM WebApp";

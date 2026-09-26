@@ -3,12 +3,8 @@ using ITAM.Shared.Enums;
 
 namespace ITAM.Domain.Entities.Custody;
 
-/// <summary>
-/// Responsiva (documento de resguardo). Folio RES-yyyy-####. Puede incluir varios assets/accesorios.
-/// </summary>
 public class CustodyForm : BaseEntity
 {
-    /// <summary>Folio único generado con FolioCounter (ej. RES-2026-0001).</summary>
     public string Folio { get; set; } = string.Empty;
 
     public Guid EmployeeId { get; set; }
@@ -20,7 +16,6 @@ public class CustodyForm : BaseEntity
     public DateTime? SignedAt { get; set; }
     public string? Notes { get; set; }
 
-    /// <summary>Usuario que emitió / generó la responsiva.</summary>
     public Guid IssuedByUserId { get; set; }
 
     public ICollection<CustodyFormLine> Lines { get; set; } = new List<CustodyFormLine>();

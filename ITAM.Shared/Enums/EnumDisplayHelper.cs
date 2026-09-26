@@ -1,6 +1,5 @@
 namespace ITAM.Shared.Enums;
 
-/// <summary>Etiquetas en español para enums de negocio (PDF, UI, reportes).</summary>
 public static class EnumDisplayHelper
 {
     public static string ToSpanish(this CustodyFormStatus status) => status switch
@@ -28,9 +27,6 @@ public static class EnumDisplayHelper
         _ => status.ToString()
     };
 
-    /// <summary>
-    /// Acepta enum name, número o etiqueta ES del requerimiento (Disponible, Asignado…).
-    /// </summary>
     public static bool TryParseAssetStatus(string? raw, out AssetStatus status)
     {
         status = default;

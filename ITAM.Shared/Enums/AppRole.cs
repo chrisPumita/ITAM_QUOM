@@ -1,8 +1,5 @@
 namespace ITAM.Shared.Enums;
 
-/// <summary>
-/// Roles de la API. Se emiten como ClaimTypes.Role en el JWT.
-/// </summary>
 public enum AppRole
 {
     Administrador = 1,

@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using ITAM.Application.Services.Assets;
 using ITAM.Domain.Entities.Assets;
 using ITAM.Domain.Interfaces.Repositories.Assets;
 using ITAM.Domain.Interfaces.Services;
@@ -9,7 +10,6 @@ using ITAM.Shared.Enums;
 
 namespace ITAM.Infrastructure.Services.Assets;
 
-/// <summary>Export Excel del inventario de activos (universo + filtros).</summary>
 public sealed class AssetExportService : IAssetExportService
 {
     private readonly IAssetRepository _repo;
@@ -112,7 +112,6 @@ public sealed class AssetExportService : IAssetExportService
         return ms.ToArray();
     }
 
-    /// <summary>Plantilla amigable (~50 filas de ejemplo). Marca/Modelo por nombre; se crean si faltan.</summary>
     public static ExportFile BuildImportTemplate()
     {
         using var wb = new XLWorkbook();

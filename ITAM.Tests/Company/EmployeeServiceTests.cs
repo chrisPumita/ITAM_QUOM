@@ -1,6 +1,6 @@
 using ITAM.Domain.Entities.Company;
 using ITAM.Domain.Interfaces.Repositories.Company;
-using ITAM.Infrastructure.Services.Company;
+using ITAM.Application.Services.Company;
 using ITAM.Shared.Dtos.Company;
 using Moq;
 

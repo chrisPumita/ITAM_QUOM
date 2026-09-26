@@ -1,10 +1,9 @@
 using ITAM.Domain.Interfaces.Repositories.Assignments;
 using ITAM.Domain.Interfaces.Services.Assignments;
-using ITAM.Infrastructure.Repositories.Assignments;
 using ITAM.Shared.Dtos.Apis;
 using ITAM.Shared.Dtos.Assignments;
 
-namespace ITAM.Infrastructure.Services.Assignments;
+namespace ITAM.Application.Services.Assignments;
 
 public sealed class AssetAssignmentService : IAssetAssignmentService
 {

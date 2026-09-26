@@ -1,6 +1,5 @@
+using ITAM.Application.Services.Assignments;
 using ITAM.Domain.Interfaces.Repositories.Assignments;
-using ITAM.Infrastructure.Repositories.Assignments;
-using ITAM.Infrastructure.Services.Assignments;
 using ITAM.Shared.Dtos.Assignments;
 using Moq;
 

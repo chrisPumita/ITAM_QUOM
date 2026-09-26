@@ -4,7 +4,6 @@ namespace ITAM.Domain.Interfaces.Services;
 
 public interface IFolioCounterService
 {
-    /// <summary>Emite el siguiente folio PREFIX-yyyy-#### bajo bloqueo.</summary>
     Task<string> NextAsync(string prefix, CancellationToken ct = default);
 }
 

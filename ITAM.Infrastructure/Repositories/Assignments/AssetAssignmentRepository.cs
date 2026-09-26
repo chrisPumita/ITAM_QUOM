@@ -8,9 +8,6 @@ using Microsoft.Data.SqlClient;
 
 namespace ITAM.Infrastructure.Repositories.Assignments;
 
-/// <summary>
-/// Repository de asignaciones: escrituras con ADO.NET + SP; lecturas con Dapper.
-/// </summary>
 public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -408,16 +405,4 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
         50012 => "Validation",
         _ => "Validation"
     };
-}
-
-/// <summary>Error de negocio levantado por el SP (números 500xx).</summary>
-public sealed class AssetAssignmentRepositoryException : Exception
-{
-    public string ErrorCode { get; }
-
-    public AssetAssignmentRepositoryException(string message, string errorCode, Exception? inner = null)
-        : base(message, inner)
-    {
-        ErrorCode = errorCode;
-    }
 }

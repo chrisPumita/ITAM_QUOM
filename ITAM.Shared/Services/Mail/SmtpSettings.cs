@@ -1,6 +1,5 @@
 namespace ITAM.Shared.Services.Mail;
 
-/// <summary>Configuración SMTP.</summary>
 public class SmtpSettings
 {
     public const string SectionName = "SmtpSettings";
@@ -13,6 +12,5 @@ public class SmtpSettings
     public string FromEmail { get; set; } = string.Empty;
     public string FromDisplayName { get; set; } = "ITAM QUOM";
 
-    /// <summary>URL base del sitio para enlaces en correos.</summary>
     public string PublicAppBaseUrl { get; set; } = string.Empty;
 }

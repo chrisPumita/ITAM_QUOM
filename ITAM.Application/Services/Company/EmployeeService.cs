@@ -4,7 +4,7 @@ using ITAM.Domain.Interfaces.Services.Company;
 using ITAM.Shared.Dtos.Apis;
 using ITAM.Shared.Dtos.Company;
 
-namespace ITAM.Infrastructure.Services.Company;
+namespace ITAM.Application.Services.Company;
 
 public class EmployeeService : IEmployeeService
 {

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ITAM.WebApp.Controllers;
 
-/// <summary>Proxy local del health de la API + metadatos de versión WebApp.</summary>
 [AllowAnonymous]
 [Route("api/connection")]
 [ApiController]
@@ -25,7 +24,6 @@ public sealed class ApiConnectionController : ControllerBase
         _web = web;
     }
 
-    /// <summary>Versión local del MVC (sin llamar a la API).</summary>
     [HttpGet("version")]
     [ResponseCache(NoStore = true, Duration = 0)]
     public IActionResult Version() => Ok(new
@@ -36,7 +34,6 @@ public sealed class ApiConnectionController : ControllerBase
         lastUpdateUtc = _web.LastUpdateUtc
     });
 
-    /// <summary>Comprueba <c>GET /api/Status</c> en la API remota e incluye versiones.</summary>
     [HttpGet("ping")]
     [ResponseCache(NoStore = true, Duration = 0)]
     public async Task<IActionResult> Ping(CancellationToken ct)

@@ -13,7 +13,6 @@ public class AssetListDto
     public AssetStatus Status { get; set; }
     public AssetCondition Condition { get; set; }
 
-    /// <summary>Etiqueta UI: Nuevo / Disponible / Asignado / …</summary>
     public string StatusLabel => Status switch
     {
         AssetStatus.Available when Condition == AssetCondition.New => "Nuevo",
@@ -60,7 +59,6 @@ public class AssetListDto
 
 public class AssetUpsertDto
 {
-    /// <summary>Vacío en alta → la API genera EQ/AC-yyyy-####.</summary>
     [MaxLength(50)]
     public string? AssetCode { get; set; }
 
@@ -78,7 +76,6 @@ public class AssetUpsertDto
 
     public Guid? SupplierId { get; set; }
 
-    /// <summary>En alta se fuerza Available. En update aplica matriz de transiciones.</summary>
     public AssetStatus Status { get; set; } = AssetStatus.Available;
 
     public int? LocationId { get; set; }

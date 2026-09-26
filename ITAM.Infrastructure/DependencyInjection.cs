@@ -7,8 +7,6 @@ using ITAM.Domain.Interfaces.Repositories.Company;
 using ITAM.Domain.Interfaces.Services;
 using ITAM.Domain.Interfaces.Services.Assets;
 using ITAM.Domain.Interfaces.Services.Assignments;
-using ITAM.Domain.Interfaces.Services.Catalog;
-using ITAM.Domain.Interfaces.Services.Company;
 using ITAM.Infrastructure.DataAccess;
 using ITAM.Infrastructure.Identity;
 using ITAM.Infrastructure.Persistence;
@@ -19,8 +17,6 @@ using ITAM.Infrastructure.Repositories.Company;
 using ITAM.Infrastructure.Services;
 using ITAM.Infrastructure.Services.Assets;
 using ITAM.Infrastructure.Services.Assignments;
-using ITAM.Infrastructure.Services.Catalog;
-using ITAM.Infrastructure.Services.Company;
 using ITAM.Infrastructure.Services.Mail;
 using ITAM.Shared.Enums;
 using ITAM.Shared.Services.Identity;
@@ -32,15 +28,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ITAM.Infrastructure;
 
-/// <summary>
-/// Registro de DI de Infrastructure: SQL Server, Identity, JwtSettings, servicios.
-/// </summary>
 public static class DependencyInjection
 {
-    /// <summary>
-    /// Agrega DbContext, ASP.NET Identity (<see cref="ApplicationUser"/>) y <see cref="IAuthService"/>.
-    /// No aplica migraciones: ejecutarlas manualmente (ver comentarios en <c>ITAM.Api/Program.cs</c>).
-    /// </summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
@@ -83,7 +72,6 @@ public static class DependencyInjection
         services.AddScoped<ISmtpMailSender, SmtpMailSender>();
         services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
         services.AddScoped<IAssetAssignmentRepository, AssetAssignmentRepository>();
-        services.AddScoped<IAssetAssignmentService, AssetAssignmentService>();
         services.AddScoped<ICustodyPdfService, CustodyPdfService>();
         services.AddScoped<IAssignmentExportService, AssignmentExportService>();
         services.AddScoped<IAssetExportService, AssetExportService>();
@@ -95,28 +83,10 @@ public static class DependencyInjection
         services.AddScoped<ISupplierRepository, SupplierRepository>();
         services.AddScoped<IAssetRepository, AssetRepository>();
         services.AddScoped<IFolioCounterService, FolioCounterService>();
-        services.AddScoped<ICategoryService, CategoryService>();
-        services.AddScoped<IBrandService, BrandService>();
-        services.AddScoped<IModelService, ModelService>();
-        services.AddScoped<ILocationService, LocationService>();
-        services.AddScoped<IEmployeeService, EmployeeService>();
-        services.AddScoped<ISupplierService, SupplierService>();
-        services.AddScoped<IAssetService, AssetService>();
 
         return services;
     }
 
-    /// <summary>
-    /// Seed de roles y usuarios de prueba. Requiere que las migraciones ya estén aplicadas.
-    /// </summary>
-    /// <remarks>
-    /// Usuarios:
-    /// <list type="bullet">
-    /// <item><c>admin@itam.local</c> / <c>Admin123!</c> → Administrador</item>
-    /// <item><c>operador@itam.local</c> / <c>Operador123!</c> → Operador</item>
-    /// </list>
-    /// Cada usuario recibe Identity Role + claim <c>ClaimTypes.Role</c> (para el JWT).
-    /// </remarks>
     public static async Task SeedIdentityAsync(this IServiceProvider services)
     {
         using var scope = services.CreateScope();

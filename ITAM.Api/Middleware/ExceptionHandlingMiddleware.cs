@@ -5,9 +5,6 @@ using Serilog;
 
 namespace ITAM.Api.Middleware;
 
-/// <summary>
-/// Middleware global de errores: registra en Serilog y responde ProblemDetails sin filtrar detalles internos.
-/// </summary>
 public sealed class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;

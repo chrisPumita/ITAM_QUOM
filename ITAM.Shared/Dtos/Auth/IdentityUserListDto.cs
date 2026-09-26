@@ -1,6 +1,5 @@
 namespace ITAM.Shared.Dtos.Auth;
 
-/// <summary>Usuario Identity para asociar a un Employee (identityUserId).</summary>
 public class IdentityUserListDto
 {
     public Guid Id { get; set; }

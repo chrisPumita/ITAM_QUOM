@@ -29,6 +29,5 @@ public class EmployeeUpsertDto
 
     public bool IsActive { get; set; } = true;
 
-    /// <summary>Opcional: vincula a AspNetUsers. Null = sin cuenta.</summary>
     public Guid? IdentityUserId { get; set; }
 }

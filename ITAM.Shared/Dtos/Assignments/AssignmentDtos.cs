@@ -46,7 +46,6 @@ public class ReturnAssetDto
     [MaxLength(1000)]
     public string? Notes { get; set; }
 
-    /// <summary>Opcional: ubicación a la que regresa el activo.</summary>
     public int? ToLocationId { get; set; }
 }
 
@@ -56,7 +55,6 @@ public class ReturnAssetResultDto
     public Guid AssignmentId { get; set; }
 }
 
-/// <summary>Fila de asignación (activa o histórica) para listados Dapper.</summary>
 public class AssignmentListDto
 {
     public Guid Id { get; set; }
@@ -69,7 +67,6 @@ public class AssignmentListDto
     public string ModelName { get; set; } = string.Empty;
     public string? Specs { get; set; }
 
-    /// <summary>Marca + modelo · specs, listo para reportes.</summary>
     public string Description
     {
         get
@@ -135,14 +132,11 @@ public class CustodyFormLineDto
     public string? DeliveryNotes { get; set; }
     public string? ReturnNotes { get; set; }
 
-    /// <summary>Si el activo de esta línea ya fue devuelto: fecha UTC.</summary>
     public DateTime? ReturnedAt { get; set; }
 
-    /// <summary>Usuario Identity que registró la devolución.</summary>
     public string? ReturnedByUserName { get; set; }
 }
 
-/// <summary>Historial / auditoría de movimientos de activo (Dapper).</summary>
 public class AssetMovementListDto
 {
     public Guid Id { get; set; }

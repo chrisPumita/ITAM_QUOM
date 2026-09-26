@@ -143,7 +143,6 @@ public class AccountController : Controller
         }
     }
 
-    /// <summary>Salida por enlace directo (sin formulario). Idempotente si ya no hay sesión.</summary>
     [AllowAnonymous]
     [HttpGet("/Account/Logout")]
     public async Task<IActionResult> LogoutLink()

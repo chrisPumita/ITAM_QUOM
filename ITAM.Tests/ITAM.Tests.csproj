@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ITAM.Api\ITAM.Api.csproj" />
+    <ProjectReference Include="..\ITAM.Application\ITAM.Application.csproj" />
     <ProjectReference Include="..\ITAM.Infrastructure\ITAM.Infrastructure.csproj" />
     <ProjectReference Include="..\ITAM.Shared\ITAM.Shared.csproj" />
   </ItemGroup>

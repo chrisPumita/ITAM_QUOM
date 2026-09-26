@@ -55,6 +55,7 @@ public class StatusController : ControllerBase
             AccessDb = accessDb,
             metaData.LastUpdate,
             metaData.LastUpdateUtc,
+            metaData.Author,
             metaData.PoweredBy
         });
     }

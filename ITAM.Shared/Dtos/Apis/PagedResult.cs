@@ -1,8 +1,5 @@
 namespace ITAM.Shared.Dtos.Apis;
 
-/// <summary>
-/// TotalCount se calcula sobre el universo filtrado, antes de Skip/Take.
-/// </summary>
 public sealed class PagedResult<T>
 {
     public IReadOnlyList<T> Items { get; init; } = [];

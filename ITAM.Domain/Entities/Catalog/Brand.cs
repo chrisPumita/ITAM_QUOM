@@ -1,6 +1,5 @@
 namespace ITAM.Domain.Entities.Catalog;
 
-/// <summary>Catálogo de marcas (Dell, HP, Lenovo…).</summary>
 public class Brand
 {
     public int Id { get; set; }

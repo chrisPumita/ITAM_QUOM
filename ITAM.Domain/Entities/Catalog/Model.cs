@@ -1,14 +1,10 @@
 namespace ITAM.Domain.Entities.Catalog;
 
-/// <summary>
-/// Modelo comercial (categoría + marca). Define el tipo concreto del activo.
-/// </summary>
 public class Model
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Especificaciones libres (CPU, RAM, SO…).</summary>
     public string? Specs { get; set; }
 
     public int CategoryId { get; set; }

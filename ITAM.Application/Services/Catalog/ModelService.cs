@@ -4,7 +4,7 @@ using ITAM.Domain.Interfaces.Services.Catalog;
 using ITAM.Shared.Dtos.Apis;
 using ITAM.Shared.Dtos.Catalog;
 
-namespace ITAM.Infrastructure.Services.Catalog;
+namespace ITAM.Application.Services.Catalog;
 
 public class ModelService : IModelService
 {

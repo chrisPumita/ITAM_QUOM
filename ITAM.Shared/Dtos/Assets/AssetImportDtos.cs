@@ -3,19 +3,15 @@ using ITAM.Shared.Enums;
 
 namespace ITAM.Shared.Dtos.Assets;
 
-/// <summary>Fila de importación amigable: nombres, no Ids.</summary>
 public class AssetImportRowDto
 {
     public int RowNumber { get; set; }
     public AssetKind Kind { get; set; } = AssetKind.Equipment;
 
-    /// <summary>Marca (se normaliza a MAYÚSCULAS; se crea si no existe).</summary>
     public string BrandName { get; set; } = string.Empty;
 
-    /// <summary>Modelo (se crea si no existe bajo la marca).</summary>
     public string ModelName { get; set; } = string.Empty;
 
-    /// <summary>Categoría (default Laptops si vacío; se crea si no existe).</summary>
     public string? CategoryName { get; set; }
 
     public string? Specs { get; set; }

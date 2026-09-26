@@ -1,6 +1,6 @@
 using ITAM.Domain.Entities.Catalog;
 using ITAM.Domain.Interfaces.Repositories.Catalog;
-using ITAM.Infrastructure.Services.Catalog;
+using ITAM.Application.Services.Catalog;
 using ITAM.Shared.Dtos.Catalog;
 using Moq;
 

@@ -4,7 +4,6 @@ using ITAM.Shared.Enums;
 
 namespace ITAM.Domain.Interfaces.Services.Assignments;
 
-/// <summary>Export Excel del historial de movimientos.</summary>
 public interface IAssignmentExportService
 {
     Task<Result<ExportFile>> ExportMovementsAsync(

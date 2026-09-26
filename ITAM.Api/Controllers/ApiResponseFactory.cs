@@ -4,10 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ITAM.Api.Controllers;
 
-/// <summary>Convierte Result a respuesta HTTP ApiResponse.</summary>
 internal static class ApiResponseFactory
 {
-    /// <summary>Éxito con el código indicado; errores NotFound/Duplicate/Conflict o 400.</summary>
     public static ActionResult<ApiResponse<T>> FromResult<T>(Result<T> result, HttpStatusCode successCode)
     {
         if (!result.IsSuccess)

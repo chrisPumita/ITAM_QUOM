@@ -2,6 +2,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using ITAM.Api;
 using ITAM.Api.Middleware;
+using ITAM.Application;
 using ITAM.Infrastructure;
 using ITAM.Shared.Services.Cors;
 using ITAM.Shared.Services.Identity;
@@ -66,13 +67,26 @@ try
         options.KnownIPNetworks.Clear();
         options.KnownProxies.Clear();
     });
+    var apiMeta = new ApiMetaData();
+    builder.Services.AddSingleton(apiMeta);
+
     builder.Services.AddSwaggerGen(options =>
     {
         options.SwaggerDoc("v1", new OpenApiInfo
         {
-            Title = "ITAM QUOM API",
-            Version = "v1",
-            Description = "API de gestión y resguardo de activos TI. Autenticación: Authorize → Bearer {JWT}."
+            Title = apiMeta.Service,
+            Version = apiMeta.Version,
+            Description = $"""
+                API de gestión y resguardo de activos TI. Autenticación: Authorize → Bearer &lt;token&gt;.
+
+                **Última actualización:** {apiMeta.LastUpdate} (America/Mexico_City) · **Autor:** {apiMeta.Author}
+
+                """,
+            Contact = new OpenApiContact
+            {
+                Name = apiMeta.Author,
+                Url = new Uri(apiMeta.ContactUrl)
+            }
         });
 
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -91,8 +105,8 @@ try
         });
     });
 
-    builder.Services.AddSingleton<ApiMetaData>();
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddApplication();
 
     var jwt = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
         ?? throw new InvalidOperationException("JwtSettings no configurado.");

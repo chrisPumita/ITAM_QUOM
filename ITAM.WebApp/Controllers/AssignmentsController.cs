@@ -42,7 +42,6 @@ public class AssignmentsController : Controller
         return View(vm);
     }
 
-    /// <summary>Activos disponibles con filtros (JSON).</summary>
     [HttpGet]
     public async Task<IActionResult> AvailableAssets(
         string? search,

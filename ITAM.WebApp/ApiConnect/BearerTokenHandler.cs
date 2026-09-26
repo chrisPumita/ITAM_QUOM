@@ -4,7 +4,6 @@ using ITAM.WebApp.Security;
 
 namespace ITAM.WebApp.ApiConnect;
 
-/// <summary>Adjunta el JWT de sesión a las llamadas ApiConnect.</summary>
 public sealed class BearerTokenHandler : DelegatingHandler
 {
     private readonly IHttpContextAccessor _httpContextAccessor;

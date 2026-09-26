@@ -1,6 +1,5 @@
 namespace ITAM.Domain.Interfaces.Services;
 
-/// <summary>Archivo generado para descarga (Excel, etc.).</summary>
 public sealed class ExportFile
 {
     public required byte[] Content { get; init; }

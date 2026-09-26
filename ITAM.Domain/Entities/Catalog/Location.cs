@@ -1,8 +1,5 @@
 namespace ITAM.Domain.Entities.Catalog;
 
-/// <summary>
-/// Ubicación física (bodega, sitio, piso). Jerárquica opcional.
-/// </summary>
 public class Location
 {
     public int Id { get; set; }

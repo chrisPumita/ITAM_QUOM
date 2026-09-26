@@ -4,9 +4,6 @@ using ITAM.Shared.Enums;
 
 namespace ITAM.Domain.Entities.Assets;
 
-/// <summary>
-/// Historial / auditoría de un activo. Incluye siempre quién ejecutó la acción.
-/// </summary>
 public class AssetMovement : BaseEntity
 {
     public Guid AssetId { get; set; }
@@ -26,7 +23,6 @@ public class AssetMovement : BaseEntity
     public Guid? EmployeeId { get; set; }
     public Employee? Employee { get; set; }
 
-    /// <summary>Usuario Identity que ejecutó el movimiento (trazabilidad operativa).</summary>
     public Guid PerformedByUserId { get; set; }
 
     public Guid? CustodyFormId { get; set; }

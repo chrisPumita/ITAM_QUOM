@@ -3,10 +3,6 @@ using ITAM.Shared.Enums;
 
 namespace ITAM.Infrastructure.Repositories.Assignments;
 
-/// <summary>
-/// Proyecciones Dapper (*Row) y mapeo a DTOs públicos de Assignments.
-/// Interno a Infrastructure; listo para sustituir por Mapperly/AutoMapper si crece.
-/// </summary>
 internal static class AssetAssignmentMappings
 {
     public static AssignmentListDto ToDto(AssignmentRow r) => new()

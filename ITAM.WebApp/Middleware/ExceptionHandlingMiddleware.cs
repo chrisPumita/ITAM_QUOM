@@ -2,9 +2,6 @@ using Serilog;
 
 namespace ITAM.WebApp.Middleware;
 
-/// <summary>
-/// Captura excepciones en MVC, las registra con Serilog y muestra error sin bucles de redirect.
-/// </summary>
 public sealed class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;

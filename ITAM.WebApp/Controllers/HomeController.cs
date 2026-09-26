@@ -54,7 +54,6 @@ public class HomeController : Controller
 
     public IActionResult Privacy() => View();
 
-    /// <summary>Página de error anónima (no debe exigir login ni provocar bucles).</summary>
     [AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()

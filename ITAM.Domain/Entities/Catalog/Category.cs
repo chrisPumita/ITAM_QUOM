@@ -1,9 +1,5 @@
 namespace ITAM.Domain.Entities.Catalog;
 
-/// <summary>
-/// Catálogo de categorías de activo (Laptop, Monitor, Accesorio, etc.).
-/// PK int consecutivos. Soporte opcional de jerarquía padre-hijo.
-/// </summary>
 public class Category
 {
     public int Id { get; set; }

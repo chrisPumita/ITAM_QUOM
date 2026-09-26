@@ -54,9 +54,6 @@ public class AssetRepository : IAssetRepository
             .ToListAsync(ct);
     }
 
-    /// <summary>
-    /// Convierte nombres de categoría (contains) en Ids — OR facetado traducible a SQL.
-    /// </summary>
     private async Task<AssetFilterCriteria> ResolveAsync(AssetFilterCriteria filter, CancellationToken ct)
     {
         if (filter.CategoryNames is not { Count: > 0 })
@@ -100,9 +97,6 @@ public class AssetRepository : IAssetRepository
         };
     }
 
-    /// <summary>
-    /// Dentro de cada faceta: OR. Entre facetas: AND. Sin Include (Count/Skip baratos).
-    /// </summary>
     private IQueryable<Asset> BuildFilterQuery(AssetFilterCriteria filter)
     {
         var q = _db.Assets.AsNoTracking().AsQueryable();

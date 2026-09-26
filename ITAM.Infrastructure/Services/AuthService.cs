@@ -15,11 +15,6 @@ using Microsoft.Extensions.Options;
 
 namespace ITAM.Infrastructure.Services;
 
-/// <summary>
-/// Implementación de <see cref="IAuthService"/> con ASP.NET Identity.
-/// No genera JWT; solo valida credenciales y resuelve rol/claims.
-/// Lockout: 3 intentos fallidos → bloqueo temporal (config Identity).
-/// </summary>
 public class AuthService : IAuthService
 {
     private readonly UserManager<ApplicationUser> _userManager;

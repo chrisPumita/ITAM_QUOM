@@ -2,9 +2,6 @@ using ITAM.Shared.Dtos.Assignments;
 
 namespace ITAM.Domain.Interfaces.Repositories.Assignments;
 
-/// <summary>
-/// Persistencia de asignación/devolución (ADO.NET + SP) y lecturas (Dapper).
-/// </summary>
 public interface IAssetAssignmentRepository
 {
     Task<AssignAssetsResultDto> AssignAsync(

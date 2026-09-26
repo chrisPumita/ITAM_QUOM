@@ -12,7 +12,6 @@ using QuestPDF.Infrastructure;
 
 namespace ITAM.Infrastructure.Services.Assignments;
 
-/// <summary>PDF de responsiva con QuestPDF y cabecero desde <see cref="CompanySettings"/>.</summary>
 public sealed class CustodyPdfService : ICustodyPdfService
 {
     private readonly IAssetAssignmentRepository _repo;

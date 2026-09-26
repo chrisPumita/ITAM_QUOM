@@ -14,9 +14,6 @@ public interface IWebAuthSession
     string? GetAccessToken(ClaimsPrincipal user);
 }
 
-/// <summary>
-/// Sesión MVC con cookie: claims de identidad + JWT para la API.
-/// </summary>
 public sealed class WebAuthSession : IWebAuthSession
 {
     public async Task SignInAsync(HttpContext http, LoginResponseDto login, bool rememberMe)

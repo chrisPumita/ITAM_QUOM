@@ -4,7 +4,7 @@ using ITAM.Domain.Interfaces.Repositories.Assets;
 using ITAM.Domain.Interfaces.Repositories.Catalog;
 using ITAM.Domain.Interfaces.Repositories.Company;
 using ITAM.Domain.Interfaces.Services;
-using ITAM.Infrastructure.Services.Assets;
+using ITAM.Application.Services.Assets;
 using ITAM.Shared.Dtos.Assets;
 using ITAM.Shared.Enums;
 using Moq;

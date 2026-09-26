@@ -9,7 +9,7 @@ using ITAM.Shared.Dtos.Apis;
 using ITAM.Shared.Dtos.Assets;
 using ITAM.Shared.Enums;
 
-namespace ITAM.Infrastructure.Services.Assets;
+namespace ITAM.Application.Services.Assets;
 
 public class AssetService : IAssetService
 {
@@ -309,8 +309,7 @@ public class AssetService : IAssetService
         return Ok(row, "OK");
     }
 
-    /// <summary>Parsea facetas de status; el resto ya viene tipado en el query.</summary>
-    internal static Result<AssetFilterCriteria> TryBuildFilter(AssetListQuery query)
+    public static Result<AssetFilterCriteria> TryBuildFilter(AssetListQuery query)
     {
         List<AssetStatus>? statuses = null;
         if (query.Statuses is { Length: > 0 })

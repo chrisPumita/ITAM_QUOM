@@ -2,62 +2,41 @@ using ITAM.Shared.Enums;
 
 namespace ITAM.Shared.Dtos.Assets;
 
-/// <summary>
-/// Filtros facetados (estilo ecommerce): cada dimensión acepta varios valores (OR dentro, AND entre dimensiones).
-/// Ejemplo:
-/// <c>?search=DELL&amp;statuses=Disponible&amp;statuses=Asignado&amp;categories=Laptop&amp;categories=Monitor&amp;kinds=1&amp;locationIds=2&amp;locationIds=5</c>
-/// </summary>
 public sealed class AssetListQuery
 {
     public const int DefaultPageSize = 20;
     public const int MaxPageSize = 100;
 
-    /// <summary>Texto libre: código, serie, IMEI, marca, modelo, specs, categoría, colaborador.</summary>
     public string? Search { get; set; }
 
-    /// <summary>Compat práctica: un solo status. Se fusiona en <see cref="Statuses"/>.</summary>
     public string? Status { get; set; }
 
-    /// <summary>Varios estados (ES / enum / número). OR.</summary>
     public string[]? Statuses { get; set; }
 
-    /// <summary>Compat: una categoría por nombre. Se fusiona en <see cref="Categories"/>.</summary>
     public string? Category { get; set; }
 
-    /// <summary>Varios nombres de categoría (contains). OR.</summary>
     public string[]? Categories { get; set; }
 
-    /// <summary>Compat: un tipo. Se fusiona en <see cref="Kinds"/>.</summary>
     public AssetKind? Kind { get; set; }
 
-    /// <summary>Varios tipos (Equipment / Accessory). OR.</summary>
     public AssetKind[]? Kinds { get; set; }
 
-    /// <summary>Compat: un modelo. Se fusiona en <see cref="ModelIds"/>.</summary>
     public int? ModelId { get; set; }
 
-    /// <summary>Varios modelos. OR.</summary>
     public int[]? ModelIds { get; set; }
 
-    /// <summary>Compat: una ubicación. Se fusiona en <see cref="LocationIds"/>.</summary>
     public int? LocationId { get; set; }
 
-    /// <summary>Varias ubicaciones. OR.</summary>
     public int[]? LocationIds { get; set; }
 
-    /// <summary>Varios Ids de categoría. OR.</summary>
     public int[]? CategoryIds { get; set; }
 
-    /// <summary>Compat: una marca. Se fusiona en <see cref="BrandIds"/>.</summary>
     public int? BrandId { get; set; }
 
-    /// <summary>Varias marcas. OR.</summary>
     public int[]? BrandIds { get; set; }
 
-    /// <summary>Compat: una condición. Se fusiona en <see cref="Conditions"/>.</summary>
     public AssetCondition? Condition { get; set; }
 
-    /// <summary>Varias condiciones (New / Used). OR.</summary>
     public AssetCondition[]? Conditions { get; set; }
 
     public int Page { get; set; } = 1;

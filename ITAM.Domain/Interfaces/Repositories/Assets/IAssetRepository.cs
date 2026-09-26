@@ -5,14 +5,12 @@ namespace ITAM.Domain.Interfaces.Repositories.Assets;
 
 public interface IAssetRepository
 {
-    /// <summary>Busca activos con filtros y paginación.</summary>
     Task<(IReadOnlyList<Asset> Items, int TotalCount)> SearchAsync(
         AssetFilterCriteria filter,
         int page,
         int pageSize,
         CancellationToken ct = default);
 
-    /// <summary>Mismos filtros que Search, sin paginar (export Excel).</summary>
     Task<IReadOnlyList<Asset>> ListAsync(
         AssetFilterCriteria filter,
         CancellationToken ct = default);
@@ -26,9 +24,7 @@ public interface IAssetRepository
     Task<bool> LocationExistsAsync(int locationId, CancellationToken ct = default);
     Task<bool> SupplierExistsAsync(Guid supplierId, CancellationToken ct = default);
 
-    /// <summary>Alta de activo + movimiento de auditoría en la misma transacción.</summary>
     Task<Asset> AddAsync(Asset entity, AssetMovement audit, CancellationToken ct = default);
 
-    /// <summary>Actualización + movimientos de auditoría (0..N) en la misma transacción.</summary>
     Task UpdateAsync(Asset entity, IReadOnlyList<AssetMovement> audits, CancellationToken ct = default);
 }

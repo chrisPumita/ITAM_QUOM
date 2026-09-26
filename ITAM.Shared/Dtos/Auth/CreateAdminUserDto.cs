@@ -11,15 +11,12 @@ public class CreateAdminUserDto
     [Required, MaxLength(120)]
     public string DisplayName { get; set; } = string.Empty;
 
-    /// <summary>Administrador u Operador. Default Administrador.</summary>
     [MaxLength(40)]
     public string Role { get; set; } = AppRoles.Administrador;
 
-    /// <summary>URL base del WebApp (ej. https://localhost:7048) para el enlace de login.</summary>
     [MaxLength(300)]
     public string? PublicAppBaseUrl { get; set; }
 
-    /// <summary>Si true e SMTP configurado, envía correo con contraseña y enlace.</summary>
     public bool SendEmail { get; set; } = true;
 }
 
