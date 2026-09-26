@@ -21,6 +21,7 @@ public class AssignViewModel
     public AssetCondition? Condition { get; set; }
     public int? BrandId { get; set; }
     public int? ModelId { get; set; }
+    public List<AssignmentListDto> EmployeeActiveAssignments { get; set; } = [];
 }
 
 public class ReturnViewModel

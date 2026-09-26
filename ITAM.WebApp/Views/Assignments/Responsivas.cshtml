@@ -48,10 +48,10 @@
                 <tr>
                     <th>Folio</th>
                     <th>Colaborador</th>
+                    <th>Asignó</th>
                     <th>Estado</th>
                     <th>Emitida</th>
                     <th>Activos</th>
-                    <th>Emitió</th>
                     <th></th>
                 </tr>
             </thead>
@@ -67,10 +67,10 @@
                     <tr>
                         <td class="font-mono">@r.Folio</td>
                         <td>@r.EmployeeName <span class="text-muted small">(@r.EmployeeNumber)</span></td>
+                        <td class="small">@(r.IssuedByUserName ?? "—")</td>
                         <td>@r.Status.ToSpanish()</td>
                         <td>@(r.IssuedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
                         <td>@r.LineCount</td>
-                        <td class="small text-muted">@(r.IssuedByUserName ?? "—")</td>
                         <td class="text-end text-nowrap">
                             <a class="btn btn-sm btn-outline-secondary" asp-action="Responsiva" asp-route-id="@r.Id">Ver</a>
                             <a class="btn btn-sm btn-primary" asp-action="CustodyPdf" asp-route-id="@r.Id">PDF</a>

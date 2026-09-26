@@ -143,6 +143,44 @@ public class AuthController : ControllerBase
         });
     }
 
+    /// <summary>Crea un Administrador u Operador con contraseña temporal. Solo Administrador.</summary>
+    [HttpPost("users")]
+    [Authorize(Roles = AppRoles.Administrador)]
+    [ProducesResponseType(typeof(ApiResponse<CreateAdminUserResultDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<CreateAdminUserResultDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<CreateAdminUserResultDto>>> CreateUser(
+        [FromBody] CreateAdminUserDto dto, CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new ApiResponse<CreateAdminUserResultDto>
+            {
+                Code = HttpStatusCode.BadRequest,
+                Message = "Datos inválidos.",
+                Error = "Validation"
+            });
+        }
+
+        var result = await _authService.CreateAdminUserAsync(dto, ct);
+        if (!result.IsSuccess)
+        {
+            var code = result.Error == "Duplicate" ? HttpStatusCode.Conflict : HttpStatusCode.BadRequest;
+            return StatusCode((int)code, new ApiResponse<CreateAdminUserResultDto>
+            {
+                Code = code,
+                Message = result.Message,
+                Error = result.Error
+            });
+        }
+
+        return StatusCode(StatusCodes.Status201Created, new ApiResponse<CreateAdminUserResultDto>
+        {
+            Code = HttpStatusCode.Created,
+            Message = result.Message,
+            Data = result.Data
+        });
+    }
+
     private string GenerateToken(LoginResultDto data, DateTime expiraEn)
     {
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));

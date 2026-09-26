@@ -26,6 +26,7 @@ public class AssetsController : Controller
         AssetKind? kind,
         int? brandId,
         int? modelId,
+        int? categoryId,
         bool showRetired = false,
         int page = 1,
         CancellationToken ct = default)
@@ -49,10 +50,12 @@ public class AssetsController : Controller
             builder.WithQuery("condition", condition);
         if (kind.HasValue)
             builder.WithQuery("kind", ((int)kind.Value).ToString());
+        if (categoryId is > 0)
+            builder.WithQuery("categoryIds", categoryId.Value.ToString());
         if (brandId is > 0)
             builder.WithQuery("brandId", brandId.Value.ToString());
         else
-            modelId = null; // modelo solo aplica con marca seleccionada
+            modelId = null;
         if (modelId is > 0)
             builder.WithQuery("modelId", modelId.Value.ToString());
 
@@ -74,6 +77,7 @@ public class AssetsController : Controller
             Kind = kind,
             BrandId = brandId,
             ModelId = modelId,
+            CategoryId = categoryId,
             ShowRetired = showRetired,
             Page = page,
             PageSize = 100,
@@ -97,6 +101,7 @@ public class AssetsController : Controller
         AssetKind? kind,
         int? brandId,
         int? modelId,
+        int? categoryId,
         bool showRetired = false,
         CancellationToken ct = default)
     {
@@ -110,6 +115,8 @@ public class AssetsController : Controller
             .WithQuery("condition", condition)
             .WithQuery("kind", kind.HasValue ? ((int)kind.Value).ToString() : null);
 
+        if (categoryId is > 0)
+            b.WithQuery("categoryIds", categoryId.Value.ToString());
         if (brandId is > 0)
             b.WithQuery("brandId", brandId.Value.ToString());
         else
@@ -452,8 +459,12 @@ public class AssetsController : Controller
             var models = await _api.Create().WithEndpoint(ApiEndpoints.Models)
                 .WithQuery("onlyActive", "true")
                 .SendJsonAsync<ApiResponse<List<ModelListDto>>>(ct);
+            var categories = await _api.Create().WithEndpoint(ApiEndpoints.Categories)
+                .WithQuery("onlyActive", "true")
+                .SendJsonAsync<ApiResponse<List<CategoryListDto>>>(ct);
             vm.Brands = brands?.Data ?? [];
             vm.Models = models?.Data ?? [];
+            vm.Categories = categories?.Data ?? [];
         }
         catch
         {

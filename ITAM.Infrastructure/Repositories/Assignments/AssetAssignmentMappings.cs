@@ -79,7 +79,9 @@ internal static class AssetAssignmentMappings
         Quantity = r.Quantity,
         ConditionOnDelivery = ParseEnum<AssetCondition>(r.ConditionOnDelivery),
         DeliveryNotes = r.DeliveryNotes,
-        ReturnNotes = r.ReturnNotes
+        ReturnNotes = r.ReturnNotes,
+        ReturnedAt = r.ReturnedAt,
+        ReturnedByUserName = r.ReturnedByUserName
     };
 
     public static AssetMovementListDto ToDto(MovementRow r) => new()
@@ -172,6 +174,8 @@ internal sealed class CustodyLineRow
     public string ConditionOnDelivery { get; set; } = string.Empty;
     public string? DeliveryNotes { get; set; }
     public string? ReturnNotes { get; set; }
+    public DateTime? ReturnedAt { get; set; }
+    public string? ReturnedByUserName { get; set; }
 }
 
 internal sealed class MovementRow

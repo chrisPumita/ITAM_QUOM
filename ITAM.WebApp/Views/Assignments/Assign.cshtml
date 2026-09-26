@@ -68,6 +68,16 @@
                 }
             </select>
         </div>
+        <div id="empAssignmentsWrap" class="mb-3 d-none">
+            <div class="border rounded p-2 bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="small">Ya tiene asignados</strong>
+                    <span class="badge text-bg-secondary" id="empAssignCount">0</span>
+                </div>
+                <p class="small text-muted mb-2 mb-0">Revise antes de entregar más equipo; pida devolución si corresponde un cambio.</p>
+                <ul class="small mb-0 ps-3" id="empAssignList"></ul>
+            </div>
+        </div>
         <div class="mb-3">
             <label class="form-label">Notas (opcional)</label>
             <input asp-for="Notes" class="form-control" maxlength="1000" />
@@ -118,6 +128,42 @@
 <script>
 (function () {
   window.itamBindBrandModel && itamBindBrandModel('assignBrand', 'assignModel');
+
+  const empSelect = document.getElementById('employeeSelect');
+  const wrap = document.getElementById('empAssignmentsWrap');
+  const list = document.getElementById('empAssignList');
+  const countBadge = document.getElementById('empAssignCount');
+  const urlTemplate = '@Url.Action("EmployeeAssignments", "Assignments")';
+
+  async function loadEmpAssignments() {
+    const id = empSelect.value;
+    if (!id) {
+      wrap.classList.add('d-none');
+      list.innerHTML = '';
+      return;
+    }
+    try {
+      const res = await fetch(urlTemplate + '?employeeId=' + encodeURIComponent(id), { headers: { Accept: 'application/json' } });
+      const data = await res.json();
+      list.innerHTML = '';
+      if (!Array.isArray(data) || data.length === 0) {
+        countBadge.textContent = '0';
+        list.innerHTML = '<li class="text-muted">Sin activos asignados actualmente.</li>';
+      } else {
+        countBadge.textContent = String(data.length);
+        data.forEach(a => {
+          const li = document.createElement('li');
+          li.innerHTML = `<span class="font-monospace">${a.assetCode}</span> · ${a.description || ''} <span class="text-muted">(${a.assignedAt || ''})</span>`;
+          list.appendChild(li);
+        });
+      }
+      wrap.classList.remove('d-none');
+    } catch {
+      wrap.classList.add('d-none');
+    }
+  }
+  empSelect.addEventListener('change', loadEmpAssignments);
+  if (empSelect.value) loadEmpAssignments();
 
   const form = document.getElementById('assignForm');
   form.addEventListener('submit', async function (e) {

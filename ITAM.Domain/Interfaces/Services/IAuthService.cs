@@ -40,4 +40,9 @@ public interface IAuthService
     /// Quita el bloqueo temporal por intentos fallidos (Admin).
     /// </summary>
     Task<Result<bool>> UnlockUserAsync(Guid userId);
+
+    /// <summary>
+    /// Crea un usuario Administrador u Operador con contraseña temporal y opcionalmente envía correo.
+    /// </summary>
+    Task<Result<CreateAdminUserResultDto>> CreateAdminUserAsync(CreateAdminUserDto dto, CancellationToken ct = default);
 }

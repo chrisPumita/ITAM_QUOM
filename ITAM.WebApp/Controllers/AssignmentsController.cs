@@ -54,6 +54,36 @@ public class AssignmentsController : Controller
         return View(vm);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> EmployeeAssignments(Guid employeeId, CancellationToken ct)
+    {
+        if (employeeId == Guid.Empty)
+            return Json(Array.Empty<object>());
+
+        try
+        {
+            var list = await _api.Create()
+                .WithEndpoint(ApiEndpoints.Assignments)
+                .WithQuery("employeeId", employeeId.ToString())
+                .WithQuery("onlyActive", "true")
+                .SendJsonAsync<ApiResponse<List<AssignmentListDto>>>(ct);
+
+            var items = (list?.Data ?? []).Select(a => new
+            {
+                a.AssetCode,
+                a.SerialNumber,
+                a.Description,
+                kind = a.AssetKind.ToSpanish(),
+                assignedAt = a.AssignedAt.ToLocalTime().ToString("yyyy-MM-dd")
+            });
+            return Json(items);
+        }
+        catch
+        {
+            return Json(Array.Empty<object>());
+        }
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Assign(AssignViewModel vm, CancellationToken ct)

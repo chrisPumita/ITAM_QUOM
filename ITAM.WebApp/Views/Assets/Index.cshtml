@@ -22,7 +22,7 @@
            asp-route-search="@Model.Search" asp-route-status="@Model.Status"
            asp-route-condition="@Model.Condition" asp-route-kind="@Model.Kind"
            asp-route-brandId="@Model.BrandId" asp-route-modelId="@Model.ModelId"
-           asp-route-showRetired="@Model.ShowRetired">
+           asp-route-categoryId="@Model.CategoryId" asp-route-showRetired="@Model.ShowRetired">
             <i class="bi bi-download"></i> Excel
         </a>
     </div>
@@ -31,24 +31,24 @@
 <form method="get" class="panel mb-3">
     <div class="panel__body">
         <div class="row g-2 align-items-end">
-            <div class="col-md-3">
+            <div class="col-lg-2 col-md-4">
                 <label class="form-label small mb-1">Buscar</label>
-                <input class="form-control form-control-sm" name="search" value="@Model.Search" placeholder="Código, serie, modelo…" />
+                <input class="form-control form-control-sm" name="search" value="@Model.Search" placeholder="SKU, SN, modelo…" />
             </div>
-            <div class="col-md-2">
+            <div class="col-lg-1 col-md-4">
                 <label class="form-label small mb-1">Estado</label>
                 <select class="form-select form-select-sm" name="status">
                     <option value="">Todos</option>
-                    @if (Model.Status == "Available") { <option value="Available" selected>Disponible / Nuevo</option> } else { <option value="Available">Disponible / Nuevo</option> }
+                    @if (Model.Status == "Available") { <option value="Available" selected>Disponible</option> } else { <option value="Available">Disponible</option> }
                     @if (Model.Status == "Assigned") { <option value="Assigned" selected>Asignado</option> } else { <option value="Assigned">Asignado</option> }
-                    @if (Model.Status == "Maintenance") { <option value="Maintenance" selected>Garantía / Mant.</option> } else { <option value="Maintenance">Garantía / Mant.</option> }
+                    @if (Model.Status == "Maintenance") { <option value="Maintenance" selected>Garantía</option> } else { <option value="Maintenance">Garantía</option> }
                     @if (isAdmin)
                     {
                         if (Model.Status == "Retired") { <option value="Retired" selected>Baja</option> } else { <option value="Retired">Baja</option> }
                     }
                 </select>
             </div>
-            <div class="col-md-1">
+            <div class="col-lg-1 col-md-4">
                 <label class="form-label small mb-1">Condición</label>
                 <select class="form-select form-select-sm" name="condition">
                     <option value="">Todas</option>
@@ -56,7 +56,7 @@
                     @if (Model.Condition == "Used") { <option value="Used" selected>Usado</option> } else { <option value="Used">Usado</option> }
                 </select>
             </div>
-            <div class="col-md-1">
+            <div class="col-lg-1 col-md-4">
                 <label class="form-label small mb-1">Tipo</label>
                 <select class="form-select form-select-sm" name="kind">
                     <option value="">Todos</option>
@@ -64,7 +64,17 @@
                     @if (Model.Kind == AssetKind.Accessory) { <option value="2" selected>Accesorio</option> } else { <option value="2">Accesorio</option> }
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label small mb-1">Categoría</label>
+                <select class="form-select form-select-sm" name="categoryId">
+                    <option value="">Todas</option>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <option value="@c.Id" selected="@(Model.CategoryId == c.Id ? "selected" : null)">@c.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
                 <label class="form-label small mb-1">Marca</label>
                 <select class="form-select form-select-sm" name="brandId" id="invBrand">
                     <option value="">Todas las marcas</option>
@@ -74,7 +84,7 @@
                     }
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-lg-2 col-md-4">
                 <label class="form-label small mb-1">Modelo</label>
                 <select class="form-select form-select-sm" name="modelId" id="invModel" disabled
                         data-models='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Models.Select(m => new { m.Id, m.Name, m.BrandId, m.BrandName })))'
@@ -82,7 +92,7 @@
                     <option value="">Seleccione marca…</option>
                 </select>
             </div>
-            <div class="col-md-1">
+            <div class="col-lg-1 col-md-4">
                 <button type="submit" class="btn btn-sm btn-primary w-100">Filtrar</button>
             </div>
         </div>
@@ -105,9 +115,9 @@
                     <th>SN</th>
                     <th>Descripción</th>
                     <th>Tipo</th>
-                    <th>Estado</th>
                     <th>Proveedor</th>
                     <th>Garantía</th>
+                    <th>Estado</th>
                     <th>Ubicación / Custodio</th>
                     <th></th>
                 </tr>
@@ -135,7 +145,12 @@
                     <td class="font-mono">@a.AssetCode</td>
                     <td class="font-mono">@(a.SerialNumber ?? "—")</td>
                     <td>@a.Description</td>
-                    <td>@a.Kind.ToSpanish()</td>
+                    <td>
+                        <div>@a.Kind.ToSpanish()</div>
+                        <div class="small text-muted">@a.CategoryName</div>
+                    </td>
+                    <td>@(a.SupplierName ?? "—")</td>
+                    <td class="@warrantyClass">@warrantyLabel</td>
                     <td>
                         @{
                             var badgeClass = a.Status switch
@@ -151,8 +166,6 @@
                             <span class="status-badge__dot"></span> @a.StatusLabel
                         </span>
                     </td>
-                    <td>@(a.SupplierName ?? "—")</td>
-                    <td class="@warrantyClass">@warrantyLabel</td>
                     <td>
                         @if (a.Status == AssetStatus.Assigned)
                         {
@@ -212,13 +225,10 @@
 <script>
 (function () {
   window.itamBindBrandModel && itamBindBrandModel('invBrand', 'invModel');
-
   $('#inventoryTable').DataTable({
     pageLength: 25,
     order: [[0, 'asc']],
-    language: {
-      url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json'
-    },
+    language: { url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json' },
     columnDefs: [{ orderable: false, targets: -1 }]
   });
 })();

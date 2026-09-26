@@ -291,12 +291,27 @@ public sealed class AssetAssignmentRepository : IAssetAssignmentRepository
                 l.Quantity,
                 l.ConditionOnDelivery,
                 l.DeliveryNotes,
-                l.ReturnNotes
+                l.ReturnNotes,
+                ret.ReturnedAt,
+                ret.ReturnedByUserName
             FROM dbo.CustodyFormLines l
+            INNER JOIN dbo.CustodyForms cf ON cf.Id = l.CustodyFormId
             INNER JOIN dbo.Assets a ON a.Id = l.AssetId AND a.IsDeleted = 0
             INNER JOIN dbo.Models m ON m.Id = a.ModelId
             INNER JOIN dbo.Brands b ON b.Id = m.BrandId
             INNER JOIN dbo.Categories c ON c.Id = m.CategoryId
+            OUTER APPLY (
+                SELECT TOP (1)
+                    aa.ReturnedAt,
+                    rb.DisplayName AS ReturnedByUserName
+                FROM dbo.AssetAssignments aa
+                LEFT JOIN dbo.AspNetUsers rb ON rb.Id = aa.ReturnedByUserId
+                WHERE aa.IsDeleted = 0
+                  AND aa.AssetId = l.AssetId
+                  AND aa.EmployeeId = cf.EmployeeId
+                  AND aa.ReturnedAt IS NOT NULL
+                ORDER BY aa.ReturnedAt DESC
+            ) ret
             WHERE l.IsDeleted = 0 AND l.CustodyFormId = @Id
             ORDER BY a.AssetCode
             """;

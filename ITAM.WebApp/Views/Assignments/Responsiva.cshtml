@@ -30,13 +30,32 @@
 </div>
 
 <div class="panel mb-3">
-    <div class="panel__header"><h2 class="panel__title">Detalle</h2></div>
+    <div class="panel__header"><h2 class="panel__title">Trazabilidad</h2></div>
     <div class="panel__body">
-        <div class="row g-3 small mb-3">
-            <div class="col-sm-4"><div class="text-muted">Emitió</div><div>@(Model.IssuedByUserName ?? "—")</div></div>
-            <div class="col-sm-4"><div class="text-muted">Firmada</div><div>@(Model.SignedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</div></div>
-            <div class="col-sm-4"><div class="text-muted">Notas</div><div>@(Model.Notes ?? "—")</div></div>
+        <div class="row g-3 small mb-0">
+            <div class="col-sm-3">
+                <div class="text-muted">Asignó (admin)</div>
+                <div class="fw-semibold">@(Model.IssuedByUserName ?? "—")</div>
+            </div>
+            <div class="col-sm-3">
+                <div class="text-muted">Colaborador</div>
+                <div>@Model.EmployeeName</div>
+            </div>
+            <div class="col-sm-3">
+                <div class="text-muted">Firmada</div>
+                <div>@(Model.SignedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</div>
+            </div>
+            <div class="col-sm-3">
+                <div class="text-muted">Notas</div>
+                <div>@(Model.Notes ?? "—")</div>
+            </div>
         </div>
+    </div>
+</div>
+
+<div class="panel mb-3">
+    <div class="panel__header"><h2 class="panel__title">Activos</h2></div>
+    <div class="panel__body">
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
                 <thead>
@@ -46,7 +65,7 @@
                         <th>Descripción</th>
                         <th>Tipo</th>
                         <th>Condición entrega</th>
-                        <th>Cant.</th>
+                        <th>Devolución / recibió</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -56,9 +75,22 @@
                         <td class="font-mono"><a asp-controller="Assets" asp-action="Details" asp-route-id="@l.AssetId">@l.AssetCode</a></td>
                         <td class="font-mono">@(l.SerialNumber ?? "—")</td>
                         <td>@l.BrandName @l.ModelName @(string.IsNullOrEmpty(l.Specs) ? "" : "· " + l.Specs)</td>
-                        <td>@l.AssetKind.ToSpanish()</td>
+                        <td>
+                            <div>@l.AssetKind.ToSpanish()</div>
+                            <div class="small text-muted">@l.CategoryName</div>
+                        </td>
                         <td>@l.ConditionOnDelivery.ToSpanish()</td>
-                        <td>@l.Quantity</td>
+                        <td>
+                            @if (l.ReturnedAt is null)
+                            {
+                                <span class="text-warning small">Pendiente</span>
+                            }
+                            else
+                            {
+                                <div>@l.ReturnedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                                <div class="small text-muted">Recibió: @(l.ReturnedByUserName ?? "—")</div>
+                            }
+                        </td>
                     </tr>
                 }
                 </tbody>

@@ -1,0 +1,48 @@
+@using ITAM.Shared.Dtos.Auth
+@model List<IdentityUserListDto>
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h4 fw-bold mb-0">Usuarios</h1>
+        <p class="text-muted small mb-0">Administradores y operadores con acceso al sistema.</p>
+    </div>
+    <a class="btn btn-primary btn-sm" asp-action="Create"><i class="bi bi-person-plus"></i> Nuevo usuario</a>
+</div>
+
+<div class="panel">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Activo</th>
+                    <th>Bloqueo</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr><td colspan="5" class="text-center text-muted py-4">Sin usuarios.</td></tr>
+            }
+            else
+            {
+                foreach (var u in Model)
+                {
+                    <tr>
+                        <td>@u.DisplayName</td>
+                        <td class="font-mono small">@u.Email</td>
+                        <td>@(u.Role ?? "—")</td>
+                        <td>@(u.IsActive ? "Sí" : "No")</td>
+                        <td>@(u.IsLockedOut ? "Bloqueado" : "—")</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
